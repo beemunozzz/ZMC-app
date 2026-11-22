@@ -1,0 +1,149 @@
+import Link from "next/link";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import { AddressBlock } from "@/components/AddressBlock";
+import { AppHeader } from "@/components/AppHeader";
+import { NotActive } from "@/components/NotActive";
+import { PageLoading } from "@/components/PageLoading";
+import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { fmtDayLong, fmtHours } from "@/lib/dates";
+import { JOB_COLUMNS, STATUS, conflicts, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
+
+export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]">) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <JobDetails params={params} searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">, "params" | "searchParams">) {
+  const { id } = await params;
+  const sp = await searchParams;
+  const { supabase, me } = await requireMember();
+  if (!me) return <NotActive />;
+  const isOwner = me.role === "owner";
+
+  const { data } = await supabase.from("jobs").select(JOB_COLUMNS).eq("id", id).maybeSingle();
+  if (!data) notFound();
+  const job = data as Job;
+
+  const [{ data: crewRows }, { data: sameDay }] = await Promise.all([
+    supabase.from("crew_members").select("id, full_name, phone"),
+    supabase.from("jobs").select(JOB_COLUMNS).eq("job_date", job.job_date),
+  ]);
+  const crewById = new Map((crewRows ?? []).map((c) => [c.id as string, c as { id: string; full_name: string; phone: string | null }]));
+  const people = jobCrew(job);
+  const st = STATUS[job.status];
+  const hrs = Number(job.est_hours) || 0;
+  const short = openSpots(job);
+  const clashes = conflicts(job, (sameDay ?? []) as Job[]);
+
+  const row = (label: string, value: React.ReactNode) => (
+    <div className="flex gap-3 py-2">
+      <dt className="w-24 shrink-0 text-sm text-muted">{label}</dt>
+      <dd className="min-w-0 break-words text-[15px] text-ink">{value}</dd>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <AppHeader title="Job" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
+        <Link href={`/?view=week&date=${job.job_date}`} className="text-sm font-semibold text-primary">
+          ‹ Back to the schedule
+        </Link>
+
+        {sp.saved && <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">✓ Saved to the schedule</p>}
+
+        <section className="flex flex-col gap-1">
+          <span className={`self-start rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
+          <h1 className="break-words font-display text-3xl font-extrabold uppercase leading-tight text-ink">{job.customer_name}</h1>
+          <p className="text-[15px] tabular-nums text-ink">
+            {fmtDayLong(job.job_date)} · {timeSpan(job)}
+          </p>
+          <p className="text-sm tabular-nums text-muted">
+            {hrs ? `About ${fmtHours(hrs)} hrs` : "Hours not set"}
+            {hrs && people.length ? ` · ${fmtHours(hrs * people.length)} crew-hrs` : ""}
+          </p>
+        </section>
+
+        {!people.length && job.status !== "canceled" && (
+          <p className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
+            <b>⚠ No crew assigned yet.</b> {isOwner ? "Tap Edit job to pick a lead and movers." : "Zach will assign a crew soon."}
+          </p>
+        )}
+        {clashes.length > 0 && (
+          <p className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
+            <b>⚠ Double-booked:</b>{" "}
+            {clashes.map((c) => `${crewById.get(c.crewId)?.full_name ?? "Someone"} is also on ${c.other.customer_name}`).join("; ")}.
+          </p>
+        )}
+
+        <AddressBlock label="Pickup" address={job.pickup_address} house={job.pickup_house} primary />
+        <AddressBlock label="Drop-off" address={job.dropoff_address} house={job.dropoff_house} />
+
+        <dl className="divide-y divide-line rounded-2xl border border-line bg-card px-4">
+          {row("Job", job.job_type)}
+          {row("Truck", job.truck === "theirs" ? "Customer has their own" : "We bring ours")}
+          {row(
+            "Customer",
+            job.customer_phone ? (
+              <a href={telUrl(job.customer_phone)} className="font-semibold text-primary">
+                {job.customer_phone}
+              </a>
+            ) : (
+              <span className="text-muted">No phone on file</span>
+            ),
+          )}
+          {job.heavy_items && row("Heavy items", job.heavy_items)}
+        </dl>
+
+        <section className="rounded-2xl border border-line bg-card p-4">
+          <h2 className="font-display text-lg font-extrabold uppercase text-ink">
+            Crew <span className="tabular-nums text-muted">({people.length} of {job.movers_needed})</span>
+          </h2>
+          {people.length ? (
+            <ul className="mt-2 flex flex-col gap-2">
+              {people.map((pid) => {
+                const c = crewById.get(pid);
+                return (
+                  <li key={pid} className="flex items-center justify-between gap-3 text-[15px]">
+                    <span className="min-w-0 break-words text-ink">
+                      {pid === job.lead_id ? <b>★ {c?.full_name ?? "Removed"}</b> : (c?.full_name ?? "Removed")}
+                      {pid === job.lead_id && <span className="text-muted"> · crew lead</span>}
+                    </span>
+                    {c?.phone && (
+                      <a href={telUrl(c.phone)} className="shrink-0 text-sm font-semibold text-primary">
+                        {c.phone}
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="mt-1 text-sm text-muted">Nobody assigned yet.</p>
+          )}
+          {short > 0 && people.length > 0 && <p className="mt-2 text-sm font-medium text-warn">Need {short} more.</p>}
+        </section>
+
+        {job.notes && (
+          <section className="rounded-2xl border border-line bg-card p-4">
+            <h2 className="font-display text-lg font-extrabold uppercase text-ink">Notes for the crew</h2>
+            <p className="mt-1 whitespace-pre-wrap break-words text-[15px] text-ink">{job.notes}</p>
+          </section>
+        )}
+
+        {isOwner && (
+          <Link
+            href={`/jobs/${job.id}/edit`}
+            className="press flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-white dark:text-navy"
+          >
+            Edit job
+          </Link>
+        )}
+      </main>
+    </div>
+  );
+}

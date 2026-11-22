@@ -14,9 +14,24 @@
   - Phase 1 tested: Brandon logged in on his phone as Owner. (He created his login before the database setup ran, so he was linked by hand; the setup file now handles that case.)
   - Database setup lives in `supabase/migrations/0001_crew_and_logins.sql` (pasted into Supabase > SQL Editor).
 
+- Phase 2 (code): jobs and the calendar.
+  - Jobs table with security rules: owner sees and edits all jobs; crew leads and movers only see jobs they're on. Setup in `supabase/migrations/0002_jobs.sql`.
+  - Schedule with Today / Week / Month tabs, back and forward arrows, and a Today jump.
+  - Week: job cards with time, hours, crew count, customer, route, lead and movers, and flags (No crew, Need N more, Double-booked, Their truck).
+  - Month: fixed spots in each day box (date top-left, weather spot top-right for Phase 4, job count bottom). The count turns red when a job that day needs crew. Tap a day to open its week.
+  - New job / Edit job form in Brandon's order, with house details per address, the "think about a 3rd mover" hint for two-story homes, and the piano / hot tub warning.
+  - Job details page with Navigate, Zillow and See the house buttons, crew phones, and Edit job.
+  - Crew view: "Your job today / next job" card, plus the next 3 weeks.
+  - ☰ menu > Show jobs for: preview what a crew member sees.
+
 ## Next
-- Phase 2: jobs and the calendar (week, month, today views, new job form, crew assignment, needs-crew flags).
+- Brandon: run `0002_jobs.sql` in Supabase, then add a test job on his phone.
+- Phase 3: address autocomplete (Google Places) and automatic house details (RentCast).
 - Before crew log in: add their emails on the Crew page, and set up a free email sender (Resend) so "Forgot password" emails reach them.
+
+## To do later
+- [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.
+- [ ] Turn off "Confirm email" in Supabase (Authentication > Sign In / Providers > Email) before crew create passwords, if not done yet.
 
 ## Known limits
 - Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. It's only needed for "Forgot password" now. Before crew rely on it, set up a free email sender (Resend) in Supabase > Authentication > SMTP.

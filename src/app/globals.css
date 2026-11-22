@@ -10,6 +10,9 @@
   --line: #e2dbd0;
   --card: #ffffff;
   --navy: #0f1b2a;
+  --ok: #2f6b45;
+  --warn: #a4541a;
+  --bad: #b3261e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +25,9 @@
     --line: #2a323c;
     --card: #1a2028;
     --navy: #0b131e;
+    --ok: #8fd3a6;
+    --warn: #f0b27a;
+    --bad: #f2b8b5;
   }
 }
 
@@ -34,6 +40,9 @@
   --color-line: var(--line);
   --color-card: var(--card);
   --color-navy: var(--navy);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
   --font-sans: var(--font-inter);
   --font-display: var(--font-barlow);
 }
