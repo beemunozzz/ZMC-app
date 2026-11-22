@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* ZMC brand colors. Light mode first, dark mode below. */
+:root {
+  --bg: #f3f0ea;
+  --ink: #15202b;
+  --muted: #5b6672;
+  --primary: #1f4e8c;
+  --tape: #d9a25b;
+  --line: #e2dbd0;
+  --card: #ffffff;
+  --navy: #0f1b2a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12171d;
+    --ink: #ece8e1;
+    --muted: #9aa3ad;
+    --primary: #8fb2e6;
+    --tape: #e0b072;
+    --line: #2a323c;
+    --card: #1a2028;
+    --navy: #0b131e;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-tape: var(--tape);
+  --color-line: var(--line);
+  --color-card: var(--card);
+  --color-navy: var(--navy);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-barlow);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Quick, calm entrance. Turned off for people who ask for less motion. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 240ms cubic-bezier(.23, 1, .32, 1) both; }
+
+.press { transition: transform 120ms ease-out; }
+.press:active { transform: scale(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  .press, .press:active { transition: none; transform: none; }
+}
