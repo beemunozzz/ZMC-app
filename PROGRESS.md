@@ -11,8 +11,9 @@
 
 ## Decisions
 - Stack: Next.js + Vercel + Supabase (confirmed).
+- Testing phase: Brandon builds and tests in his own accounts (Vercel and Supabase free plans). Everything moves to Zach's accounts once it's tested. Both services support transferring a project.
 - Invoices leave out materials, water and extra-item lines (Brandon's decision, from the handoff).
 
 ## Open questions
-- Who creates the Vercel and Supabase accounts: Zach, or Brandon using Zach's email?
+- Before handing over: decide on Vercel Pro (about $20/month; the free plan is for non-business use) or moving to a host whose free plan allows business use.
 - For Zach: see section 3 of `CLAUDE.md` (trip charge on invoices, truck miles, truck charge, per-mile rates).
