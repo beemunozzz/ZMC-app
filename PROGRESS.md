@@ -7,17 +7,18 @@
 - Phase 0, part 2: live on Vercel (Hobby plan, Brandon's account) at https://zmc-app.vercel.app. Vercel publishes the GitHub `main` version automatically.
 
 - Phase 1, part 1 (code): Supabase project `zmc-hub` created (free plan, West US). Its two public settings are in Vercel.
-  - Login with a 6-digit email code (works inside the home-screen app, unlike email links).
+  - Login with email and password (Brandon chose passwords over email codes). First-timers tap "First time? Create your password". "Forgot password" emails a reset link. ☰ menu > Change password.
+  - Supabase setting: Authentication > Sign In / Providers > Email > "Confirm email" is OFF, so new crew can log in right after creating a password. Only emails on the crew list can create an account.
   - Crew list with roles: Owner, Crew lead, Mover. Only people on the crew list can log in; the first person to log in becomes the owner.
   - Crew page (owner only, ☰ menu > Crew members): add people, set role, email, phone, turn accounts on or off.
   - Database setup lives in `supabase/migrations/0001_crew_and_logins.sql` (pasted into Supabase > SQL Editor).
 
 ## Next
-- Brandon: run the database setup, switch the Supabase emails to send a code, then log in on his phone.
+- Brandon: run the database setup, turn off "Confirm email" in Supabase, then create his password and log in on his phone.
 - Then Phase 2: jobs and the calendar.
 
 ## Known limits
-- Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. Before crew can log in, set up a free email sender (Resend) in Supabase > Authentication > SMTP.
+- Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. It's only needed for "Forgot password" now. Before crew rely on it, set up a free email sender (Resend) in Supabase > Authentication > SMTP.
 
 ## Decisions
 - Stack: Next.js + Vercel + Supabase (confirmed).

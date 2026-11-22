@@ -64,6 +64,9 @@ export function AppHeader({
               </>
             )}
             <div className="my-2 border-t border-line" />
+            <Link href="/account/password" className={item} onClick={() => setOpen(false)}>
+              Change password
+            </Link>
             <button onClick={signOut} className={`${item} w-full text-left`}>
               Log out
             </button>
