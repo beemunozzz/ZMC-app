@@ -1,18 +1,22 @@
 import Link from "next/link";
 import { fmtHours } from "@/lib/dates";
 import { STATUS, cityOf, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
+import { WX_EMOJI, WX_LABEL, WX_WATCH, type JobWx } from "@/lib/weather-kinds";
 
 export function JobCard({
   job,
   names,
   doubleBooked,
   isOwner,
+  wx,
 }: {
   job: Job;
   names: Map<string, string>;
   doubleBooked: boolean;
   isOwner: boolean;
+  wx?: JobWx | null;
 }) {
+  const wxWatch = wx && WX_WATCH.includes(wx.kind) && job.status !== "canceled" ? wx : null;
   const st = STATUS[job.status];
   const crew = jobCrew(job);
   const hrs = Number(job.est_hours) || 0;
@@ -65,13 +69,18 @@ export function JobCard({
       )}
 
       {/* Row 4: flags */}
-      {(short > 0 && crew.length > 0) || doubleBooked || job.truck === "theirs" ? (
+      {(short > 0 && crew.length > 0) || doubleBooked || wxWatch || job.truck === "theirs" ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {short > 0 && crew.length > 0 && !canceled && (
             <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">Need {short} more</span>
           )}
           {doubleBooked && (
             <span className="rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">⚠ Double-booked</span>
+          )}
+          {wxWatch && (
+            <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">
+              {WX_EMOJI[wxWatch.kind]} {WX_LABEL[wxWatch.kind]}
+            </span>
           )}
           {job.truck === "theirs" && (
             <span className="rounded-full bg-bg px-2.5 py-0.5 text-xs font-medium text-muted">Their truck</span>

@@ -7,6 +7,8 @@ import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { ROLE_LABEL, requireMember } from "@/lib/crew";
 import { fmtDayLong, fmtHours } from "@/lib/dates";
+import { WeatherNote } from "@/components/WeatherNote";
+import { jobForecast, stocktonForecast } from "@/lib/weather";
 import { JOB_COLUMNS, STATUS, conflicts, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
 
 export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]">) {
@@ -38,6 +40,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   const hrs = Number(job.est_hours) || 0;
   const short = openSpots(job);
   const clashes = conflicts(job, (sameDay ?? []) as Job[]);
+  const wx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
 
   const row = (label: string, value: React.ReactNode) => (
     <div className="flex gap-3 py-2">
@@ -79,6 +82,8 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
             {clashes.map((c) => `${crewById.get(c.crewId)?.full_name ?? "Someone"} is also on ${c.other.customer_name}`).join("; ")}.
           </p>
         )}
+
+        <WeatherNote wx={wx} />
 
         <AddressBlock label="Pickup" address={job.pickup_address} house={job.pickup_house} primary />
         <AddressBlock label="Drop-off" address={job.dropoff_address} house={job.dropoff_house} />

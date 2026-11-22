@@ -2,17 +2,21 @@ import Link from "next/link";
 import { fmtDayLong } from "@/lib/dates";
 import { jobCrew, telUrl, timeSpan, type Job } from "@/lib/jobs";
 import { AddressBlock } from "./AddressBlock";
+import { WeatherNote } from "./WeatherNote";
+import type { JobWx } from "@/lib/weather-kinds";
 
 export function NextJob({
   job,
   names,
   meId,
   today,
+  wx,
 }: {
   job: Job;
   names: Map<string, string>;
   meId: string;
   today: string;
+  wx?: JobWx | null;
 }) {
   const others = jobCrew(job)
     .filter((id) => id !== meId)
@@ -29,6 +33,8 @@ export function NextJob({
           {job.customer_name} <span className="font-normal text-muted">· {job.job_type}</span>
         </p>
       </div>
+
+      <WeatherNote wx={wx} />
 
       <AddressBlock label="Pickup" address={job.pickup_address} house={job.pickup_house} primary />
       <AddressBlock label="Drop-off" address={job.dropoff_address} house={job.dropoff_house} />
