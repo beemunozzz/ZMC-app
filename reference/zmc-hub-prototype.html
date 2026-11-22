@@ -1,0 +1,1452 @@
+<title>ZMC Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a dispatch board. Week of day columns on desktop, a day-by-day list on phones; a slide-over panel for job details and editing. Same navy, blanket blue and tape tan as the ZMC site. */
+:root{
+  --bg:#F3F0EA; --panel:#FFFFFF; --ink:#15202B; --muted:#5B6470; --line:#E2DBD0; --soft:#F8F6F2;
+  --blue:#1F4E8C; --blue-soft:#E3EAF4; --tape:#D9A25B; --tape-soft:#F6EAD8;
+  --ok:#2F6B45; --ok-soft:#E1EFE5; --warn:#A4541A; --warn-soft:#F8E8DA; --bad:#A3302A; --bad-soft:#F7E1DF; --on-accent:#FFFFFF;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171D; --panel:#1B222B; --ink:#ECE8E1; --muted:#A3ABB5; --line:#2E3742; --soft:#222A34;
+  --blue:#8FB2E6; --blue-soft:#22324A; --tape:#E0B072; --tape-soft:#3A2F20;
+  --ok:#7CC496; --ok-soft:#1E3326; --warn:#F0A86E; --warn-soft:#3A2A1F; --bad:#F08A80; --bad-soft:#3D2220; --on-accent:#12171D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171D; --panel:#1B222B; --ink:#ECE8E1; --muted:#A3ABB5; --line:#2E3742; --soft:#222A34;
+  --blue:#8FB2E6; --blue-soft:#22324A; --tape:#E0B072; --tape-soft:#3A2F20;
+  --ok:#7CC496; --ok-soft:#1E3326; --warn:#F0A86E; --warn-soft:#3A2A1F; --bad:#F08A80; --bad-soft:#3D2220; --on-accent:#12171D; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.wrap>*{min-width:0}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.appbar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .mark{background:var(--ink);color:var(--bg);font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.04em;border-radius:7px;padding:4px 7px;line-height:1}
+.brand h1{margin:0;font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appactions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.menuwrap{position:relative}
+.menubtn{position:relative;font-size:18px;line-height:1}
+.menubtn .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:min(280px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:grid;gap:2px}
+.mgroup{display:grid;gap:2px;padding:6px 4px}
+.mgroup+.mgroup{border-top:1px solid var(--line)}
+.mlabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:2px 8px 4px}
+.mgroup .sel{width:100%}
+.mitem{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:transparent;text-align:left;padding:10px 8px;border-radius:8px;font-weight:600;cursor:pointer;min-height:42px}
+.mitem:hover{background:var(--soft)}
+.badge{background:var(--bad);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px}
+@media (prefers-reduced-motion:no-preference){.menu:not([hidden]){animation:zpop .16s ease-out;transform-origin:top right}}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;min-height:40px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}a.btn:not(.primary){color:var(--ink)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--on-accent)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.icon{padding:9px 12px}
+.sel{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 10px;min-height:40px;max-width:100%}
+.weeknav{display:flex;align-items:center;gap:6px}
+.weeknav strong{font-family:var(--display);font-size:22px;font-weight:700;min-width:12ch;text-align:center}
+.summary{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px}
+.stat b{font-variant-numeric:tabular-nums}
+.note{background:var(--tape-soft);border-radius:8px;padding:10px 14px;font-size:14px}
+.board{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:start}
+@media (max-width:1050px){.board{grid-template-columns:1fr}}
+.day{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px;min-width:0;align-content:start;min-height:140px}
+.day.today{border-color:var(--blue);box-shadow:inset 0 3px 0 var(--blue)}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.dayhead b{font-family:var(--display);font-size:20px;text-transform:uppercase;letter-spacing:.02em}
+.dayhead span{font-size:13px;color:var(--muted)}
+.empty{font-size:13px;color:var(--muted);padding:6px 2px}
+.addday{border:1px dashed var(--line);background:transparent;border-radius:8px;padding:8px;color:var(--muted);cursor:pointer;font-size:13px}
+.job{text-align:left;width:100%;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:10px;display:grid;gap:6px;cursor:pointer;min-width:0}
+.job.s-confirmed{border-left-color:var(--ok)}
+.job.s-done{border-left-color:var(--muted);opacity:.75}
+.job.s-canceled{border-left-color:var(--bad);opacity:.6}
+.job.s-canceled .cust{text-decoration:line-through}
+.jrow{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap}
+.time{font-weight:700;font-variant-numeric:tabular-nums}
+.cust{font-weight:600;overflow-wrap:anywhere}
+.route{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue);white-space:nowrap}
+.chip.lead{background:var(--tape-soft);color:var(--ink)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.mute{background:var(--soft);color:var(--muted);border:1px solid var(--line)}
+.pwrap{display:grid;gap:8px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
+.pgrid:empty{display:none}
+.pthumb{border:0;padding:0;border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--soft);cursor:pointer;position:relative}
+.pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pthumb .pby{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6));padding:8px 4px 3px;text-align:left}
+.paddrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.paddrow .btn.sm{min-height:34px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;cursor:pointer}
+.pstat{font-size:13px;color:var(--muted)}
+.lightbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lightbox img{max-width:100%;max-height:calc(100% - 110px);object-fit:contain;border-radius:8px}
+.lbbar,.lbconfirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;width:min(640px,100%);color:#fff;font-size:14px}
+.lbconfirm{background:#3a1d1d;border-radius:8px;padding:8px 10px}
+.overlay{position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:20;display:flex;justify-content:flex-end}
+.sheet{background:var(--panel);width:min(560px,100%);height:100%;overflow-y:auto;padding:20px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 20px;padding-top:calc(20px + env(safe-area-inset-top,0px));display:grid;gap:16px;align-content:start}
+.sheethead{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.sheethead h2{margin:0;font-family:var(--display);font-size:30px;font-weight:800;text-transform:uppercase;line-height:1.05;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px 12px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.section{display:grid;gap:8px}
+.section h3{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.callout{border-radius:8px;padding:10px 12px;font-size:14px}
+.callout.warn{background:var(--warn-soft);color:var(--warn)}
+.callout.info{background:var(--blue-soft);color:var(--blue)}
+form.edit{display:grid;gap:12px}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:600;min-width:0}
+label.f input,label.f select,label.f textarea{border:1px solid var(--line);background:var(--soft);border-radius:6px;padding:9px 10px;width:100%;min-width:0}
+textarea{min-height:70px;resize:vertical}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+.pick label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px;background:var(--soft)}
+.pick label:has(input:checked){background:var(--blue-soft);border-color:var(--blue);color:var(--blue);font-weight:600}
+.pick input{margin:0;accent-color:var(--blue)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+.crewrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.crewrow div{min-width:0;overflow-wrap:anywhere}
+.err{color:var(--bad);font-size:14px;margin:0}
+.ct{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.ct h2{margin:0;font-family:var(--display);font-size:26px;text-transform:uppercase;letter-spacing:.01em}
+.cthead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.ctm{font-size:14px;color:var(--muted);margin:0;overflow-wrap:anywhere}
+.ctgrid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+@media (max-width:760px){.ctgrid{grid-template-columns:1fr}}
+.ctjob{display:grid;gap:8px;min-width:0}
+.ctlab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+.cttime{font-family:var(--display);font-size:34px;font-weight:700;line-height:1}
+.ctcust{font-weight:700;font-size:18px;overflow-wrap:anywhere}
+.ctaddr{display:grid;gap:2px;font-size:14px;overflow-wrap:anywhere}
+.ctbtns{display:flex;flex-wrap:wrap;gap:8px}
+.house{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.hlab{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.hline{font-weight:600;overflow-wrap:anywhere}
+.hsrc{font-size:12px;color:var(--muted)}
+.house .btn.sm{min-height:34px;padding:6px 10px;font-size:13px}
+.afield{display:grid;gap:6px}
+.lookrow{display:flex;flex-wrap:wrap;gap:6px}
+.pastebox{display:grid;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px}
+.lookrow .btn.sm{min-height:34px;padding:6px 12px;font-size:13px}
+.astat{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.astat:empty{display:none}
+.astat b{color:var(--ok)}
+.astat .btn.sm{min-height:30px;padding:4px 10px;font-size:13px;margin-top:4px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;vertical-align:-1px;margin-right:4px}
+@media (prefers-reduced-motion:no-preference){.spin{animation:zspin .8s linear infinite}}
+@keyframes zspin{to{transform:rotate(360deg)}}
+.hgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media (max-width:600px){.hgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ctbtns .btn{text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
+.ctrow{display:flex;flex-wrap:wrap;gap:8px}
+.ctside{display:grid;gap:8px}
+.btn.clock{width:100%;min-height:68px;font-size:18px;display:grid;gap:2px;justify-items:center;background:var(--ok);border-color:var(--ok);color:var(--on-accent)}
+.btn.clock.out{background:var(--bad);border-color:var(--bad)}
+.btn.clock span{font-size:13px;font-weight:500}
+.btn.clock:disabled{opacity:.5;cursor:not-allowed}
+.invt{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.invt td{padding:7px 0;border-bottom:1px solid var(--line)}
+.invt td:last-child{text-align:right;white-space:nowrap}
+.invtotal{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.invtotal b{font-family:var(--display);font-size:36px;line-height:1}
+.sigwrap{display:grid;gap:6px}
+.sig{width:100%;height:160px;background:#FFFFFF;border:1.5px dashed var(--line);border-radius:10px;touch-action:none;cursor:crosshair;display:block}
+.sigimg{background:#FFFFFF;border:1px solid var(--line);border-radius:10px;max-width:100%;height:auto;display:block}
+.nte-ok{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 12px;font-size:14px}
+.nte-bad{background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:600}
+.invrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer}
+.invrow b{overflow-wrap:anywhere}
+.saved{display:flex;align-items:center;gap:10px;background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:12px 14px;font-weight:700}
+.saved svg{flex-shrink:0}
+/* Motion: quick ease-out, transform and opacity only, off for reduced motion */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.job,.invrow{transition:transform .12s ease-out,background-color .15s ease-out,border-color .15s ease-out}
+  .btn:active:not(:disabled),.job:active,.invrow:active{transform:scale(.97)}
+  .overlay{animation:zfade .2s ease-out}
+  .sheet{animation:zsheet .26s cubic-bezier(.23,1,.32,1)}
+  .saved svg{animation:zpop .32s cubic-bezier(.23,1,.32,1)}
+}
+@keyframes zfade{from{opacity:0}}
+@keyframes zsheet{from{transform:translateX(20px);opacity:0}}
+@keyframes zpop{from{transform:scale(.85);opacity:0}}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;align-items:start}
+.main>.board,.main>.month{min-width:0}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);min-width:0}
+@media (max-width:1050px){.main{grid-template-columns:1fr}.side{order:-1;position:static}}
+#crewpanel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+#crewpanel summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;min-height:32px}
+#crewpanel summary::-webkit-details-marker{display:none}
+.burger{font-size:18px;color:var(--muted)}
+.sidelist{display:grid;gap:12px;margin-top:12px}
+.srow{display:grid;gap:3px}
+.srow .sn{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.srow .sm{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.srow.off .sn span:first-child{color:var(--muted)}
+.sbar{height:6px;background:var(--soft);border-radius:999px;overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--blue);border-radius:999px}
+.job.nocrew{border:2px dashed var(--bad);border-left:4px solid var(--bad);background:var(--bad-soft)}
+.nocrewbox{display:grid;gap:2px;font-size:13px;color:var(--bad);min-width:0;overflow-wrap:anywhere;white-space:normal}
+.nocrewbox b{font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.job{overflow:hidden}
+.job>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.mjob.nocrew{border-left-color:var(--bad);background:var(--bad-soft)}
+.mjob.nocrew .mc{color:var(--bad);font-weight:700}
+.crewbar{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:8px}
+.crewbar .cbrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crewbar .cbt{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.crewbar .chip{font-size:13px;padding:4px 10px;font-variant-numeric:tabular-nums}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;padding:9px 14px;font-weight:600;cursor:pointer;min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.mhead{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.06em;padding:0 4px}
+.mcell{background:var(--soft);border:1px solid var(--line);border-radius:8px;min-height:120px;padding:6px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.mcell.out{opacity:.45}
+.mcell.today{border-color:var(--blue);box-shadow:inset 0 3px 0 var(--blue)}
+.mday{align-self:flex-start;border:0;background:none;font-weight:700;cursor:pointer;padding:2px 6px;border-radius:4px;font-variant-numeric:tabular-nums}
+.mcell.today .mday{background:var(--blue);color:var(--on-accent)}
+.mjob{border:0;border-left:3px solid var(--blue);background:var(--panel);text-align:left;font-size:12px;line-height:1.3;padding:4px 6px;border-radius:4px;cursor:pointer;width:100%;display:grid;gap:1px;min-width:0}
+.mjob .ml{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mjob .mc{color:var(--muted)}
+.crewline{font-size:13px;overflow-wrap:anywhere}
+.crewline b{font-weight:600}
+.hrsline{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mjob .mt{font-weight:700;font-variant-numeric:tabular-nums}
+.mjob.s-confirmed{border-left-color:var(--ok)}
+.mjob.s-done{opacity:.6;border-left-color:var(--muted)}
+.mjob.s-canceled{text-decoration:line-through;opacity:.5;border-left-color:var(--bad)}
+.mjob.cf{border-left-color:var(--bad);background:var(--bad-soft)}
+.mmore{border:0;background:none;color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;text-align:left;padding:2px 6px}
+.mcell{position:relative}
+.mtop{display:flex;align-items:center;justify-content:space-between;gap:2px;min-height:26px}
+.mwx{position:relative;display:inline-flex;align-items:center;line-height:0;flex-shrink:0}
+@media (max-width:380px){.mday{font-size:12px!important}.mcell.today .mday{padding:1px 2px!important}.mwx .wxe{font-size:10px!important}}
+.mdot{position:absolute;right:0;bottom:0;width:6px;height:6px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 1.5px var(--soft)}
+.mwx{padding:0 1px 1px 0}
+.mcell{overflow:hidden}
+.wxchip{display:inline-flex;align-items:center;gap:4px}
+.wxe{line-height:1;display:inline-block;flex-shrink:0}
+.mneed{display:none}
+.mcount{margin-top:auto}
+.mcount.bad{background:var(--bad);color:#fff}
+.mcount{display:none;border:0;background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:700;border-radius:999px;padding:2px 6px;cursor:pointer;align-self:flex-start}
+@media (max-width:700px){.mjob,.mmore,.mneed{display:none}.mcount{display:block}.mwx .wxe{font-size:11px!important}.mday{padding:1px 1px;font-size:13px}.mcell.today .mday{padding:1px 3px}.mtop{min-height:20px;gap:1px}.mdot{width:5px;height:5px}.mcell{gap:2px}.mcell{min-height:64px;padding:4px 3px}.mhead{font-size:10px;padding:0}.month{gap:3px}}
+@media (max-width:600px){
+  body{font-size:14px;padding-block:12px 40px}
+  .wrap{gap:12px}
+  .brand h1{font-size:20px}
+  .btn,.seg button{min-height:36px;padding:7px 11px;font-size:14px}
+  .btn.icon{padding:7px 10px}
+  .weeknav strong{font-size:17px;min-width:9ch}
+  .stat{padding:6px 10px;font-size:13px;white-space:nowrap;flex-shrink:0}
+  .summary{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px;-webkit-overflow-scrolling:touch}
+  .summary::-webkit-scrollbar{display:none}
+  .toolbar{flex-wrap:nowrap;gap:6px}
+  .seg button{padding:7px 10px}
+  .weeknav{gap:4px;min-width:0;flex:1;justify-content:center}
+  .weeknav strong{font-size:15px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #crewpanel{padding:10px 12px}
+  #crewpanel summary{font-size:16px;min-height:28px}
+}
+.btn.sm{padding:7px 12px}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:14px}
+</style>
+
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand"><span class="mark">ZMC</span><h1>Hub</h1></div>
+    <div class="appactions">
+      <button class="btn primary sm" id="newbtn" hidden>+ New job</button>
+      <div class="menuwrap">
+        <button class="btn icon menubtn" id="menubtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu" aria-label="Menu" hidden>☰<span class="dot" id="menudot" hidden></span></button>
+        <div class="menu" id="menu" role="menu" hidden>
+          <div class="mgroup" id="m-view">
+            <label for="who" class="mlabel">Show jobs for</label>
+            <select id="who" class="sel"><option value="">Everyone</option></select>
+          </div>
+          <div class="mgroup" id="m-biz">
+            <div class="mlabel">Business</div>
+            <button class="mitem" role="menuitem" id="quotebtn" hidden><span>Quotes</span><span class="badge" id="quotebadge" hidden></span></button>
+            <button class="mitem" role="menuitem" id="invbtn" hidden><span>Invoices</span></button>
+            <button class="mitem" role="menuitem" id="custbtn" hidden><span>Customers</span></button>
+            <button class="mitem" role="menuitem" id="repbtn" hidden><span>Reports</span></button>
+          </div>
+          <div class="mgroup" id="m-team">
+            <div class="mlabel">Team</div>
+            <button class="mitem" role="menuitem" id="crewbtn" hidden><span>Crew members</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="View"><button id="v-week" aria-pressed="true">Week</button><button id="v-month" aria-pressed="false">Month</button></div>
+    <div class="weeknav">
+      <button class="btn icon" id="prev" aria-label="Previous">‹</button>
+      <strong id="weeklabel">This week</strong>
+      <button class="btn icon" id="next" aria-label="Next">›</button>
+    </div>
+    <button class="btn" id="today">Today</button>
+  </div>
+
+  <div id="banner" class="banner" hidden></div>
+  <section id="crewtoday" class="ct" aria-live="polite" hidden></section>
+  <div class="summary" id="summary"></div>
+  <div class="crewbar" id="crewbar" hidden></div>
+  <div class="main">
+    <div class="board" id="board" aria-live="polite"></div>
+    <aside class="side" id="side" hidden>
+      <details id="crewpanel" open>
+        <summary><span class="burger" aria-hidden="true">☰</span><span id="sidetitle">Crew this week</span></summary>
+        <div id="sidelist" class="sidelist"></div>
+      </details>
+    </aside>
+  </div>
+</div>
+
+<input type="file" id="photoinput" accept="image/*" multiple hidden>
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo">
+  <img id="lb-img" alt="">
+  <div class="lbbar"><span id="lb-cap"></span><span style="display:flex;gap:8px"><button class="btn sm danger" id="lb-del" hidden>Delete photo</button><button class="btn sm" id="lb-close">Close</button></span></div>
+  <div class="lbconfirm" id="lb-confirm" hidden><span>Delete this photo for everyone?</span><span style="display:flex;gap:8px"><button class="btn sm danger" id="lb-yes">Yes, delete</button><button class="btn sm" id="lb-no">Keep it</button></span></div>
+</div>
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const WEATHER={"":{t:"No forecast yet",c:"mute"},clear:{t:"Clear",c:"ok"},cloudy:{t:"Cloudy",c:"mute"},rain:{t:"Rain likely",c:"warn"},hot:{t:"Hot (100°F+)",c:"warn"},wind:{t:"Windy",c:"warn"},fog:{t:"Fog",c:"warn"}};
+const WXE={clear:"☀️",cloudy:"☁️",rain:"🌧️",fog:"☁️",hot:"🔥",wind:"💨"};
+function wxSvg(k,sz){const e=WXE[k];if(!e)return"";return `<span class="wxe" style="font-size:${sz||16}px" aria-hidden="true">${e}</span>`;}
+function wxChip(k){const w=WEATHER[k]||WEATHER[""];return `<span class="chip ${w.c} wxchip">${wxSvg(k,14)}${w.t}</span>`;}
+const WXRANK=["rain","hot","wind","fog","cloudy","clear"];
+let forecast={};
+const WEATHER_TIP={rain:"Rain expected: bring extra blankets, plastic covers and floor runners.",hot:"Hot day: extra water, start early, take breaks in the shade.",wind:"Windy: strap loads tight and watch mattresses and boxes on the ramp.",fog:"Morning fog (tule fog): leave early and drive carefully."};
+const STATUS={booked:{t:"Booked",c:"chip"},confirmed:{t:"Confirmed",c:"chip ok"},done:{t:"Done",c:"chip mute"},canceled:{t:"Canceled",c:"chip bad"}};
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
+const monday=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x;};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+const fmtTime=t=>{if(!t)return"Time TBD";const[h,m]=t.split(":").map(Number);return`${((h+11)%12)+1}:${pad(m)} ${h<12?"am":"pm"}`;};
+const fh=n=>String(Math.round(n*10)/10);
+const endOf=j=>{if(!j.start||!j.hours)return"";const[h,m]=j.start.split(":").map(Number);const t=h*60+m+Math.round(Number(j.hours)*60);return`${pad(Math.floor(t/60)%24)}:${pad(t%60)}`;};
+const span=j=>{const e=endOf(j);if(!e)return fmtTime(j.start);const a=fmtTime(j.start),b=fmtTime(e);return a.slice(-2)===b.slice(-2)?`${a.slice(0,-3)} – ${b}`:`${a} – ${b}`;};
+const fmtDay=d=>d.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+const city=a=>{if(!a)return"";const p=a.split(",").map(s=>s.trim()).filter(Boolean);return p.length>1?p[p.length-2].replace(/\s+\d{5}$/,"").replace(/\s+[A-Z]{2}$/,""):p[0];};
+
+let db=null, canWrite=false, crew=[], jobs=[], week=monday(new Date());
+let view="week", month=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+try{if(localStorage.getItem("zmc-view")==="month")view="month";}catch(e){}
+let who=""; try{who=localStorage.getItem("zmc-who")||"";}catch(e){}
+let openJob=null, loaded={crew:false,jobs:false};
+let uid=null, myCrew="", myEntries=[], logs={}, logSubs={}, curJobId="";
+let invoices={}, invSubs={};
+// Pricing (from Brandon): $65 per mover per hour, 2-hour minimum, $1/mile truck, $20 materials + $5 water
+const S={rate:65,minHours:2,perMile:1,materials:20,water:5,phone:"(209) 326-5601",freeTrip:25,tripStep:25,tripHours:0.5};
+let quotes=[], sampler=null;
+let pstatus={};
+let pastLooks=[];
+const normAddr=a=>String(a||"").toLowerCase().replace(/[.,#]/g," ").replace(/\b\d{5}(-\d{4})?\b/g," ").replace(/\b(ca|california|usa)\b/g," ")
+  .replace(/\b(street)\b/g,"st").replace(/\b(avenue)\b/g,"ave").replace(/\b(place)\b/g,"pl").replace(/\b(drive)\b/g,"dr").replace(/\b(road)\b/g,"rd").replace(/\b(court)\b/g,"ct").replace(/\b(lane)\b/g,"ln").replace(/\b(boulevard)\b/g,"blvd").replace(/\b(circle)\b/g,"cir").replace(/\b(way)\b/g,"way")
+  .replace(/\s+/g," ").trim();
+let officePhotos={}, offSubs={}, crewPhotos={}, cphSubs={};
+function subOffice(pk){ // pk = "jobs:ID" or "quotes:ID"
+  if(!db||!pk||offSubs[pk])return; const [k,id]=pk.split(":"); if(!id)return;
+  offSubs[pk]=db.collection((k==="quotes"?"quotephotos/":"jobphotos/")+id+"/items").onSnapshot(q=>{officePhotos[pk]=q.docs.map(d=>({id:d.id,_path:(k==="quotes"?"quotephotos/":"jobphotos/")+id+"/items/"+d.id,...d.data()}));paintPhotos();},()=>{});
+}
+function subCrewPhotos(u){
+  if(!db||!u||cphSubs[u]||Object.keys(cphSubs).length>=50)return;
+  cphSubs[u]=db.collection("crewphotos/"+u+"/items").onSnapshot(q=>{crewPhotos[u]=q.docs.map(d=>({id:d.id,_u:u,_path:"crewphotos/"+u+"/items/"+d.id,...d.data()}));paintPhotos();},()=>{});
+}
+function photosFor(pk){
+  const [k,id]=pk.split(":"); const out=[...(officePhotos[pk]||[])];
+  if(k==="jobs")Object.values(crewPhotos).forEach(a=>a.forEach(p=>{if(p.jobId===id)out.push(p);}));
+  return out.sort((a,b)=>String(a.at||"").localeCompare(String(b.at||"")));
+}
+function photoBox(pk,canAdd){
+  subOffice(pk);
+  return `<div class="pwrap"><div class="pgrid" data-pk="${esc(pk)}"></div>${canAdd?`<div class="paddrow"><button type="button" class="btn sm" data-addphoto="${esc(pk)}">+ Add photos</button><span class="pstat" data-pstat="${esc(pk)}"></span></div>`:""}</div>`;
+}
+function paintPhotos(){
+  document.querySelectorAll(".pgrid[data-pk]").forEach(g=>{
+    const ps=photosFor(g.dataset.pk);
+    g.innerHTML=ps.map((p,i)=>`<button type="button" class="pthumb" data-photo="${esc(g.dataset.pk)}" data-pi="${i}" aria-label="Open photo ${i+1}"><img src="${p.data&&String(p.data).startsWith("data:image/")?p.data:""}" alt="" loading="lazy">${p.byName?`<span class="pby">${esc(p.byName)}</span>`:""}</button>`).join("");
+    const st=document.querySelector(`[data-pstat="${CSS.escape(g.dataset.pk)}"]`);if(st)st.textContent=pstatus[g.dataset.pk]||(ps.length?"":"No photos yet");
+  });
+}
+async function shrinkImage(file,maxSide){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=url;});
+    for(const [max,q] of (maxSide?[[maxSide,.82],[1280,.72]]:[[1280,.72],[1024,.62],[800,.55]])){
+      const r=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+      const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*r);c.height=Math.round(img.naturalHeight*r);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      const d=c.toDataURL("image/jpeg",q); if(d.length<450000)return d;
+    }
+    throw new Error("too big");
+  } finally{URL.revokeObjectURL(url);}
+}
+async function addPhotos(pk,files){
+  const [k,id]=pk.split(":"); let done=0, bad=0;
+  const say=t=>{pstatus[pk]=t;paintPhotos();};
+  for(const f of files){
+    say(`Adding photo ${done+bad+1} of ${files.length}…`);
+    try{
+      const data=await shrinkImage(f);
+      const me=crew.find(c=>c.id===(canWrite?"zach":myCrew));
+      const body={data,at:new Date().toISOString(),byName:canWrite?"Office":(me?me.name:"Crew")};
+      if(canWrite) await db.collection((k==="quotes"?"quotephotos/":"jobphotos/")+id+"/items").doc().set(body);
+      else await db.collection("crewphotos/"+uid+"/items").doc().set({...body,jobId:id,crewId:myCrew});
+      done++;
+    }catch(x){bad++;}
+  }
+  say(bad?`${done} added. ${bad} couldn't be added (try a JPG or PNG photo).`:`${done} photo${done===1?"":"s"} added.`);
+  setTimeout(()=>{delete pstatus[pk];paintPhotos();},6000);
+  if(!canWrite)subCrewPhotos(uid);
+}
+let lbPhoto=null, quoteSaver=null;
+function openPhoto(pk,i){
+  const p=photosFor(pk)[i]; if(!p)return; lbPhoto=p;
+  $("lb-img").src=p.data; $("lb-cap").textContent=`${p.byName||""}${p.at?" · "+new Date(p.at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}`;
+  $("lb-del").hidden=!(canWrite||(p._u&&p._u===uid)); $("lb-confirm").hidden=true; $("lightbox").hidden=false; $("lb-close").focus();
+}
+function closePhoto(){$("lightbox").hidden=true;$("lb-img").src="";lbPhoto=null;}
+const money=n=>"$"+(Math.round((Number(n)||0)*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const allInvoices=()=>Object.values(invoices).flat();
+function subInvoices(u){
+  if(!u||invSubs[u]||Object.keys(invSubs).length>=50)return;
+  invSubs[u]=db.collection("invoices/"+u+"/items").onSnapshot(q=>{invoices[u]=q.docs.map(d=>({id:d.id,_u:u,...d.data()}));render();},()=>{});
+}
+
+function crewName(id){const c=crew.find(x=>x.id===id);return c?c.name:"Removed crew member";}
+function jobCrew(j){return [j.leadId,...(j.crewIds||[])].filter(Boolean);}
+
+const mins=t=>{if(!t)return null;const[h,m]=t.split(":").map(Number);return h*60+m;};
+function overlaps(a,b){
+  // job times overlap, allowing 30 minutes to drive between jobs
+  const as=mins(a.start),bs=mins(b.start);if(as==null||bs==null)return true;
+  const ae=as+(Number(a.hours)||2)*60+30, be=bs+(Number(b.hours)||2)*60+30;
+  return as<be&&bs<ae;
+}
+function conflicts(j){
+  // crew members also booked on an overlapping job the same day
+  const mine=new Set(jobCrew(j));const out=[];
+  jobs.forEach(o=>{if(o.id===j.id||o.date!==j.date||o.status==="canceled"||j.status==="canceled"||!overlaps(j,o))return;
+    jobCrew(o).forEach(id=>{if(mine.has(id))out.push({id,other:o});});});
+  return out;
+}
+
+function render(){
+  // crew members only ever see their own jobs
+  const crewMode=!canWrite&&!!myCrew;
+  if(crewMode) who=myCrew;
+  $("m-view").hidden=crewMode; syncMenu();
+  renderToday();
+  // who filter options
+  const sel=$("who");const keep=who;
+  sel.innerHTML=`<option value="">Everyone</option>`+crew.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  sel.value=crew.some(c=>c.id===keep)?keep:"";
+  $("v-week").setAttribute("aria-pressed",view==="week");$("v-month").setAttribute("aria-pressed",view==="month");
+  let start,end;
+  if(view==="month"){start=new Date(month);end=new Date(month.getFullYear(),month.getMonth()+1,0);
+    $("weeklabel").textContent=month.toLocaleDateString(undefined,{month:"long",year:"numeric"});}
+  else{start=week;end=addDays(week,6);
+    const thisMon=monday(new Date());
+    $("weeklabel").textContent=+week===+thisMon?"This week":`${week.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;}
+
+  const visible=jobs.filter(j=>!who||jobCrew(j).includes(who));
+  const wk=visible.filter(j=>j.date>=iso(start)&&j.date<=iso(end));
+  const todayIso=iso(new Date());
+  const todayJobs=visible.filter(j=>j.date===todayIso&&j.status!=="canceled");
+  const guysToday=new Set(jobs.filter(j=>j.date===todayIso&&j.status!=="canceled").flatMap(jobCrew));
+  const weatherFlags=wk.filter(j=>["rain","hot","wind","fog"].includes(j.weather)&&j.status!=="canceled");
+  const conflictJobs=wk.filter(j=>conflicts(j).length);
+  const sum=[];
+  if(!loaded.jobs) sum.push(`<span class="stat">Loading the schedule…</span>`);
+  else{
+    sum.push(`<span class="stat">Today: <b>${todayJobs.length}</b> job${todayJobs.length===1?"":"s"}${who?"":` · <b>${guysToday.size}</b> guys out`}</span>`);
+    sum.push(`<span class="stat">${view==="month"?"This month":"This week"}: <b>${wk.filter(j=>j.status!=="canceled").length}</b> jobs</span>`);
+    const act=wk.filter(j=>j.status!=="canceled");
+    const hrs=act.reduce((s,j)=>s+(Number(j.hours)||0),0);
+    const crewHrs=act.reduce((s,j)=>s+(Number(j.hours)||0)*jobCrew(j).length,0);
+    const open=act.reduce((s,j)=>s+Math.max(0,(Number(j.movers)||0)-jobCrew(j).length),0);
+    sum.push(`<span class="stat">Est. hours: <b>${fh(hrs)}</b> · <b>${fh(crewHrs)}</b> crew-hours</span>`);
+    const nocrew=act.filter(j=>!jobCrew(j).length).length;
+    if(nocrew) sum.push(`<span class="stat" style="color:var(--bad);border-color:var(--bad)">⚠ No crew assigned: <b>${nocrew}</b> job${nocrew===1?"":"s"}</span>`);
+    sum.push(open?`<span class="stat" style="color:var(--warn)">Open spots: <b>${open}</b> mover${open===1?"":"s"} still needed</span>`:`<span class="stat" style="color:var(--ok)">Every job fully staffed</span>`);
+    if(weatherFlags.length) sum.push(`<span class="stat" style="color:var(--warn)">Weather to watch: <b>${weatherFlags.length}</b> job${weatherFlags.length===1?"":"s"}</span>`);
+    if(conflictJobs.length) sum.push(`<span class="stat" style="color:var(--bad)">Double-booked: <b>${conflictJobs.length}</b> job${conflictJobs.length===1?"":"s"}</span>`);
+  }
+  $("summary").innerHTML=sum.join("");
+
+  // Crew hours for the period, and who's working today
+  const cb=$("crewbar");
+  if(loaded.jobs&&crew.length){
+    const period=jobs.filter(j=>j.date>=iso(start)&&j.date<=iso(end)&&j.status!=="canceled");
+    const per=crew.map(c=>{const js=period.filter(j=>jobCrew(j).includes(c.id));return{c,n:js.length,h:js.reduce((s,j)=>s+(Number(j.hours)||0),0)};})
+      .sort((a,b)=>b.h-a.h);
+    const todays=jobs.filter(j=>j.date===todayIso&&j.status!=="canceled");
+    const on=crew.filter(c=>todays.some(j=>jobCrew(j).includes(c.id)));
+    const off=crew.filter(c=>!on.includes(c));
+    const max=Math.max(1,...per.map(p=>p.h));
+    $("sidetitle").textContent=`Crew ${view==="month"?"this month":"this week"}`;
+    $("sidelist").innerHTML=per.map(p=>`<div class="srow${p.n?"":" off"}">
+        <div class="sn"><span>${esc(p.c.name)}</span><span class="sm">${p.n?fh(p.h)+" hrs":"—"}</span></div>
+        <div class="sm">${p.n?`${p.n} job${p.n===1?"":"s"}`:"Not assigned"}${p.c.role&&p.c.role!=="Mover"?` · ${esc(p.c.role)}`:""}${clockedLine(p.c.id,start,end)}</div>
+        <div class="sbar" aria-hidden="true"><i style="width:${p.n?Math.max(4,p.h/max*100):0}%"></i></div></div>`).join("");
+    $("side").hidden=false;
+    cb.innerHTML=`<div class="cbrow"><span class="cbt">Today</span>${on.length?on.map(c=>`<span class="chip ok">${esc(c.name)} working</span>`).join(""):`<span class="chip mute">Nobody scheduled</span>`}${off.map(c=>`<span class="chip mute">${esc(c.name)} off</span>`).join("")}</div>`;
+    cb.hidden=false;
+  } else {cb.hidden=true;$("side").hidden=true;}
+
+  $("board").className=view==="month"?"month":"board";
+  if(view==="month"){$("board").innerHTML=monthHTML(visible,todayIso);return;}
+  let html="";
+  for(let i=0;i<7;i++){
+    const d=addDays(week,i), di=iso(d);
+    const list=wk.filter(j=>j.date===di).sort((a,b)=>(a.start||"99").localeCompare(b.start||"99"));
+    html+=`<section class="day${di===todayIso?" today":""}" aria-label="${esc(fmtDay(d))}">
+      <div class="dayhead"><b>${DAYS[i]}</b><span>${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span></div>
+      ${list.map(card).join("")||`<div class="empty">${loaded.jobs?"No jobs":""}</div>`}
+      ${canWrite?`<button class="addday" data-add="${di}">+ Add job</button>`:""}
+    </section>`;
+  }
+  $("board").innerHTML=html;
+  if(openJob){const j=jobs.find(x=>x.id===openJob);if(j&&!$("sheet").querySelector("form"))showJob(j);}
+}
+
+// ---- Clock-ins and the crew's "Today" view ----
+function entriesFor(crewId){const all=canWrite?Object.values(logs).flat():myEntries;return all.filter(e=>e.crewId===crewId);}
+function hoursOf(list,from,to){return list.reduce((s,e)=>{if(!e.in)return s;const a=new Date(e.in),d=iso(a);if(d<from||d>to)return s;const b=e.out?new Date(e.out):new Date();return s+Math.max(0,(b-a)/36e5);},0);}
+function clockedLine(id,start,end){
+  if(!canWrite)return"";
+  const es=entriesFor(id), h=hoursOf(es,iso(start),iso(end)), on=es.some(e=>!e.out);
+  return (h||on)?` · ${fh(h)} clocked${on?' · <b style="color:var(--ok)">● on the clock</b>':""}`:"";
+}
+const mapUrl=a=>"https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(a||"");
+const zillowUrl=a=>"https://www.zillow.com/homes/"+encodeURIComponent((a||"").replace(/,/g,"").trim().replace(/\s+/g,"-"))+"_rb/";
+const houseUrl=a=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(a||"");
+const HF=[["type","Type"],["gated","Gated"],["stories","Stories"],["beds","Beds"],["baths","Baths"],["sqft","Sq ft"],["garage","Garage"]];
+const HSEL={type:["","House","Condo","Townhouse","Apartment","Mobile home","Duplex"],gated:["","Yes","No"]};
+let LOOKUP_TASK="";
+const houseDone=h=>!!h&&(/not found/i.test(h.src||"")||["stories","beds","sqft"].every(k=>String(h[k]||"").trim()));
+let mcpNs=null;
+async function kickLookup(col,id,label){
+  try{
+    if(!mcpNs)mcpNs=await window.claude.use("mcp");
+    if(!mcpNs||!LOOKUP_TASK){toast("House details will fill in within the hour.");return;}
+    await mcpNs.callTool("Claude Code Remote","fire_trigger",{trigger_id:LOOKUP_TASK,text:`Run now for one document only: ${col}/${id}. Skip every other document this time.`});
+    toast(`Looking up the house for ${label||"this job"}. Details show up in a minute or two.`);
+  }catch(x){
+    const c=x&&x.code;
+    toast(c==="approval_required"||c==="not_in_manifest"?"Allow the house lookup when asked, or details fill in within the hour.":"House details will fill in within the hour.");
+  }
+}
+function toast(msg){let t=$("toast");if(!t){t=document.createElement("div");t.id="toast";t.className="toast";t.setAttribute("role","status");document.body.appendChild(t);}
+  t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>{t.hidden=true;},5000);}
+function houseLine(h){
+  if(!h)return"";
+  const n=x=>String(x||"").trim(), parts=[];
+  if(n(h.stories))parts.push(n(h.stories)==="1"?"1 story":n(h.stories)+" stories");
+  if(n(h.beds))parts.push(n(h.beds)+" bed");
+  if(n(h.baths))parts.push(n(h.baths)+" bath");
+  if(n(h.sqft))parts.push(Number(String(h.sqft).replace(/,/g,""))?Number(String(h.sqft).replace(/,/g,"")).toLocaleString()+" sq ft":n(h.sqft)+" sq ft");
+  if(n(h.garage))parts.push(/^\d+$/.test(n(h.garage))?n(h.garage)+"-car garage":/^(no|none|0)$/i.test(n(h.garage))?"no garage":"garage: "+n(h.garage));
+  if(n(h.built))parts.push("built "+n(h.built));
+  if(/^y/i.test(n(h.gated)))parts.push("gated community");
+  if(n(h.type))parts.unshift(n(h.type));
+  return parts.join(" · ");
+}
+function houseBox(label,addr,h){
+  if(!addr)return"";
+  const line=houseLine(h), auto=h&&/^auto/i.test(h.src||"");
+  return `<div class="house"><div class="hlab">${esc(label)}</div>
+    <div class="hline">${line?esc(line):`<span class="ctm">${h&&h.src&&/not found/i.test(h.src)?"No listing found for this address.":"House details not filled in yet."}</span>`}</div>
+    ${auto&&line?`<div class="hsrc">From public listings (${esc(String(h.src).replace(/^auto,?\s*/i,""))}). Double-check with the customer.</div>`:""}
+    <div class="ctbtns"><a class="btn sm" href="${zillowUrl(addr)}" target="_blank" rel="noopener">Look up on Zillow</a><a class="btn sm" href="${houseUrl(addr)}" target="_blank" rel="noopener">See the house</a></div></div>`;
+}
+function houseInputs(pre,h){
+  h=h||{};
+  return `<div class="hgrid">${HF.map(([k,l])=>HSEL[k]?`<label class="f">${l}<select id="${pre}-${k}">${HSEL[k].map(o=>`<option value="${o}" ${String(h[k]||"").toLowerCase()===o.toLowerCase()?"selected":""}>${o||"?"}</option>`).join("")}</select></label>`:`<label class="f">${l}<input type="text" inputmode="${k==="garage"?"text":"decimal"}" id="${pre}-${k}" value="${esc(h[k]||"")}" placeholder="${k==="garage"?"2, no":""}"></label>`).join("")}</div>`;
+}
+function readHouse(pre,old){
+  old=old||{}; const h={...old}; let changed=false;
+  HF.forEach(([k])=>{const el=$(pre+"-"+k);if(!el)return;let v=el.value.trim();const o=String(old[k]||"");if(HSEL[k]&&v.toLowerCase()===o.toLowerCase())v=o;if(v!==o)changed=true;h[k]=v;});
+  const auto=HF.some(([k])=>{const el=$(pre+"-"+k);return el&&el.dataset.auto==="1";});
+  const typed=HF.some(([k])=>{const el=$(pre+"-"+k);return el&&el.dataset.auto!=="1"&&el.value.trim()!==String(old[k]||"");});
+  if(auto&&lookExtra[pre])Object.entries(lookExtra[pre]).forEach(([k,v])=>{if(v&&!h[k])h[k]=v;});
+  if(typed)h.src="Zach"; else if(changed&&auto)h.src="auto, lookup, "+new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  return HF.some(([k])=>h[k])||h.src?h:null;
+}
+const lookSubs=[];const lookExtra={};
+function addrField(id,label,v){
+  return `<div class="afield"><label class="f">${label}<input type="text" id="${id}" value="${esc(v||"")}" list="addrlist" autocomplete="off" placeholder="Street, City, CA ZIP"></label><div class="lookrow">${canWrite?`<button type="button" class="btn sm primary" id="${id}-look">Look up address</button><button type="button" class="btn sm" id="${id}-pastebtn">Add Zillow details</button>`:""}<a class="btn sm" id="${id}-z" href="${zillowUrl(v||"")}" target="_blank" rel="noopener"${v?"":" hidden"}>Zillow</a><a class="btn sm" id="${id}-m" href="${houseUrl(v||"")}" target="_blank" rel="noopener"${v?"":" hidden"}>See the house</a></div><div class="astat" id="${id}-stat" aria-live="polite"></div>${canWrite?`<div class="pastebox" id="${id}-paste" hidden><p class="ctm" style="margin:0">In the Zillow app, screenshot the top of the listing (beds, baths, sq ft) and the <b>Facts &amp; features</b> section, then add the screenshots here.</p><div class="lookrow"><button type="button" class="btn sm primary" id="${id}-shot">Add screenshots</button><input type="file" id="${id}-shotin" accept="image/*" multiple hidden><button type="button" class="btn sm" id="${id}-pcancel">Cancel</button></div><details><summary class="ctm" style="cursor:pointer">Or paste text instead</summary><label class="f" style="margin-top:6px">Paste the home facts<textarea id="${id}-ptext" rows="4" placeholder="Paste text copied from Zillow (in a web browser)"></textarea></label><button type="button" class="btn sm" id="${id}-pfill" style="margin-top:6px">Fill in from text</button></details></div>`:""}</div>`;
+}
+function refreshAddrList(){
+  let dl=$("addrlist");if(!dl){dl=document.createElement("datalist");dl.id="addrlist";document.body.appendChild(dl);}
+  const set=new Set();[...jobs,...quotes].forEach(x=>{[x.pickup,x.dropoff].forEach(a=>{if(a&&!/^Example/i.test(x.customer||x.name||""))set.add(a.trim());});});
+  dl.innerHTML=[...set].sort().map(a=>`<option value="${esc(a)}"></option>`).join("");
+}
+const addrReady=a=>/^\d+[a-z]?\s+\S+/i.test(a)&&a.length>=10&&/,|\bCA\b|california/i.test(a);
+function wireAddr(id,pre,orig,onFill){
+  const inp=$(id),stat=$(id+"-stat");if(!inp||!canWrite||!db)return;
+  refreshAddrList();
+  const btn=$(id+"-look");if(!btn)return;
+  const zl=$(id+"-z"),ml=$(id+"-m");
+  inp.addEventListener("input",()=>{const a=inp.value.trim();zl.href=zillowUrl(a);ml.href=houseUrl(a);zl.hidden=ml.hidden=!a;});
+  const pb=$(id+"-pastebtn"),box=$(id+"-paste");
+  if(pb&&box){
+    if(!pre){pb.hidden=true;}
+    pb.onclick=()=>{box.hidden=!box.hidden;if(!box.hidden)$(id+"-ptext").focus();};
+    $(id+"-pcancel").onclick=()=>{box.hidden=true;};
+    const putFacts=h=>{
+      if(!["beds","baths","sqft","stories","garage","type"].some(k=>h[k])){stat.textContent="Couldn't find house details there. Try a screenshot of the Facts & features section.";return;}
+      HF.forEach(([k])=>{const el=$(pre+"-"+k);if(!el||!h[k])return;if(el.value.trim()&&el.dataset.auto!=="1")return;
+        if(HSEL[k]){const o=[...el.options].find(o=>o.value.toLowerCase()===String(h[k]).toLowerCase());if(!o)return;el.value=o.value;}else el.value=h[k];
+        el.dataset.auto="1";});
+      lookExtra[pre]={built:h.built||"",match:h.match||""};
+      box.hidden=true; $(id+"-ptext").value="";
+      stat.innerHTML=`<b>Filled in from Zillow:</b> ${esc(houseLine(h))}`;
+      const f=inp.closest("form"); if(f)f.dispatchEvent(new Event("input",{bubbles:true}));
+      if(onFill)onFill();
+    };
+    const FACTS_ASK=`Return JSON only: {"type": one of "House","Condo","Townhouse","Apartment","Mobile home","Duplex" or "", "gated": "Yes","No" or "", "stories": "1","2","3" or "", "beds": digits or "", "baths": e.g. "2.5" or "", "sqft": living area, digits only, or "", "garage": number of garage spaces as digits, "no", or "", "built": 4-digit year or "", "match": the home's full street address with ZIP if shown, or ""}. Use "" for anything not shown. Single family = "House". Ignore other homes, prices, values, agents and people.`;
+    $(id+"-shot").onclick=()=>$(id+"-shotin").click();
+    $(id+"-shotin").onchange=async()=>{
+      const fi=$(id+"-shotin"), files=[...fi.files].slice(0,4); fi.value=""; if(!files.length)return;
+      if(!sampler){stat.textContent="Reading screenshots needs Claude, which isn't available in this view. Paste text instead.";return;}
+      const sb=$(id+"-shot"); sb.disabled=true; stat.innerHTML=`<span class="spin" aria-hidden="true"></span> Reading your screenshot${files.length>1?"s":""}…`;
+      try{
+        const lim=sampler.limits?await sampler.limits().catch(()=>({})):{};
+        if(lim&&lim.images===false)throw {code:"no_images"};
+        const imgs=[];for(const f of files){const d=await shrinkImage(f,1600);imgs.push(await (await fetch(d)).blob());}
+        let r=await sampler.json(`These are screenshots of ONE home's listing in the Zillow app. Read the facts about that home. ${FACTS_ASK}`,{images:imgs});
+        if(typeof r==="string")r=JSON.parse(r);
+        const h={};if(r&&typeof r==="object")Object.keys(r).forEach(k=>{if(r[k]!=null&&String(r[k]).trim())h[k]=String(r[k]).trim();});
+        putFacts(h);
+      }catch(x){stat.textContent=x&&x.code==="not_granted"?"Allow Claude to read the screenshot when asked, then try again.":x&&x.code==="rate_limited"?"Too many requests. Try again in a minute.":x&&x.code==="no_images"?"Screenshots can't be read here. Paste text instead.":"Couldn't read that screenshot. Try one that shows beds, baths and sq ft clearly.";}
+      sb.disabled=false;
+    };
+    $(id+"-pfill").onclick=async()=>{
+      const txt=$(id+"-ptext").value.trim(); if(!txt){stat.textContent="Paste the Zillow text first.";return;}
+      const h=parseHomeFacts(txt); const fb=$(id+"-pfill");
+      const missing=["type","stories","beds","baths","sqft","garage"].filter(k=>!h[k]);
+      if(missing.length&&sampler){
+        fb.disabled=true; stat.innerHTML=`<span class="spin" aria-hidden="true"></span> Reading the details…`;
+        try{
+          let r=await sampler.json(`Extract facts about ONE home from this text copied from a real-estate website. ${FACTS_ASK}\n\nTEXT:\n${txt.slice(0,8000)}`);
+          if(typeof r==="string")r=JSON.parse(r);
+          if(r&&typeof r==="object")Object.keys(r).forEach(k=>{if(!h[k]&&r[k]!=null&&String(r[k]).trim())h[k]=String(r[k]).trim();});
+        }catch(x){}
+        fb.disabled=false;
+      }
+      putFacts(h);
+    };
+  }
+  btn.addEventListener("click",()=>{
+    const a=inp.value.trim();
+    if(!a){stat.textContent="Type the address first.";inp.focus();return;}
+    if(pre)HF.forEach(([k])=>{const el=$(pre+"-"+k);if(el&&el.dataset.auto==="1"){el.value="";el.dataset.auto="";}});
+    if(!addrReady(a)){stat.textContent="Add the city (e.g. \"123 Main St, Stockton, CA\") so we can look up the house.";return;}
+    startLookup(a,pre,stat,inp,onFill);
+  });
+}
+function applyLook(v,a,pre,stat,inp,onFill){
+      const h=v.house||{};
+      if(v.status==="not found"){stat.textContent="No listing found for this address. Fill in the house details by hand.";return;}
+      let n=0;
+      if(pre)HF.forEach(([k])=>{const el=$(pre+"-"+k);if(!el||el.value.trim()||!h[k])return;
+        if(HSEL[k]){const o=[...el.options].find(o=>o.value.toLowerCase()===String(h[k]).toLowerCase());if(!o)return;el.value=o.value;}else el.value=h[k];
+        el.dataset.auto="1";n++;});
+      if(pre)lookExtra[pre]={built:h.built||"",match:h.match||""};
+      const line=houseLine(h);
+      stat.innerHTML=`<b>Found:</b> ${esc(line||"listing found")}${h.match&&h.match.toLowerCase()!==a.toLowerCase()?`<br><span>Full address: ${esc(h.match)}</span> <button type="button" class="btn sm" data-useaddr>Use this</button>`:""}`;
+      const ub=stat.querySelector("[data-useaddr]");if(ub)ub.onclick=()=>{inp.value=h.match;ub.remove();inp.dispatchEvent(new Event("input",{bubbles:true}));};
+      if(pre){const el=$(pre+"-stories");if(el)el.closest("form").dispatchEvent(new Event("input",{bubbles:true}));}
+      if(onFill&&n)onFill();
+}
+async function startLookup(a,pre,stat,inp,onFill){
+  const na=normAddr(a);
+  const hit=pastLooks.find(l=>l.status==="done"&&l.house&&(normAddr(l.address)===na||normAddr(l.house.match)===na));
+  if(hit){applyLook(hit,a,pre,stat,inp,onFill);return;}
+  stat.innerHTML=`<span class="spin" aria-hidden="true"></span> Looking up ${esc(a)}… <span class="lkt"></span>`;
+  const t0=Date.now(), tick=setInterval(()=>{const e=stat.querySelector(".lkt");if(e)e.textContent=Math.round((Date.now()-t0)/1000)+"s";else clearInterval(tick);},1000);
+  lookSubs.push(()=>clearInterval(tick));
+  try{
+    const ref=db.collection("lookups").doc();
+    await ref.set({address:a,status:"pending",createdAt:new Date().toISOString()});
+    let fired=false;
+    try{if(!mcpNs)mcpNs=await window.claude.use("mcp");
+      if(mcpNs&&LOOKUP_TASK){await mcpNs.callTool("Claude Code Remote","fire_trigger",{trigger_id:LOOKUP_TASK,text:`Run now for one document only: lookups/${ref.id}. Skip every other document this time.`});fired=true;}}catch(x){}
+    if(!fired){stat.textContent="Lookup queued. House details fill in within the hour.";return;}
+    const timer=setTimeout(()=>{if(inp.value.trim()===a)stat.textContent="Still looking. If you save now, the details fill in on the job within the hour.";},240000);
+    const un=ref.onSnapshot(d=>{
+      if(!d||!d.exists)return; const v=d.data()||{};
+      if(v.status==="pending"||inp.value.trim()!==a)return;
+      clearTimeout(timer);un();clearInterval(tick);
+      applyLook(v,a,pre,stat,inp,onFill);
+    },()=>{});
+    lookSubs.push(()=>{clearTimeout(timer);un();});
+  }catch(x){stat.textContent="Couldn't start the lookup. Save the job and it fills in within the hour.";}
+}
+function parseHomeFacts(t){
+  const s=" "+t.replace(/\u00a0/g," ").replace(/[ \t]+/g," ")+" ", h={};
+  const num=x=>String(x).replace(/,/g,"");
+  let m;
+  if(m=s.match(/(\d+)\s*(?:bd|beds?|bedrooms?)\b/i)||s.match(/bedrooms?\s*:?\s*(\d+)/i))h.beds=m[1];
+  if(m=s.match(/(\d+(?:\.\d+)?)\s*(?:ba|baths?|bathrooms?)\b/i)||s.match(/bathrooms?\s*:?\s*(\d+(?:\.\d+)?)/i))h.baths=m[1];
+  if(!h.baths&&(m=s.match(/full bathrooms?\s*:?\s*(\d+)/i))){let b=Number(m[1]);const hb=s.match(/(?:half|1\/2) bathrooms?\s*:?\s*(\d+)/i);if(hb)b+=0.5*Number(hb[1]);h.baths=String(b);}
+  if(m=s.match(/(\d{1,3}(?:,\d{3})+|\d{3,5})\s*(?:sq\.?\s*ft|sqft|square feet)/i))h.sqft=num(m[1]);
+  if(m=s.match(/(?:total interior livable area|living area|interior livable area)\s*:?\s*(\d{1,3}(?:,\d{3})+|\d{3,5})/i))h.sqft=num(m[1]);
+  if(m=s.match(/stories\s*:?\s*(\d)/i)||s.match(/levels?\s*:?\s*(one|two|three|1|2|3)\b/i)){const w={one:"1",two:"2",three:"3"};h.stories=w[m[1].toLowerCase()]||m[1];}
+  else if(/single[- ]stor(y|ey)|one[- ]stor(y|ey)/i.test(s))h.stories="1"; else if(/two[- ]stor(y|ey)|2[- ]stor(y|ey)/i.test(s))h.stories="2";
+  if(m=s.match(/garage spaces?\s*:?\s*(\d+)/i)||s.match(/attached garage spaces?\s*:?\s*(\d+)/i)||s.match(/(\d)[- ]car garage/i))h.garage=m[1];
+  else if(/no garage/i.test(s))h.garage="no";
+  if(m=s.match(/(?:built in|year built\s*:?)\s*(1[89]\d\d|20\d\d)/i))h.built=m[1];
+  if(/single[ -]?family/i.test(s))h.type="House"; else if(/condo/i.test(s))h.type="Condo"; else if(/townho/i.test(s))h.type="Townhouse"; else if(/apartment/i.test(s))h.type="Apartment"; else if(/manufactured|mobile home/i.test(s))h.type="Mobile home"; else if(/duplex/i.test(s))h.type="Duplex";
+  if(/gated/i.test(s))h.gated="Yes";
+  if(m=s.match(/\d+ [A-Za-z0-9 .]+?, [A-Za-z .]+?, CA \d{5}/))h.match=m[0].trim();
+  return h;
+}
+function houseFor(pre,old,addrChanged){const h=readHouse(pre,old);const auto=HF.some(([k])=>{const el=$(pre+"-"+k);return el&&el.dataset.auto==="1";});if(addrChanged&&h&&h.src!=="Zach"&&!auto)return null;return h;}
+const clockTime=s=>new Date(s).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+function renderToday(){
+  const el=$("crewtoday");
+  const preview=canWrite&&!!who;
+  const meId=canWrite?who:myCrew;
+  if(!canWrite&&uid&&loaded.crew&&!myCrew){
+    el.innerHTML=`<h2>Welcome! Who are you?</h2>
+      <p class="ctm">Pick your name once and this page will show only your jobs.</p>
+      <div class="ctrow"><label for="claim" class="ctm" style="align-self:center">I'm</label><select id="claim" class="sel">${crew.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select><button class="btn primary" data-claim="1">That's me</button></div>
+      <p class="err" id="claim-err" hidden></p>`;
+    el.hidden=false;return;
+  }
+  if(!meId||!loaded.jobs){el.hidden=true;curJobId="";return;}
+  const me=crew.find(c=>c.id===meId); if(!me){el.hidden=true;return;}
+  const t=iso(new Date());
+  const mine=jobs.filter(j=>jobCrew(j).includes(meId)&&j.date>=t&&!["canceled","done"].includes(j.status))
+    .sort((a,b)=>(a.date+(a.start||"99")).localeCompare(b.date+(b.start||"99")));
+  const j=mine[0]; curJobId=j?j.id:"";
+  const es=canWrite?entriesFor(meId):myEntries;
+  const open=es.find(e=>!e.out);
+  const mon=monday(new Date());
+  const wkH=hoursOf(es,iso(mon),iso(addDays(mon,6)));
+  const openJ=open?jobs.find(x=>x.id===open.jobId):null;
+  let job;
+  if(j){
+    const w=WEATHER[j.weather||""]||WEATHER[""], isToday=j.date===t;
+    const others=jobCrew(j).filter(id=>id!==meId).map(id=>esc(crewName(id))+(id===j.leadId?" (lead)":"")).join(", ");
+    job=`<div class="ctjob">
+      <div class="ctlab">${isToday?"Your job today":"Your next job · "+esc(fmtDay(parse(j.date)))}</div>
+      <div class="cttime">${span(j)}</div>
+      <div class="ctcust">${esc(j.customer||"Job")}${j.moveType?` · ${esc(j.moveType)}`:""}</div>
+      <div class="ctaddr"><span>Pickup: ${esc(j.pickup||"Not set")}</span>${j.dropoff?`<span>Drop-off: ${esc(j.dropoff)}</span>`:""}</div>
+      <div class="ctbtns">${j.pickup?`<a class="btn primary" href="${mapUrl(j.pickup)}" target="_blank" rel="noopener">Navigate to pickup</a>`:""}${j.dropoff?`<a class="btn" href="${mapUrl(j.dropoff)}" target="_blank" rel="noopener">Navigate to drop-off</a>`:""}${(j.leadId===meId||me.role==="Crew lead")&&!preview?(allInvoices().some(v=>v.jobId===j.id)?`<span class="chip ok" style="align-self:center">Invoiced ✓</span>`:`<button class="btn" data-invoice="${esc(j.id)}">Finish job and invoice</button>`):""}</div>
+      ${houseBox("House at pickup",j.pickup,j.house)}
+      <div class="house"><div class="hlab">Photos</div>${photoBox("jobs:"+j.id,!preview)}</div>${j.dropoff&&houseLine(j.dropHouse)?houseBox("House at drop-off",j.dropoff,j.dropHouse):""}
+      ${j.phone?`<p class="ctm">Customer: <a href="tel:${esc(j.phone.replace(/[^0-9+]/g,""))}">${esc(j.phone)}</a></p>`:""}
+      <p class="ctm">${others?`With ${others}`:"No one else assigned yet"}</p>
+      <div class="chips">${wxChip(j.weather||"")}${j.items?`<span class="chip lead">${esc(j.items)}</span>`:""}</div>
+      ${WEATHER_TIP[j.weather]?`<div class="callout warn">${WEATHER_TIP[j.weather]}</div>`:""}
+      ${j.notes?`<p class="ctm" style="white-space:pre-wrap">${esc(j.notes)}</p>`:""}
+    </div>`;
+  } else job=`<div class="ctjob"><div class="ctcust">No jobs coming up</div><p class="ctm">New jobs show up here as soon as Zach adds you.</p></div>`;
+  const clockBtn=open
+    ?`<button class="btn clock out" data-clock="out"${preview?" disabled":""}>Clock out<span>On the clock since ${esc(clockTime(open.in))}${openJ?" · "+esc(openJ.customer||""):""}</span></button>`
+    :`<button class="btn clock" data-clock="in"${(!j||preview)?" disabled":""}>Clock in${j?`<span>${esc(j.customer||"")}</span>`:""}</button>`;
+  const recent=es.filter(e=>e.in).sort((a,b)=>b.in.localeCompare(a.in)).slice(0,3).map(e=>{
+    const jj=jobs.find(x=>x.id===e.jobId);const h=((e.out?new Date(e.out):new Date())-new Date(e.in))/36e5;
+    return `<p class="ctm">${esc(new Date(e.in).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))} · ${esc(clockTime(e.in))} – ${e.out?esc(clockTime(e.out)):"now"} · <b>${fh(h)} h</b>${jj?" · "+esc(jj.customer||""):""}</p>`;}).join("");
+  el.innerHTML=`<div class="cthead"><h2>${preview?"Preview: ":""}Hi ${esc(me.name)}</h2><span class="ctm"><b>${fh(wkH)}</b> hrs clocked this week</span></div>
+    ${preview?`<p class="ctm">This is what ${esc(me.name)} sees when he opens this page. Clocking in only works from his own account. Pick "Everyone" to leave the preview.</p>`:""}
+    <div class="ctgrid">${job}<div class="ctside">${clockBtn}<p class="err" id="clock-err" hidden></p>${recent?`<div><p class="ctm" style="font-weight:700">Recent time</p>${recent}</div>`:""}</div></div>`;
+  el.hidden=false; paintPhotos();
+}
+
+function monthHTML(visible,todayIso){
+  const first=new Date(month), last=new Date(month.getFullYear(),month.getMonth()+1,0);
+  const gs=monday(first), ge=addDays(monday(last),6);
+  const wIcon={rain:1,hot:1,wind:1,fog:1};
+  let h=DAYS.map(d=>`<div class="mhead">${d}</div>`).join("");
+  for(let d=new Date(gs);d<=ge;d=addDays(d,1)){
+    const di=iso(d), inM=d.getMonth()===month.getMonth();
+    const list=visible.filter(j=>j.date===di).sort((a,b)=>(a.start||"99").localeCompare(b.start||"99"));
+    const live=list.filter(j=>!["canceled","done"].includes(j.status));
+    const short=live.filter(j=>jobCrew(j).length<(Number(j.movers)||2));
+    const fc=forecast[di]||{}, cand=[fc.w,...live.map(j=>j.weather)].filter(Boolean);
+    const dw=WXRANK.find(w=>cand.includes(w))||"";
+    const away=live.filter(j=>j.weather&&j.weather===dw&&fc.w!==dw).length>0;
+    const wtitle=dw?(WEATHER[dw].t+(away?" at a job site":fc.w?" in Stockton":"")+(fc.hi?` · high ${fc.hi}°`:"")):"";
+    const st=t=>{if(!t)return"";const[hh,mm]=t.split(":").map(Number);return`${((hh+11)%12)+1}${mm?":"+pad(mm):""}${hh<12?"a":"p"}`;};
+    h+=`<div class="mcell${inM?"":" out"}${di===todayIso?" today":""}">
+      <div class="mtop"><button class="mday" data-gotoweek="${di}" aria-label="Open the week of ${esc(fmtDay(d))}">${d.getDate()}</button>${dw?`<span class="mwx" title="${esc(wtitle)}" role="img" aria-label="${esc(wtitle)}">${wxSvg(dw,18)}${away?'<i class="mdot"></i>':""}</span>`:""}</div>
+      ${short.length?`<span class="mneed">⚠ ${short.length===1?"Needs crew":short.length+" need crew"}</span>`:""}
+      ${list.slice(0,3).map(j=>{const e=endOf(j),hrs=Number(j.hours)||0,n=jobCrew(j).length;
+        const who=n?[j.leadId?"★"+crewName(j.leadId):"★?",...(j.crewIds||[]).map(crewName)].join(", "):"⚠ No crew assigned";
+        return `<button class="mjob s-${esc(j.status||"booked")}${conflicts(j).length?" cf":""}${n?"":" nocrew"}" data-job="${esc(j.id)}" title="${esc(span(j)+" · "+(j.customer||"")+" · "+who)}">
+          <span class="ml"><span class="mt">${st(j.start)}${e?"–"+st(e):""}</span>${hrs?` · ${fh(hrs)}h · ${fh(hrs*n)} crew-h`:""}</span>
+          <span class="ml">${wIcon[j.weather]?wxSvg(j.weather,12)+" ":""}${esc((j.customer||"Job").replace(/^Example:\s*/,""))}</span>
+          <span class="ml mc">${esc(who)}</span></button>`;}).join("")}
+      ${list.length>3?`<button class="mmore" data-gotoweek="${di}">+${list.length-3} more</button>`:""}
+      ${list.length?`<button class="mcount${short.length?" bad":""}" data-gotoweek="${di}" aria-label="${list.length} jobs${short.length?", "+short.length+" need crew":""}, open the week">${list.length}</button>`:""}
+    </div>`;
+  }
+  return h;
+}
+
+function card(j){
+  const st=STATUS[j.status]||STATUS.booked, w=WEATHER[j.weather||""]||WEATHER[""];
+  const need=Number(j.movers)||0, have=jobCrew(j).length, hrs=Number(j.hours)||0;
+  const leadLine=j.leadId?`<div class="crewline">★ Lead: <b>${esc(crewName(j.leadId))}</b></div>`:`<div class="crewline" style="color:var(--warn)">★ Lead: not assigned</div>`;
+  const subs=(j.crewIds||[]).map(id=>esc(crewName(id)));
+  const subLine=`<div class="crewline">Movers: ${subs.length?`<b>${subs.join(", ")}</b>`:`<span style="color:var(--muted)">none yet</span>`}</div>`;
+  const hrsLine=`<div class="hrsline">${hrs?`${fh(hrs)} hrs · `:""}${have} guy${have===1?"":"s"}${hrs&&have?` · ${fh(hrs*have)} crew-hrs total`:""}</div>`;
+  const short=have&&need&&have<need?`<span class="chip warn">Need ${need-have} more</span>`:"";
+  const cf=conflicts(j).length?`<span class="chip bad">Double-booked</span>`:"";
+  const route=j.dropoff?`${esc(city(j.pickup))} → ${esc(city(j.dropoff))}`:esc(city(j.pickup));
+  return `<button class="job s-${esc(j.status||"booked")}${have?"":" nocrew"}" data-job="${esc(j.id)}">
+    ${have?"":`<div class="nocrewbox"><b>⚠ No crew assigned</b><span>Needs ${need||2} movers</span></div>`}
+    <div class="jrow"><span class="time">${span(j)}</span><span class="${st.c}">${st.t}</span></div>
+    ${hrsLine}
+    <div class="cust">${esc(j.customer||"Untitled job")}</div>
+    ${route?`<div class="route">${route}</div>`:""}
+    ${have?leadLine+subLine:`<div class="crewline" style="color:var(--bad)">${canWrite?"Tap to assign a lead and movers":"Crew not assigned yet"}</div>`}
+    ${short||cf?`<div class="chips">${short}${cf}</div>`:""}
+    <div class="chips">${wxChip(j.weather||"")}${j.truck==="theirs"?`<span class="chip mute">Their truck</span>`:`<span class="chip mute">Our truck</span>`}</div>
+  </button>`;
+}
+
+// ---- Invoices ----
+function invoiceForm(j){
+  openJob=null;
+  const leadId=canWrite?(j.leadId||""):myCrew;
+  const src=canWrite?Object.values(logs).flat().filter(e=>e.crewId===leadId):myEntries;
+  let clocked=src.filter(e=>e.jobId===j.id&&e.in&&e.out).reduce((s,e)=>s+(new Date(e.out)-new Date(e.in))/36e5,0);
+  clocked=Math.ceil(clocked*4)/4;
+  const hours=clocked||Number(j.hours)||S.minHours;
+  const movers=jobCrew(j).length||Number(j.movers)||2;
+  const ours=j.truck!=="theirs";
+  openSheet(`
+    <div class="sheethead"><div><div class="ctlab">Finish job and invoice</div><h2 id="sheettitle">${esc(j.customer||"Job")}</h2></div><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <p class="ctm">${esc(fmtDay(parse(j.date)))}${clocked?` · ${fh(clocked)} hrs from clock-in`:" · hours from the job estimate, change if needed"}</p>
+    <form class="edit" id="invform" novalidate>
+      <div class="frow">
+        <label class="f">Hours on the job<input type="number" id="i-hours" min="0" step="0.25" value="${hours}"></label>
+        <label class="f">Movers<input type="number" id="i-movers" min="1" step="1" value="${movers}"></label>
+      </div>
+      <div class="frow">
+        <label class="f">Travel / trip charge ($)<input type="number" id="i-travel" min="0" step="1" value="0"></label>
+        <label class="f">Truck miles${ours?"":" (their truck)"}<input type="number" id="i-miles" min="0" step="1" value="0" ${ours?"":"disabled"}></label>
+        <label class="f">Materials and water ($)<input type="number" id="i-mat" min="0" step="1" value="${S.materials+S.water}"></label>
+      </div>
+      <div class="frow">
+        <label class="f">Extra item<input type="text" id="i-xdesc" placeholder="e.g. 10 extra boxes"></label>
+        <label class="f">Extra amount ($)<input type="number" id="i-x" min="0" step="1" value="0"></label>
+        <label class="f">Not-to-exceed price ($)<input type="number" id="i-nte" min="0" step="1" value="${esc(j.nte||"")}"></label>
+      </div>
+      <table class="invt"><tbody id="i-lines"></tbody></table>
+      <div class="invtotal"><span>Total due</span><b id="i-total">$0.00</b></div>
+      <div id="i-nte-msg"></div>
+      <div class="sigwrap">
+        <label class="f" for="sig">Customer signature</label>
+        <canvas id="sig" class="sig" aria-label="Signature pad: the customer signs here with a finger"></canvas>
+        <div class="actions"><span class="ctm">Hand the phone to the customer to sign.</span><button type="button" class="btn" id="sig-clear">Clear</button></div>
+      </div>
+      <div class="frow">
+        <label class="f">Customer's printed name<input type="text" id="i-name" value="${esc((j.customer||"").replace(/^Example:\s*/,""))}"></label>
+        <label class="f">Payment<select id="i-paid"><option value="">Not paid yet</option><option>Cash</option><option>Zelle</option><option>Card</option><option>Check</option></select></label>
+      </div>
+      <p class="err" id="i-err" hidden></p>
+      <div class="actions"><button class="btn primary" type="submit">Save invoice</button><button class="btn" type="button" data-close>Cancel</button></div>
+    </form>`);
+  const getSig=wireSig();
+  const num=id=>Math.max(0,parseFloat($(id).value)||0);
+  function calc(){
+    const hrs=num("i-hours"), billed=Math.max(S.minHours,hrs), mv=Math.max(1,num("i-movers"));
+    const labor=billed*mv*S.rate, travel=num("i-travel"), miles=ours?num("i-miles"):0, truck=miles*S.perMile, mat=num("i-mat"), extra=num("i-x");
+    const total=labor+travel+truck+mat+extra, nte=num("i-nte");
+    return {hours:hrs,billed,movers:mv,rate:S.rate,labor,travel,truckMiles:miles,truckCharge:truck,materials:mat,extraDesc:$("i-xdesc").value.trim(),extra,total,nte};
+  }
+  function show(){
+    const c=calc();
+    $("i-lines").innerHTML=`<tr><td>Labor · ${c.movers} movers × ${fh(c.billed)} hrs × ${money(c.rate)}${c.billed>c.hours?" (2-hr minimum)":""}</td><td>${money(c.labor)}</td></tr>
+      ${c.travel?`<tr><td>Travel / trip charge</td><td>${money(c.travel)}</td></tr>`:""}
+      ${c.truckCharge?`<tr><td>Truck mileage · ${c.truckMiles} mi × ${money(S.perMile)}</td><td>${money(c.truckCharge)}</td></tr>`:""}
+      ${c.materials?`<tr><td>Materials and crew water</td><td>${money(c.materials)}</td></tr>`:""}
+      ${c.extra?`<tr><td>${esc(c.extraDesc||"Extra")}</td><td>${money(c.extra)}</td></tr>`:""}`;
+    $("i-total").textContent=money(c.total);
+    $("i-nte-msg").innerHTML=c.nte?(c.total<=c.nte?`<div class="nte-ok">✓ Under the not-to-exceed price of ${money(c.nte)}</div>`:`<div class="nte-bad">Over the not-to-exceed price of ${money(c.nte)}. Lower the total to ${money(c.nte)} or less before saving.</div>`):"";
+  }
+  $("invform").addEventListener("input",show); show();
+  $("invform").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const c=calc(), err=$("i-err");
+    if(c.nte&&c.total>c.nte){err.textContent=`The total is over the not-to-exceed price of ${money(c.nte)}.`;err.hidden=false;return;}
+    const signature=getSig();
+    if(!signature){err.textContent="Have the customer sign before saving.";err.hidden=false;return;}
+    const body={...c,jobId:j.id,customer:j.customer||"",leadCrewId:leadId,byOwner:canWrite,signature,signedName:$("i-name").value.trim(),paid:$("i-paid").value,createdAt:new Date().toISOString()};
+    const btn=e.submitter; if(btn)btn.disabled=true;
+    try{const ref=db.collection("invoices/"+uid+"/items").doc();await ref.set(body);showInvoice({id:ref.id,_u:uid,...body},true);}
+    catch(x){err.textContent=x&&x.code==="quota_exceeded"?"The invoice store is full. Ask Brandon to clear old invoices.":"Couldn't save the invoice. Check your connection and try again.";err.hidden=false;if(btn)btn.disabled=false;}
+  });
+}
+function wireSig(){
+  const c=$("sig"), ctx=c.getContext("2d"); let drawing=false, dirty=false;
+  const r=c.getBoundingClientRect(), d=window.devicePixelRatio||1;
+  c.width=Math.round(r.width*d); c.height=Math.round(r.height*d); ctx.scale(d,d);
+  ctx.lineWidth=2.4; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="#111821";
+  const pt=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top];};
+  c.addEventListener("pointerdown",e=>{drawing=true;dirty=true;try{c.setPointerCapture(e.pointerId);}catch(x){}const[x,y]=pt(e);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.1,y+.1);ctx.stroke();});
+  c.addEventListener("pointermove",e=>{if(!drawing)return;const[x,y]=pt(e);ctx.lineTo(x,y);ctx.stroke();});
+  ["pointerup","pointercancel","pointerleave"].forEach(t=>c.addEventListener(t,()=>{drawing=false;}));
+  $("sig-clear").onclick=()=>{ctx.clearRect(0,0,c.width,c.height);dirty=false;};
+  return ()=>{
+    if(!dirty)return"";
+    // shrink to a light image before saving
+    const out=document.createElement("canvas"); out.width=600; out.height=Math.round(600*c.height/c.width);
+    const o=out.getContext("2d"); o.fillStyle="#FFFFFF"; o.fillRect(0,0,out.width,out.height); o.drawImage(c,0,0,out.width,out.height);
+    return out.toDataURL("image/png");
+  };
+}
+function invoiceText(v){
+  const lines=[`Zachery's Moving Co. · Invoice`,`${(v.customer||"").replace(/^Example:\s*/,"")} · ${new Date(v.createdAt).toLocaleDateString()}`,
+    `Labor: ${v.movers} movers × ${fh(v.billed)} hrs × ${money(v.rate)} = ${money(v.labor)}`];
+  if(v.travel)lines.push(`Travel / trip charge: ${money(v.travel)}`);
+  if(v.truckCharge)lines.push(`Truck mileage (${v.truckMiles} mi): ${money(v.truckCharge)}`);
+  if(v.materials)lines.push(`Materials and crew water: ${money(v.materials)}`);
+  if(v.extra)lines.push(`${v.extraDesc||"Extra"}: ${money(v.extra)}`);
+  lines.push(`Total: ${money(v.total)}`, v.paid?`Paid by ${v.paid}. Thank you!`:`Payment due. Zelle, cash, check or card accepted.`, `Questions? Call or text ${S.phone}`);
+  return lines.join("\n");
+}
+function showInvoice(v,justSaved){
+  openJob=null;
+  const by=crewName(v.leadCrewId)||"Owner";
+  openSheet(`
+    <div class="sheethead"><div><div class="ctlab">Invoice · ${esc(new Date(v.createdAt).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}))}</div><h2 id="sheettitle">${esc(v.customer||"Customer")}</h2></div><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    ${justSaved?`<div class="saved"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>Invoice saved. Zach can see it now.</div>`:""}
+    <p class="ctm">Made by ${esc(v.byOwner?"the owner":by)} · ${v.paid?`<b style="color:var(--ok)">Paid · ${esc(v.paid)}</b>`:`<b style="color:var(--warn)">Not paid yet</b>`}</p>
+    <table class="invt"><tbody>
+      <tr><td>Labor · ${v.movers} movers × ${fh(v.billed)} hrs × ${money(v.rate)}</td><td>${money(v.labor)}</td></tr>
+      ${v.travel?`<tr><td>Travel / trip charge</td><td>${money(v.travel)}</td></tr>`:""}
+      ${v.truckCharge?`<tr><td>Truck mileage · ${v.truckMiles} mi</td><td>${money(v.truckCharge)}</td></tr>`:""}
+      ${v.materials?`<tr><td>Materials and crew water</td><td>${money(v.materials)}</td></tr>`:""}
+      ${v.extra?`<tr><td>${esc(v.extraDesc||"Extra")}</td><td>${money(v.extra)}</td></tr>`:""}
+    </tbody></table>
+    <div class="invtotal"><span>Total</span><b>${money(v.total)}</b></div>
+    ${v.nte?(v.total<=v.nte?`<div class="nte-ok">✓ Under the not-to-exceed price of ${money(v.nte)}</div>`:`<div class="nte-bad">Over the not-to-exceed price of ${money(v.nte)}</div>`):""}
+    ${v.signature?`<div class="sigwrap"><span class="ctm">Signed by ${esc(v.signedName||"customer")}</span><img class="sigimg" src="${v.signature}" alt="Customer signature"></div>`:""}
+    <div class="section"><h3>Text for the customer</h3><pre class="ctm" id="inv-text" style="white-space:pre-wrap;margin:0;font-family:inherit;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px">${esc(invoiceText(v))}</pre>
+      <div class="actions"><button class="btn primary" id="inv-copy">Copy text</button><span class="ctm">Paste it into a text or email to the customer.</span></div></div>
+    ${canWrite?`<div class="frow"><label class="f">Payment<select id="inv-paid"><option value="">Not paid yet</option>${["Cash","Zelle","Card","Check"].map(m=>`<option ${v.paid===m?"selected":""}>${m}</option>`).join("")}</select></label></div>
+      <div class="actions"><button class="btn" id="inv-save">Save payment</button><span class="ctm" id="inv-msg"></span></div>`:""}`);
+  $("inv-copy").onclick=()=>{const t=$("inv-text").textContent,b=$("inv-copy");
+    navigator.clipboard.writeText(t).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy text",1500);})
+    .catch(()=>{const rg=document.createRange();rg.selectNodeContents($("inv-text"));const s=getSelection();s.removeAllRanges();s.addRange(rg);b.textContent="Selected, copy it";});};
+  if(canWrite)$("inv-save").onclick=async()=>{
+    try{await db.doc("invoices/"+v._u+"/items/"+v.id).update({paid:$("inv-paid").value,paidAt:$("inv-paid").value?new Date().toISOString():""});$("inv-msg").textContent="Saved";}
+    catch(x){$("inv-msg").textContent="Couldn't save. Try again.";}
+  };
+}
+function showInvoices(){
+  openJob=null;
+  const list=allInvoices().sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+  const unpaid=list.filter(v=>!v.paid), paid=list.filter(v=>v.paid);
+  const row=v=>`<button class="invrow" data-inv="${esc(v._u+"/"+v.id)}"><b>${esc(v.customer||"Customer")}</b><b>${money(v.total)}</b>
+    <span class="ctm">${esc(new Date(v.createdAt).toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · by ${esc(v.byOwner?"owner":crewName(v.leadCrewId))}</span><span class="chip ${v.paid?"ok":"warn"}">${v.paid?"Paid · "+esc(v.paid):"Not paid"}</span></button>`;
+  openSheet(`
+    <div class="sheethead"><h2 id="sheettitle">Invoices</h2><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <div class="summary"><span class="stat">Waiting to be paid: <b>${money(unpaid.reduce((s,v)=>s+(v.total||0),0))}</b></span><span class="stat">Paid: <b>${money(paid.reduce((s,v)=>s+(v.total||0),0))}</b></span></div>
+    ${list.length?`<div style="display:grid;gap:8px">${list.map(row).join("")}</div>`:`<p class="ctm">No invoices yet. Crew leads make them on site with "Finish job and invoice", or open a job and tap "Create invoice".</p>`}`);
+}
+// ---- Quotes (owner) ----
+// Price math from Brandon's rules: labor + trip charge + truck miles + materials/water
+function priceOf(q,extraHrs){
+  const mv=Math.max(2,Number(q.movers)||2), hrs=Math.max(S.minHours,(Number(q.hours)||0)+(extraHrs||0));
+  const out=Number(q.milesOut)||0, mid=Number(q.milesBetween)||0, back=Number(q.milesBack)||0;
+  const labor=hrs*mv*S.rate;
+  const steps=out+back<=S.freeTrip?0:Math.ceil((out+back-S.freeTrip)/S.tripStep);
+  const trip=steps*S.tripHours*S.rate*mv;
+  const truck=q.truck==="theirs"?0:(out+mid+back)*S.perMile;
+  const supplies=S.materials+S.water;
+  return {mv,hrs,labor,trip,steps,truck,supplies,total:labor+trip+truck+supplies};
+}
+const QSTATUS={new:{t:"New",c:"warn"},quoted:{t:"Quoted",c:""},booked:{t:"Booked",c:"ok"},declined:{t:"Declined",c:"mute"}};
+function quoteText(q){
+  const p=priceOf(q), nte=Number(q.nte)||0;
+  return [`Hi ${(q.name||"").split(" ")[0]||"there"}, thanks for reaching out to Zachery's Moving Co.!`,
+    `For your move${q.date?` on ${new Date(parse(q.date)).toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}`:""}, we'd send ${p.mv} movers${q.truck==="theirs"?"":" with our truck"}.`,
+    `Estimate: about ${fh(p.hrs)} hours, ${money(p.total)} total.${nte?` Written not-to-exceed price: ${money(nte)}.`:""}`,
+    `We charge $${S.rate} per mover per hour with a ${S.minHours}-hour minimum.${/piano|hot tub/i.test(q.items||"")?" We don't move pianos or hot tubs ourselves, but we'll connect you with a specialist.":""}`,
+    `Reply YES to book, or call/text ${S.phone} with any questions.`].join("\n");
+}
+function quoteForm(q){
+  openJob=null; const isNew=!q;
+  q=q||{status:"new",movers:2,truck:"ours",heard:"",createdAt:new Date().toISOString()};
+  const opt=(v,c)=>v===c?"selected":"";
+  openSheet(`
+    <div class="sheethead"><div><div class="ctlab">${isNew?"New quote request":"Quote request"}</div><h2 id="sheettitle">${esc(q.name||"New customer")}</h2></div><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <form class="edit" id="qform" novalidate>
+      <div class="frow">
+        <label class="f">Move date<input type="date" id="q-date" value="${esc(q.date||"")}"></label>
+        <label class="f">Start time<input type="time" id="q-start" value="${esc(q.start||"08:00")}"></label>
+        <label class="f">Type of job<select id="q-type">${["Full move","Partial move","Garage only","Same property","Storage unit","Pod load/unload","Office move","Labor only"].map(t=>`<option ${opt(t,q.moveType)}>${t}</option>`).join("")}</select></label>
+      </div>
+      ${addrField("q-pickup","Pickup address",q.pickup)}
+      <div class="section"><h3>House at pickup</h3>${houseInputs("qh",q.house)}</div>
+      ${addrField("q-dropoff","Drop-off address",q.dropoff)}
+      <div class="frow">
+        <label class="f">Customer name<input type="text" id="q-name" value="${esc(q.name||"")}" required></label>
+        <label class="f">Phone<input type="tel" id="q-phone" value="${esc(q.phone||"")}"></label>
+        <label class="f">How they heard about you<select id="q-heard">${["","Google","Facebook","A friend or family member","A realtor","A cleaning company","Repeat customer","Other"].map(h=>`<option value="${h}" ${opt(h,q.heard)}>${h||"Choose one"}</option>`).join("")}</select></label>
+      </div>
+      <div class="frow">
+        <label class="f">Size<input type="text" id="q-size" value="${esc(q.size||"")}" placeholder="e.g. 3 bed, 2 storeys, garage full"></label>
+        <label class="f">Heavy or special items<input type="text" id="q-items" value="${esc(q.items||"")}" placeholder="e.g. gun safe, piano, sectional"></label>
+      </div>
+      <div class="section"><h3>Photos from the customer</h3>${photoBox("quotes:"+(q.id||""),true)}</div>
+      <label class="f">Notes from the customer<textarea id="q-notes">${esc(q.notes||"")}</textarea></label>
+      <div class="frow">
+        <label class="f">Truck<select id="q-truck"><option value="ours" ${opt("ours",q.truck)}>We bring ours</option><option value="theirs" ${opt("theirs",q.truck)}>Customer has their own</option></select></label>
+        <label class="f">Movers<input type="number" id="q-movers" min="2" step="1" value="${esc(q.movers||2)}"></label>
+        <label class="f">Est. hours on site<input type="number" id="q-hours" min="0" step="0.5" value="${esc(q.hours||"")}"></label>
+      </div>
+      <div class="frow">
+        <label class="f">Miles: shop to pickup<input type="number" id="q-out" min="0" step="1" value="${esc(q.milesOut||"")}"></label>
+        <label class="f">Miles: pickup to drop-off<input type="number" id="q-mid" min="0" step="1" value="${esc(q.milesBetween||"")}"></label>
+        <label class="f">Miles: drop-off to shop<input type="number" id="q-back" min="0" step="1" value="${esc(q.milesBack||"")}"></label>
+      </div>
+      ${sampler?`<div class="actions"><button type="button" class="btn" id="q-suggest">✦ Suggest hours and crew</button><span class="ctm" id="q-why"></span></div>`:""}
+      <table class="invt"><tbody id="q-lines"></tbody></table>
+      <div class="invtotal"><span>Quote</span><b id="q-total">$0.00</b></div>
+      <div class="frow">
+        <label class="f">Not-to-exceed price ($)<input type="number" id="q-nte" min="0" step="10" value="${esc(q.nte||"")}"></label>
+        <label class="f">Status<select id="q-status">${Object.entries(QSTATUS).map(([k,v])=>`<option value="${k}" ${opt(k,q.status)}>${v.t}</option>`).join("")}</select></label>
+      </div>
+      <p class="ctm" id="q-nte-tip"></p>
+      <div class="section"><h3>Text for the customer</h3><pre class="ctm" id="q-text" style="white-space:pre-wrap;margin:0;font-family:inherit;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px"></pre></div>
+      <p class="err" id="q-err" hidden></p>
+      <div class="actions">
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">Save quote</button><button class="btn" type="button" id="q-copy">Copy text</button></div>
+        ${q.jobId?`<span class="chip ok" style="align-self:center">Booked ✓</span>`:`<button class="btn" type="button" id="q-book">Book it</button>`}
+      </div>
+    </form>`);
+  const val=()=>({...q,name:$("q-name").value.trim(),phone:$("q-phone").value.trim(),heard:$("q-heard").value,date:$("q-date").value,start:$("q-start").value,
+    moveType:$("q-type").value,pickup:$("q-pickup").value.trim(),dropoff:$("q-dropoff").value.trim(),size:$("q-size").value.trim(),items:$("q-items").value.trim(),
+    notes:$("q-notes").value.trim(),truck:$("q-truck").value,movers:Number($("q-movers").value)||2,hours:Number($("q-hours").value)||0,
+    milesOut:Number($("q-out").value)||0,milesBetween:Number($("q-mid").value)||0,milesBack:Number($("q-back").value)||0,
+    nte:Number($("q-nte").value)||0,status:$("q-status").value,
+    house:houseFor("qh",q.house,$("q-pickup").value.trim()!==(q.pickup||"")),dropHouse:$("q-dropoff").value.trim()!==(q.dropoff||"")?null:(q.dropHouse||null)});
+  function show(){
+    const v=val(), p=priceOf(v);
+    $("q-lines").innerHTML=`<tr><td>Labor · ${p.mv} movers × ${fh(p.hrs)} hrs × ${money(S.rate)}</td><td>${money(p.labor)}</td></tr>
+      <tr><td>Trip charge · ${v.milesOut+v.milesBack} mi out and back${p.steps?` (+${fh(p.steps*S.tripHours)} hr crew time)`:" (under 25 free miles)"}</td><td>${money(p.trip)}</td></tr>
+      ${v.truck==="theirs"?"":`<tr><td>Truck mileage · ${v.milesOut+v.milesBetween+v.milesBack} mi × ${money(S.perMile)}</td><td>${money(p.truck)}</td></tr>`}
+      <tr><td>Materials and crew water</td><td>${money(p.supplies)}</td></tr>`;
+    $("q-total").textContent=money(p.total);
+    const cushion=Math.ceil(priceOf(v,1).total/10)*10;
+    $("q-nte-tip").textContent=`Tip: one extra hour of cushion puts the not-to-exceed price at ${money(cushion)}.`;
+    $("q-text").textContent=quoteText(v);
+    if(/piano|hot tub/i.test(v.items)) $("q-nte-tip").textContent+=" Heads up: piano or hot tub listed, refer it to your partner mover.";
+  }
+  $("qform").addEventListener("input",show); show();
+  wireAddr("q-pickup","qh",q.pickup,()=>{show();if(sampler&&!Number($("q-hours").value)&&$("q-suggest"))$("q-suggest").click();});
+  wireAddr("q-dropoff",null,q.dropoff);
+  if(!q.nte&&!isNew){}
+  $("q-copy").onclick=()=>{const t=$("q-text").textContent,b=$("q-copy");
+    navigator.clipboard.writeText(t).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy text",1500);})
+    .catch(()=>{const rg=document.createRange();rg.selectNodeContents($("q-text"));const s=getSelection();s.removeAllRanges();s.addRange(rg);b.textContent="Selected, copy it";});};
+  if(sampler)$("q-suggest").onclick=async()=>{
+    const b=$("q-suggest"), why=$("q-why"), v=val(); b.disabled=true; why.textContent="Thinking…";
+    const prompt=`You help Zachery's Moving Co., a local mover in Stockton, California, estimate jobs.
+Rules: they charge $${S.rate} per mover per hour, minimum ${S.minHours} hours and 2 movers. Hours you estimate are crew time on site including the drive between the two addresses (not the drive from the shop). Typical: a 1-bedroom apartment takes 2 movers about 3 hours; a 3-bedroom house takes 3 movers about 5 to 6 hours; add time for stairs, long walks, a full garage and heavy items. They do not move pianos or hot tubs.
+Job:
+Type: ${v.moveType}
+Pickup: ${v.pickup||"not given"}
+Drop-off: ${v.dropoff||"not given"}
+Miles between addresses: ${v.milesBetween||"unknown"}
+Size: ${v.size||"not given"}
+House at pickup: ${houseLine(v.house)||"unknown"}
+House at drop-off: ${houseLine(v.dropHouse)||"unknown"}
+Heavy items: ${v.items||"none"}
+Customer notes: ${v.notes||"none"}
+Reply with JSON only: {"movers": whole number 2 to 5, "hours": number in half hours, "why": one short plain sentence}.`;
+    try{
+      let r=await sampler.json(prompt);
+      if(typeof r==="string")r=JSON.parse(r);
+      if(r&&r.hours){$("q-hours").value=r.hours;$("q-movers").value=Math.max(2,Math.round(r.movers||2));why.textContent=r.why||"";show();}
+      else why.textContent="Couldn't get a suggestion. Fill in hours yourself.";
+    }catch(x){why.textContent=x&&x.code==="rate_limited"?"Too many requests. Try again in a minute.":"Couldn't get a suggestion. Fill in hours yourself.";}
+    b.disabled=false;
+  };
+  let kicked=false;
+  async function save(extra){
+    const v={...val(),...(extra||{})}; const err=$("q-err");
+    if(!v.name){err.textContent="Add the customer's name.";err.hidden=false;return null;}
+    v.quote=priceOf(v).total; delete v.id;
+    const ref=q.id?db.collection("quotes").doc(q.id):db.collection("quotes").doc();
+    try{const wasPick=q.pickup||"",wasNew=!q.id;await ref.set(v);q.id=ref.id;
+      if(v.pickup&&(wasNew||v.pickup!==wasPick||!kicked)&&!houseDone(v.house)&&!extra){kicked=true;kickLookup("quotes",ref.id,v.name);}
+      q.pickup=v.pickup;q.house=v.house;return {...v,id:ref.id};}catch(x){err.textContent="Couldn't save. Try again.";err.hidden=false;return null;}
+  }
+  quoteSaver=()=>save(); paintPhotos();
+  $("qform").addEventListener("submit",async e=>{e.preventDefault();const s=await save();if(s)showQuotes();});
+  if(!q.jobId)$("q-book").onclick=async()=>{
+    const v=val(), err=$("q-err");
+    if(!v.date){err.textContent="Add a move date before booking.";err.hidden=false;return;}
+    try{
+      const jref=db.collection("jobs").doc();
+      const p=priceOf(v);
+      await jref.set({date:v.date,start:v.start,hours:String(p.hrs),customer:v.name,phone:v.phone,pickup:v.pickup,dropoff:v.dropoff,moveType:v.moveType,
+        truck:v.truck,status:"booked",movers:p.mv,leadId:"",crewIds:[],weather:"",weatherNote:"",items:v.items,notes:v.notes,nte:v.nte||"",quoteId:q.id||"",house:v.house||null,dropHouse:v.dropHouse||null});
+      const s=await save({status:"booked",jobId:jref.id});
+      if(v.pickup&&!houseDone(v.house))kickLookup("jobs",jref.id,v.name);
+      for(const ph of (officePhotos["quotes:"+q.id]||[])){try{await db.collection("jobphotos/"+jref.id+"/items").doc().set({data:ph.data,at:ph.at,byName:ph.byName||"Office"});}catch(x){}}
+      week=monday(parse(v.date));month=new Date(parse(v.date).getFullYear(),parse(v.date).getMonth(),1);
+      const j=jobs.find(x=>x.id===jref.id)||{id:jref.id,date:v.date,start:v.start,hours:String(p.hrs),customer:v.name,pickup:v.pickup,dropoff:v.dropoff,status:"booked",movers:p.mv,crewIds:[],truck:v.truck};
+      if(s) showJob(j);
+    }catch(x){err.textContent="Couldn't book it. Try again.";err.hidden=false;}
+  };
+}
+function showQuotes(){
+  openJob=null;
+  const list=quotes.slice().sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+  const open=list.filter(q=>q.status==="new"||q.status==="quoted");
+  const row=q=>`<button class="invrow" data-quote="${esc(q.id)}"><b>${esc(q.name||"Customer")}</b><b>${money(q.quote||priceOf(q).total)}</b>
+    <span class="ctm">${q.date?esc(new Date(parse(q.date)).toLocaleDateString(undefined,{month:"short",day:"numeric"})):"No date yet"} · ${esc(q.moveType||"")}${q.heard?" · "+esc(q.heard):""}</span><span class="chip ${(QSTATUS[q.status]||QSTATUS.new).c}">${(QSTATUS[q.status]||QSTATUS.new).t}</span></button>`;
+  openSheet(`
+    <div class="sheethead"><h2 id="sheettitle">Quotes</h2><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <div class="actions"><button class="btn primary" data-newquote="1">+ New quote request</button><span class="ctm">${open.length} waiting on a reply</span></div>
+    ${list.length?`<div style="display:grid;gap:8px">${list.map(row).join("")}</div>`:`<p class="ctm">No quote requests yet. When someone calls or texts for a price, tap "New quote request" and the app works out the price and writes the reply for you.</p>`}`);
+}
+// ---- Customers and reports (owner) ----
+function customerList(){
+  const map={};
+  const key=(n,p)=>(p||"").replace(/\D/g,"")||(n||"").toLowerCase().trim();
+  jobs.forEach(j=>{if(!j.customer)return;const k=key(j.customer,j.phone);const c=map[k]||(map[k]={name:j.customer,phone:j.phone||"",jobs:0,last:"",spent:0,heard:""});
+    c.jobs++; if(j.date>c.last)c.last=j.date; if(j.phone&&!c.phone)c.phone=j.phone;});
+  allInvoices().forEach(v=>{const j=jobs.find(x=>x.id===v.jobId);const k=key(v.customer,j&&j.phone);if(map[k])map[k].spent+=v.total||0;});
+  quotes.forEach(q=>{const k=key(q.name,q.phone);if(map[k]&&q.heard)map[k].heard=q.heard;});
+  return Object.values(map).sort((a,b)=>b.last.localeCompare(a.last));
+}
+function showCustomers(){
+  openJob=null;
+  const list=customerList();
+  openSheet(`
+    <div class="sheethead"><h2 id="sheettitle">Customers</h2><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <p class="ctm">${list.length} customer${list.length===1?"":"s"}, built from your jobs and invoices.</p>
+    ${list.length?`<div style="display:grid;gap:8px">${list.map(c=>`<div class="invrow" style="cursor:default"><b>${esc(c.name)}</b><b>${money(c.spent)}</b>
+      <span class="ctm">${c.phone?esc(c.phone)+" · ":""}${c.jobs} job${c.jobs===1?"":"s"} · last ${esc(new Date(parse(c.last)).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}))}${c.heard?" · "+esc(c.heard):""}</span><span></span></div>`).join("")}</div>`:`<p class="ctm">No customers yet.</p>`}`);
+}
+function showReports(){
+  openJob=null;
+  const inv=allInvoices(), now=new Date();
+  const months=[...Array(6)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return{key:`${d.getFullYear()}-${pad(d.getMonth()+1)}`,label:d.toLocaleDateString(undefined,{month:"short"}),total:0};});
+  inv.forEach(v=>{const k=(v.createdAt||"").slice(0,7);const m=months.find(x=>x.key===k);if(m)m.total+=v.total||0;});
+  const max=Math.max(1,...months.map(m=>m.total));
+  const thisM=months[5].total, paid=inv.filter(v=>v.paid).reduce((s,v)=>s+(v.total||0),0), unpaid=inv.filter(v=>!v.paid).reduce((s,v)=>s+(v.total||0),0);
+  const avg=inv.length?inv.reduce((s,v)=>s+(v.total||0),0)/inv.length:0;
+  const decided=quotes.filter(q=>q.status==="booked"||q.status==="declined"), won=quotes.filter(q=>q.status==="booked").length;
+  const src={}; quotes.forEach(q=>{const h=q.heard||"Not asked";src[h]=(src[h]||0)+1;});
+  const srcList=Object.entries(src).sort((a,b)=>b[1]-a[1]), smax=Math.max(1,...srcList.map(s=>s[1]));
+  openSheet(`
+    <div class="sheethead"><h2 id="sheettitle">Reports</h2><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <p class="ctm">From your saved invoices and quotes.</p>
+    <div class="summary"><span class="stat">This month: <b>${money(thisM)}</b></span><span class="stat">Paid: <b>${money(paid)}</b></span><span class="stat">Waiting: <b>${money(unpaid)}</b></span>
+      <span class="stat">Average job: <b>${money(avg)}</b></span><span class="stat">Quotes won: <b>${decided.length?Math.round(won/decided.length*100)+"%":"–"}</b>${decided.length?` (${won} of ${decided.length})`:""}</span></div>
+    <div class="section"><h3>Invoiced by month</h3>
+      <div role="img" aria-label="Invoiced by month: ${months.map(m=>m.label+" "+money(m.total)).join(", ")}" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:end;height:160px;border-bottom:1px solid var(--line);padding-top:20px">
+        ${months.map((m,i)=>`<div style="height:${m.total?Math.max(3,m.total/max*100):0}%;background:${i===5?"var(--tape)":"var(--ink)"};border-radius:6px 6px 0 0;position:relative">${m.total?`<span style="position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;color:var(--ink)">${money(m.total).replace(".00","")}</span>`:""}</div>`).join("")}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;text-align:center;font-size:12px;color:var(--muted)">${months.map(m=>`<span>${m.label}</span>`).join("")}</div></div>
+    <div class="section"><h3>Where quote requests come from</h3>
+      ${srcList.length?srcList.map(([k,n])=>`<div style="display:grid;grid-template-columns:150px minmax(0,1fr) 28px;gap:10px;align-items:center;font-size:14px"><span style="overflow-wrap:anywhere">${esc(k)}</span><span style="height:10px;background:var(--soft);border-radius:999px;overflow:hidden"><span style="display:block;height:100%;width:${n/smax*100}%;background:var(--blue);border-radius:999px"></span></span><b style="text-align:right">${n}</b></div>`).join(""):`<p class="ctm">Ask "How did you hear about us?" on each quote and it shows up here.</p>`}</div>`);
+}
+function findInv(key){const [u,id]=key.split("/");return (invoices[u]||[]).find(v=>v.id===id);}
+
+function openSheet(html){$("sheet").innerHTML=html;$("overlay").hidden=false;const f=$("sheet").querySelector("input,select,button");if(f)f.focus();}
+function closeSheet(){quoteSaver=null;Object.keys(lookExtra).forEach(k=>delete lookExtra[k]);lookSubs.splice(0).forEach(u=>{try{u()}catch(x){}});$("overlay").hidden=true;$("sheet").innerHTML="";openJob=null;}
+
+function showJob(j){
+  openJob=j.id;
+  const st=STATUS[j.status]||STATUS.booked, w=WEATHER[j.weather||""]||WEATHER[""];
+  const cf=conflicts(j);
+  const crewList=[j.leadId?`<li><b>★ ${esc(crewName(j.leadId))}</b> (crew lead)${phoneOf(j.leadId)}</li>`:""]
+    .concat((j.crewIds||[]).map(id=>`<li>${esc(crewName(id))}${phoneOf(id)}</li>`)).join("");
+  openSheet(`
+    <div class="sheethead"><div><div class="${st.c}" style="display:inline-block;margin-bottom:6px">${st.t}</div><h2 id="sheettitle">${esc(j.customer||"Untitled job")}</h2></div>
+      <button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <dl class="kv">
+      <dt>When</dt><dd>${esc(fmtDay(parse(j.date)))} · ${span(j)}${j.hours?` · about ${esc(j.hours)} hrs (${fh(Number(j.hours)*jobCrew(j).length)} crew-hrs)`:""}</dd>
+      <dt>Pickup</dt><dd>${esc(j.pickup||"Not set")}</dd>
+      ${j.dropoff?`<dt>Drop-off</dt><dd>${esc(j.dropoff)}</dd>`:""}
+      <dt>Job</dt><dd>${esc(j.moveType||"Not set")}</dd>
+      <dt>Truck</dt><dd>${j.truck==="theirs"?"Customer has their own":"We bring ours"}</dd>
+      <dt>Customer</dt><dd>${esc(j.phone||"No phone on file")}</dd>
+    </dl>
+    <div class="section"><h3>Photos</h3>${photoBox("jobs:"+j.id,canWrite||(!!myCrew&&jobCrew(j).includes(myCrew)))}</div>
+    <div class="section"><h3>The house</h3><div style="display:grid;gap:8px">${houseBox("Pickup",j.pickup,j.house)}${houseBox("Drop-off",j.dropoff,j.dropHouse)}</div></div>
+    ${jobCrew(j).length?"":`<div class="callout" style="background:var(--bad-soft);color:var(--bad)"><b>No crew assigned yet.</b> ${canWrite?"Tap Edit job to pick a lead and movers.":"Zach will assign a crew soon."}</div>`}
+    ${cf.length?`<div class="callout warn">Double-booked: ${cf.map(c=>`${esc(crewName(c.id))} is also on ${esc(c.other.customer||"another job")} at ${fmtTime(c.other.start)}`).join("; ")}.</div>`:""}
+    <div class="section"><h3>Crew (${jobCrew(j).length}${j.movers?` of ${esc(j.movers)} needed`:""})</h3>
+      ${crewList?`<ul style="margin:0;padding-left:18px;display:grid;gap:4px">${crewList}</ul>`:`<div class="empty">Nobody assigned yet</div>`}</div>
+    <div class="section"><h3>Weather</h3>
+      <div>${wxChip(j.weather||"")}${j.weatherNote?` <span style="font-size:14px">${esc(j.weatherNote)}</span>`:""}</div>
+      ${WEATHER_TIP[j.weather]?`<div class="callout warn">${WEATHER_TIP[j.weather]}</div>`:""}</div>
+    ${j.items?`<div class="section"><h3>Heavy or special items</h3><div style="overflow-wrap:anywhere">${esc(j.items)}</div></div>`:""}
+    ${j.notes?`<div class="section"><h3>Notes for the crew</h3><div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(j.notes)}</div></div>`:""}
+    ${canWrite?`<div class="actions"><button class="btn primary" data-edit="${esc(j.id)}">Edit job</button>${(()=>{const v=allInvoices().find(x=>x.jobId===j.id);return v?`<button class="btn" data-inv="${esc(v._u+"/"+v.id)}">View invoice</button>`:`<button class="btn" data-invoice="${esc(j.id)}">Create invoice</button>`;})()}</div>`:""}
+  `);
+  paintPhotos();
+}
+function phoneOf(id){const c=crew.find(x=>x.id===id);return c&&c.phone?` · ${esc(c.phone)}`:"";}
+
+function editJob(j,date){
+  const isNew=!j; j=j||{date:date||iso(new Date()),start:"08:00",status:"booked",truck:"ours",movers:2,weather:""};
+  openJob=null;
+  const opt=(val,cur)=>val===cur?"selected":"";
+  const leadOpts=`<option value="">Choose a crew lead</option>`+crew.map(c=>`<option value="${esc(c.id)}" ${opt(c.id,j.leadId)}>${esc(c.name)}${c.role?` (${esc(c.role)})`:""}</option>`).join("");
+  const picks=crew.map(c=>`<label><input type="checkbox" name="crew" value="${esc(c.id)}" ${(j.crewIds||[]).includes(c.id)?"checked":""}> ${esc(c.name)}</label>`).join("")||`<span class="empty">Add your guys under Crew first.</span>`;
+  openSheet(`
+    <div class="sheethead"><h2 id="sheettitle">${isNew?"New job":"Edit job"}</h2><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <form class="edit" id="jobform" novalidate>
+      <div class="frow">
+        <label class="f">Date<input type="date" id="f-date" value="${esc(j.date)}" required></label>
+        <label class="f">Start time<input type="time" id="f-start" value="${esc(j.start||"")}"></label>
+      </div>
+      ${addrField("f-pickup","Pickup address",j.pickup)}
+      <div class="section"><h3>House at pickup</h3>${houseInputs("fh",j.house)}</div>
+      ${addrField("f-dropoff","Drop-off address",j.dropoff)}
+      <div class="section"><h3>House at drop-off</h3>${houseInputs("fd",j.dropHouse)}</div>
+      <div class="frow">
+        <label class="f">Customer name<input type="text" id="f-customer" value="${esc(j.customer||"")}" required></label>
+        <label class="f">Customer phone<input type="tel" id="f-phone" value="${esc(j.phone||"")}"></label>
+      </div>
+      <div class="frow">
+        <label class="f">Type of job<select id="f-type">${["Full move","Partial move","Garage only","Same property","Storage unit","Pod load/unload","Office move","Labor only"].map(t=>`<option ${opt(t,j.moveType)}>${t}</option>`).join("")}</select></label>
+        <label class="f">Truck<select id="f-truck"><option value="ours" ${opt("ours",j.truck)}>We bring ours</option><option value="theirs" ${opt("theirs",j.truck)}>Customer has their own</option></select></label>
+        <label class="f">Status<select id="f-status">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${opt(k,j.status)}>${v.t}</option>`).join("")}</select></label>
+      </div>
+      <div class="frow">
+        <label class="f">Est. hours<input type="number" id="f-hours" min="0" step="0.5" value="${esc(j.hours||"")}"></label>
+        <label class="f">Movers needed<select id="f-movers">${[2,3,4,5,6].map(n=>`<option ${n==j.movers?"selected":""}>${n}</option>`).join("")}</select></label>
+        <label class="f">Crew lead<select id="f-lead">${leadOpts}</select></label>
+      </div>
+      <div class="section"><h3>Movers on this job</h3><div class="pick" id="f-crew">${picks}</div></div>
+      <div class="frow">
+        <label class="f">Weather<select id="f-weather">${Object.entries(WEATHER).map(([k,v])=>`<option value="${k}" ${opt(k,j.weather||"")}>${k?v.t:"No forecast yet"}</option>`).join("")}</select></label>
+        <label class="f">Weather note<input type="text" id="f-wnote" value="${esc(j.weatherNote||"")}" placeholder="e.g. High 58°F, 70% rain after 2pm"></label>
+      </div>
+      <label class="f">Heavy or special items<input type="text" id="f-items" value="${esc(j.items||"")}"></label>
+      <label class="f">Notes for the crew<textarea id="f-notes">${esc(j.notes||"")}</textarea></label>
+      <p class="err" id="f-err" hidden></p>
+      <div class="actions">
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">${isNew?"Add to schedule":"Save changes"}</button><button class="btn" type="button" data-close>Cancel</button></div>
+        ${isNew?"":`<button class="btn danger" type="button" id="f-del">Delete job</button>`}
+      </div>
+      <div id="f-confirm" hidden class="callout warn" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">
+        <span>Delete this job for everyone?</span>
+        <span style="display:flex;gap:8px"><button class="btn danger" type="button" id="f-del-yes">Yes, delete</button><button class="btn" type="button" id="f-del-no">Keep it</button></span>
+      </div>
+    </form>`);
+  $("f-confirm").hidden=true;
+  wireAddr("f-pickup","fh",j.pickup);wireAddr("f-dropoff","fd",j.dropoff);
+  $("jobform").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const err=$("f-err");
+    const body={
+      date:$("f-date").value,start:$("f-start").value,hours:$("f-hours").value,
+      customer:$("f-customer").value.trim(),phone:$("f-phone").value.trim(),
+      pickup:$("f-pickup").value.trim(),dropoff:$("f-dropoff").value.trim(),
+      moveType:$("f-type").value,truck:$("f-truck").value,status:$("f-status").value,
+      movers:Number($("f-movers").value),leadId:$("f-lead").value,
+      crewIds:[...document.querySelectorAll('#f-crew input:checked')].map(i=>i.value).filter(id=>id!==$("f-lead").value),
+      weather:$("f-weather").value,weatherNote:$("f-wnote").value.trim(),
+      items:$("f-items").value.trim(),notes:$("f-notes").value.trim(),nte:j.nte||"",quoteId:j.quoteId||"",
+      house:houseFor("fh",j.house,$("f-pickup").value.trim()!==(j.pickup||"")),
+      dropHouse:houseFor("fd",j.dropHouse,$("f-dropoff").value.trim()!==(j.dropoff||""))
+    };
+    if(!body.date||!body.customer){err.textContent="Add a date and a customer name.";err.hidden=false;return;}
+    try{
+      const ref=isNew?db.collection("jobs").doc():db.collection("jobs").doc(j.id);
+      await ref.set(body);
+      const pc=isNew||body.pickup!==(j.pickup||""), dc=isNew||body.dropoff!==(j.dropoff||"");
+      if((pc&&body.pickup&&!houseDone(body.house))||(dc&&body.dropoff&&!houseDone(body.dropHouse)))kickLookup("jobs",ref.id,body.customer);
+      openJob=ref.id; week=monday(parse(body.date)); month=new Date(parse(body.date).getFullYear(),parse(body.date).getMonth(),1);
+      showJob({id:ref.id,...body});
+    }catch(x){err.textContent=x&&x.code==="invalid_argument"?"You can view this schedule but not change it.":"Couldn't save. Check your connection and try again.";err.hidden=false;}
+  });
+  if(!isNew){
+    $("f-del").onclick=()=>{$("f-confirm").hidden=false;};
+    $("f-del-no").onclick=()=>{$("f-confirm").hidden=true;};
+    $("f-del-yes").onclick=async()=>{try{await db.collection("jobs").doc(j.id).delete();closeSheet();}catch(x){$("f-err").textContent="Couldn't delete. Try again.";$("f-err").hidden=false;}};
+  }
+}
+
+function showCrew(){
+  openJob=null;
+  const rows=crew.map(c=>`<div class="crewrow"><div><b>${esc(c.name)}</b>${c.role?` · ${esc(c.role)}`:""}${c.phone?`<br><span style="font-size:13px;color:var(--muted)">${esc(c.phone)}</span>`:""}</div>
+    <button class="btn danger" data-rmcrew="${esc(c.id)}">Remove</button></div>`).join("")||`<div class="empty">No crew yet. Add your first guy below.</div>`;
+  openSheet(`
+    <div class="sheethead"><h2 id="sheettitle">Crew</h2><button class="btn icon" data-close aria-label="Close">✕</button></div>
+    <div>${rows}</div>
+    <form class="edit" id="crewform" novalidate>
+      <div class="frow">
+        <label class="f">Name<input type="text" id="c-name" required></label>
+        <label class="f">Role<select id="c-role"><option>Mover</option><option>Crew lead</option><option>Driver</option><option>Owner</option></select></label>
+        <label class="f">Phone<input type="tel" id="c-phone"></label>
+      </div>
+      <p class="err" id="c-err" hidden></p>
+      <div><button class="btn primary" type="submit">Add to crew</button></div>
+    </form>`);
+  $("crewform").addEventListener("submit",async e=>{
+    e.preventDefault();const n=$("c-name").value.trim();
+    if(!n){$("c-err").textContent="Add a name.";$("c-err").hidden=false;return;}
+    try{await db.collection("crew").doc().set({name:n,role:$("c-role").value,phone:$("c-phone").value.trim()});}
+    catch(x){$("c-err").textContent="Couldn't add. Try again.";$("c-err").hidden=false;}
+  });
+}
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-job],[data-add],[data-edit],[data-close],[data-rmcrew],[data-gotoweek],[data-claim],[data-clock],[data-invoice],[data-inv],[data-quote],[data-newquote]");
+  if(e.target===$("overlay")){closeSheet();return;}
+  if(!t)return;
+  if(t.dataset.claim){
+    const v=$("claim").value;
+    try{await db.doc("me/"+uid).set({crewId:v,at:new Date().toISOString()});}
+    catch(x){$("claim-err").textContent="Couldn't save. Ask Zach to share this page with you as a Contributor.";$("claim-err").hidden=false;}
+    return;
+  }
+  if(t.dataset.clock){
+    t.disabled=true;
+    try{
+      if(t.dataset.clock==="in") await db.collection("timelog/"+uid+"/entries").doc().set({jobId:curJobId,crewId:myCrew,in:new Date().toISOString(),out:""});
+      else{const open=myEntries.find(x=>!x.out); if(open) await db.doc("timelog/"+uid+"/entries/"+open.id).update({out:new Date().toISOString()});}
+    }catch(x){$("clock-err").textContent="Couldn't save your time. Ask Zach to share this page with you as a Contributor.";$("clock-err").hidden=false;t.disabled=false;}
+    return;
+  }
+  if(t.dataset.newquote){quoteForm(null);return;}
+  if(t.dataset.quote){const q=quotes.find(x=>x.id===t.dataset.quote);if(q)quoteForm(q);return;}
+  if(t.dataset.invoice){const j=jobs.find(x=>x.id===t.dataset.invoice);if(j)invoiceForm(j);return;}
+  if(t.dataset.inv){const v=findInv(t.dataset.inv);if(v)showInvoice(v);return;}
+  if(t.dataset.gotoweek){setView("week");week=monday(parse(t.dataset.gotoweek));render();}
+  else if(t.dataset.job){const j=jobs.find(x=>x.id===t.dataset.job);if(j)showJob(j);}
+  else if(t.dataset.add!==undefined&&t.dataset.add) editJob(null,t.dataset.add);
+  else if(t.dataset.edit){const j=jobs.find(x=>x.id===t.dataset.edit);if(j)editJob(j);}
+  else if(t.hasAttribute("data-close")) closeSheet();
+  else if(t.dataset.rmcrew){
+    if(t.dataset.armed){try{await db.collection("crew").doc(t.dataset.rmcrew).delete();}catch(x){}}
+    else{t.dataset.armed="1";t.textContent="Tap again to remove";}
+  }
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("overlay").hidden)closeSheet();});
+function setView(v){view=v;try{localStorage.setItem("zmc-view",v);}catch(e){}}
+$("v-week").onclick=()=>{setView("week");if(week.getMonth()!==month.getMonth()&&addDays(week,6).getMonth()!==month.getMonth())week=monday(month);render();};
+$("v-month").onclick=()=>{setView("month");month=new Date(week.getFullYear(),week.getMonth(),1);if(addDays(week,6).getMonth()!==week.getMonth()&&+monday(new Date())===+week)month=new Date(new Date().getFullYear(),new Date().getMonth(),1);render();};
+$("prev").onclick=()=>{if(view==="month")month=new Date(month.getFullYear(),month.getMonth()-1,1);else week=addDays(week,-7);render();};
+$("next").onclick=()=>{if(view==="month")month=new Date(month.getFullYear(),month.getMonth()+1,1);else week=addDays(week,7);render();};
+$("today").onclick=()=>{week=monday(new Date());month=new Date(new Date().getFullYear(),new Date().getMonth(),1);render();};
+$("who").onchange=e=>{who=e.target.value;try{localStorage.setItem("zmc-who",who);}catch(x){}render();};
+$("newbtn").onclick=()=>editJob(null);
+function syncMenu(){
+  ["m-biz","m-team"].forEach(g=>{const el=$(g);el.hidden=![...el.querySelectorAll(".mitem")].some(b=>!b.hidden);});
+  $("menubtn").hidden=["m-view","m-biz","m-team"].every(g=>$(g).hidden);
+}
+function setMenu(open){$("menu").hidden=!open;$("menubtn").setAttribute("aria-expanded",open);}
+$("menubtn").onclick=e=>{e.stopPropagation();setMenu($("menu").hidden);};
+$("lb-close").onclick=closePhoto;
+$("lb-del").onclick=()=>{$("lb-confirm").hidden=false;};
+$("lb-no").onclick=()=>{$("lb-confirm").hidden=true;};
+$("lb-yes").onclick=async()=>{if(!lbPhoto)return;try{await db.doc(lbPhoto._path).delete();closePhoto();}catch(x){$("lb-cap").textContent="Couldn't delete. Try again.";}};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lightbox").hidden){e.stopPropagation();closePhoto();}},true);
+document.addEventListener("click",e=>{const t=e.target.closest("[data-photo]");if(t){e.preventDefault();openPhoto(t.dataset.photo,Number(t.dataset.pi));}});
+document.addEventListener("click",e=>{const b=e.target.closest("button[data-addphoto]");if(!b)return;const pi=$("photoinput");pi.dataset.pk=b.dataset.addphoto;pi.click();});
+$("photoinput").addEventListener("change",async()=>{
+  const inp=$("photoinput"); if(!inp.files||!inp.files.length)return;
+  let pk=inp.dataset.pk||""; const files=[...inp.files]; inp.value="";
+  if(pk==="quotes:"){
+    const sv=typeof quoteSaver==="function"?await quoteSaver():null;
+    if(!sv){pstatus[pk]="Add the customer's name first, then add photos.";paintPhotos();return;}
+    const npk="quotes:"+sv.id;
+    document.querySelectorAll('[data-pk="quotes:"]').forEach(x=>x.dataset.pk=npk);
+    document.querySelectorAll('[data-addphoto="quotes:"]').forEach(x=>x.dataset.addphoto=npk);
+    document.querySelectorAll('[data-pstat="quotes:"]').forEach(x=>x.dataset.pstat=npk);
+    delete pstatus[pk]; pk=npk; subOffice(pk);
+  }
+  if(pk)addPhotos(pk,files);
+});
+document.addEventListener("click",e=>{if(!$("menu").hidden&&!e.target.closest(".menuwrap"))setMenu(false);});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("menu").hidden){setMenu(false);$("menubtn").focus();}});
+$("menu").addEventListener("click",e=>{if(e.target.closest(".mitem"))setMenu(false);});
+$("who").addEventListener("change",()=>setMenu(false));
+$("crewbtn").onclick=showCrew;
+$("invbtn").onclick=showInvoices;
+$("quotebtn").onclick=showQuotes;
+$("custbtn").onclick=showCustomers;
+$("repbtn").onclick=showReports;
+
+try{if(matchMedia("(max-width:1050px)").matches)$("crewpanel").open=false;}catch(e){}
+render();
+
+(async()=>{
+  const C=window.claude;
+  db=C?await C.use("db"):null;
+  if(!db){$("banner").textContent="Sign in to see the schedule. If you're signed in, ask Zach to share this page with you.";$("banner").hidden=false;loaded.jobs=true;render();return;}
+  const user=await C.use("user");
+  const w=user?await user.can("data.write"):null;
+  canWrite=w===true||(w===null&&(user?await user.canEdit():false));
+  $("newbtn").hidden=!canWrite;$("crewbtn").hidden=!canWrite;
+  uid=user?await user.id():null;
+  $("invbtn").hidden=!canWrite; $("quotebtn").hidden=!canWrite; $("custbtn").hidden=!canWrite; $("repbtn").hidden=!canWrite; syncMenu();
+  if(canWrite){
+    db.collection("quotes").onSnapshot(s=>{quotes=s.docs.map(d=>({id:d.id,...d.data()}));
+      const n=quotes.filter(q=>q.status==="new").length; $("quotebadge").textContent=n+" new";$("quotebadge").hidden=!n;$("menudot").hidden=!n;},()=>{});
+    C.use("sample").then(sm=>{sampler=sm;}).catch(()=>{});
+    db.collection("settings").doc("app").onSnapshot(d=>{if(d&&d.exists){const v=d.data()||{};LOOKUP_TASK=v.lookupTask||"";}},()=>{});
+  }
+  if(uid){subInvoices(uid); if(!canWrite)subCrewPhotos(uid);}
+  if(!canWrite&&uid){
+    db.doc("me/"+uid).onSnapshot(s=>{myCrew=s.exists?(s.data().crewId||""):"";render();},()=>{});
+    db.collection("timelog/"+uid+"/entries").onSnapshot(s=>{myEntries=s.docs.map(d=>({id:d.id,...d.data()}));render();},()=>{});
+  }
+  if(canWrite){
+    db.collection("me").onSnapshot(s=>{
+      s.docs.forEach(d=>{const u=d.id; subInvoices(u); subCrewPhotos(u);
+        if(!logSubs[u]&&Object.keys(logSubs).length<50)
+          logSubs[u]=db.collection("timelog/"+u+"/entries").onSnapshot(q=>{logs[u]=q.docs.map(x=>({id:x.id,...x.data()}));render();},()=>{});
+      });
+    },()=>{});
+  }
+  if(canWrite)db.collection("lookups").onSnapshot(q=>{pastLooks=q.docs.map(d=>d.data());},()=>{});
+  db.collection("forecast").doc("stockton").onSnapshot(d=>{if(d&&d.exists){forecast=(d.data()||{}).days||{};render();}},()=>{});
+  const timer=setTimeout(()=>{if(!loaded.jobs){$("banner").textContent="Can't reach the schedule yet. Check your connection; it will load when it can.";$("banner").hidden=false;}},10000);
+  db.collection("crew").onSnapshot(s=>{
+    crew=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{const r={Owner:0,"Crew lead":1,Driver:2,Mover:3};return (r[a.role]??4)-(r[b.role]??4)||a.name.localeCompare(b.name);});
+    loaded.crew=true;render();
+    if(!$("overlay").hidden&&$("sheettitle")&&$("sheettitle").textContent==="Crew")showCrew();
+  },()=>{});
+  db.collection("jobs").onSnapshot(s=>{
+    jobs=s.docs.map(d=>({id:d.id,...d.data()}));
+    if(!s.metadata.fromCache){loaded.jobs=true;clearTimeout(timer);$("banner").hidden=true;}
+    else loaded.jobs=true;
+    render();
+  },err=>{clearTimeout(timer);$("banner").textContent="The schedule couldn't load. Refresh the page to try again.";$("banner").hidden=false;});
+})();
+</script>
