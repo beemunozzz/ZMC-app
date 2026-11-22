@@ -4,10 +4,10 @@
 - Handoff added to the repo: `CLAUDE.md` (the plan) and `reference/zmc-hub-prototype.html` (the v1 prototype, used as a blueprint).
 - Stack confirmed by Brandon: Next.js, Vercel, Supabase.
 - Phase 0, part 1: Next.js project created with a "Hello ZMC" page in ZMC colors and fonts, light and dark mode, sized for phones (checked at 360 px wide). It builds with no errors.
+- Phase 0, part 2: live on Vercel (Hobby plan, Brandon's account) at https://zmc-app.vercel.app. Vercel publishes the GitHub `main` version automatically.
 
 ## Next
-- Phase 0, part 2: connect the GitHub project to Vercel (free plan, under Zach's account) so the page gets a live link to open on a phone.
-- Then create the Supabase project (free plan) for Phase 1, logins and roles.
+- Phase 1 (Logins and roles): create the Supabase project (free plan), email login links, and Owner / Crew lead / Mover roles.
 
 ## Decisions
 - Stack: Next.js + Vercel + Supabase (confirmed).
