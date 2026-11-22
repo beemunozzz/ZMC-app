@@ -24,9 +24,15 @@
   - Crew view: "Your job today / next job" card, plus the next 3 weeks.
   - ☰ menu > Show jobs for: preview what a crew member sees.
 
+- Phase 4 (done early, no account needed): weather from the free National Weather Service.
+  - Stockton's forecast for every day (next 7 days, the most NWS gives), saved for an hour.
+  - Each job also gets its own forecast: the worse of its pickup and drop-off cities (addresses are turned into map spots with the free US Census lookup, saved for good).
+  - Month: emoji in each day's top-right corner; orange dot = weather at a job site, not Stockton. Week: emoji and high next to each date. Job cards: orange chip for rain, heat (100°F+), wind or fog. Crew next-job card and job details: weather line plus a tip.
+  - Couldn't test against the live weather service from the build computer; tested the sorting logic with sample forecasts.
+
 ## Next
-- Brandon: run `0002_jobs.sql` in Supabase, then add a test job on his phone.
-- Phase 3: address autocomplete (Google Places) and automatic house details (RentCast).
+- Brandon: check the weather on the live app.
+- Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
 - Before crew log in: add their emails on the Crew page, and set up a free email sender (Resend) so "Forgot password" emails reach them.
 
 ## To do later

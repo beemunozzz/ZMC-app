@@ -347,14 +347,14 @@ function Month({
             >
               {/* Fixed spot: date, top-left */}
               <span
-                className={`absolute left-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums ${
+                className={`absolute left-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums md:left-1 md:top-1 ${
                   isToday ? "bg-tape text-navy" : "text-ink"
                 }`}
               >
                 {dayOfMonth(d)}
               </span>
               {/* Fixed spot: weather, top-right. Orange dot = weather at a job site, not Stockton. */}
-              <span className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center text-[13px] leading-none md:text-base" aria-hidden>
+              <span className="absolute right-0.5 top-1 flex h-4 w-4 items-center justify-center text-[11px] leading-none sm:text-[13px] md:right-1 md:text-base" aria-hidden>
                 {wx ? WX_EMOJI[wx.kind] : ""}
                 {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
               </span>
@@ -382,7 +382,7 @@ function Month({
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-warn" /> Weather at a job site
         </span>
-        <span>☀️ ☁️ 🌧️ 🔥 💨 forecast (next 7 days). Tap a day to open its week.</span>
+        <span>Weather shows for the next 7 days. Tap a day to open its week.</span>
       </div>
     </div>
   );
