@@ -1,29 +1,65 @@
+import { Suspense } from "react";
+import { PageLoading } from "@/components/PageLoading";
+import Link from "next/link";
+import { AppHeader } from "@/components/AppHeader";
+import { NotActive } from "@/components/NotActive";
+import { ROLE_LABEL, requireMember } from "@/lib/crew";
+
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex h-14 items-center gap-2 border-b border-line px-4">
-        <span className="font-display text-xl font-extrabold uppercase tracking-wide text-ink">ZMC</span>
-        <span className="font-display text-xl font-bold uppercase tracking-wide text-muted">Hub</span>
-      </header>
+    <Suspense fallback={<PageLoading />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
-        <div className="rise rounded-2xl border border-line bg-card p-6">
-          <div className="mb-4 h-1.5 w-12 rounded-full bg-tape" aria-hidden />
-          <h1 className="font-display text-4xl font-extrabold uppercase leading-none text-ink">
-            Hello ZMC
+async function HomeContent() {
+  const { supabase, me } = await requireMember();
+  if (!me) return <NotActive />;
+
+  const isOwner = me.role === "owner";
+  let crewCount = 0;
+  let canLogIn = 0;
+  if (isOwner) {
+    const { data } = await supabase.from("crew_members").select("email, active").eq("active", true);
+    crewCount = data?.length ?? 0;
+    canLogIn = data?.filter((c) => c.email).length ?? 0;
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <AppHeader title={isOwner ? "Schedule" : "My jobs"} isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
+        <p className="text-sm text-muted">
+          Hi <span className="font-semibold text-ink">{me.full_name}</span> · {ROLE_LABEL[me.role]}
+        </p>
+
+        <section className="rise rounded-2xl border border-line bg-card p-5">
+          <div className="mb-3 h-1.5 w-10 rounded-full bg-tape" aria-hidden />
+          <h1 className="font-display text-2xl font-extrabold uppercase text-ink">
+            {isOwner ? "Schedule" : "Your jobs"}
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            The new ZMC Hub is up and running. Jobs, crew schedules, quotes and invoices will
-            show up here as we build them.
+          <p className="mt-1 text-[15px] text-muted">
+            {isOwner
+              ? "The week, month and today views come next. You'll book jobs and assign crew here."
+              : "Your upcoming jobs will show here as soon as Zach books them."}
           </p>
-          <a
-            href="tel:+12093265601"
-            className="press mt-6 flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-white dark:text-navy"
-          >
-            Call Zach: (209) 326-5601
-          </a>
-        </div>
-        <p className="mt-6 text-center text-sm text-muted">Don&apos;t break your back, call Zach!</p>
+        </section>
+
+        {isOwner && (
+          <Link href="/team" className="press rise flex items-center justify-between rounded-2xl border border-line bg-card p-5">
+            <div>
+              <h2 className="font-display text-xl font-extrabold uppercase text-ink">Crew members</h2>
+              <p className="mt-0.5 text-sm text-muted tabular-nums">
+                {crewCount} on the crew · {canLogIn} can log in
+              </p>
+            </div>
+            <span className="text-2xl text-primary" aria-hidden>
+              ›
+            </span>
+          </Link>
+        )}
       </main>
     </div>
   );
