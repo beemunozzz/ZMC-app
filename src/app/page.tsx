@@ -1,469 +1,323 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
-import { JobCard } from "@/components/JobCard";
-import { NextJob } from "@/components/NextJob";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
-import {
-  DAY_SHORT,
-  addDays,
-  addMonths,
-  dayOfMonth,
-  firstOfMonth,
-  fmtDayLong,
-  fmtHours,
-  fmtMonth,
-  fmtShort,
-  isISODate,
-  lastOfMonth,
-  mondayOf,
-  todayISO,
-} from "@/lib/dates";
-import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, type Job } from "@/lib/jobs";
-import { jobsForecast, stocktonForecast } from "@/lib/weather";
-import { WX_EMOJI, WX_LABEL, worse, type DayWx, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
+import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { DAY_SHORT, ZMC_TZ, addDays, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
+import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
+import { money } from "@/lib/pricing";
+import type { QuoteStatus } from "@/lib/quotes";
+import { jobsForecast, stocktonForecast } from "@/lib/weather";
+import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, type JobWx } from "@/lib/weather-kinds";
 
-type View = "today" | "week" | "month";
-type Search = { view?: string; date?: string; who?: string };
-
-export default function Home({ searchParams }: { searchParams: Promise<Search> }) {
+export default function HomePage() {
   return (
     <Suspense fallback={<PageLoading />}>
-      <Schedule searchParams={searchParams} />
+      <Home />
     </Suspense>
   );
 }
 
-async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
-  const sp = await searchParams;
+type Attention = { key: string; tone: "bad" | "warn"; text: string; sub: string; href: string };
+
+async function Home() {
   const { supabase, me } = await requireMember();
   if (!me) return <NotActive />;
+  if (me.role !== "owner") redirect("/schedule"); // crew keep their "next job" screen
 
-  const isOwner = me.role === "owner";
   const today = todayISO();
-  const view: View = sp.view === "month" || sp.view === "today" || sp.view === "week" ? sp.view : isOwner ? "week" : "today";
-  const date = isISODate(sp.date) ? sp.date : today;
+  const weekStart = mondayOf(today);
+  const weekEnd = addDays(weekStart, 6);
+  const horizon = addDays(today, 13); // "needs attention" looks two weeks ahead
+  const from = weekStart < today ? weekStart : today;
 
-  // Everyone on the active crew (names for the cards).
-  const { data: crewRows } = await supabase
-    .from("crew_members")
-    .select("id, full_name")
-    .eq("active", true)
-    .order("full_name");
+  const [{ data: jobRows }, { data: crewRows }, { data: quoteRows }, stockton] = await Promise.all([
+    supabase.from("jobs").select(JOB_COLUMNS).gte("job_date", from).lte("job_date", horizon > weekEnd ? horizon : weekEnd).order("job_date").order("start_time", { nullsFirst: false }),
+    supabase.from("crew_members").select("id, full_name, email, user_id").eq("active", true).order("full_name"),
+    supabase.from("quotes").select("id, customer_name, status, created_at, quote_total, move_date").order("created_at", { ascending: false }).limit(300),
+    stocktonForecast(),
+  ]);
+  const jobs = (jobRows ?? []) as Job[];
   const crew = crewRows ?? [];
   const names = new Map(crew.map((c) => [c.id as string, c.full_name as string]));
-  const who = isOwner && sp.who && names.has(sp.who) ? sp.who : "";
+  const quotes = (quoteRows ?? []) as { id: string; customer_name: string; status: QuoteStatus; created_at: string; quote_total: number | null; move_date: string | null }[];
 
-  // Which dates to load.
-  let from: string, to: string;
-  if (view === "month") {
-    from = mondayOf(firstOfMonth(date));
-    to = addDays(mondayOf(lastOfMonth(date)), 6);
-  } else if (view === "week") {
-    from = mondayOf(date);
-    to = addDays(from, 6);
-  } else {
-    from = date;
-    to = isOwner && !who ? date : addDays(date, 21);
+  const upcoming = jobs.filter((j) => j.job_date >= today && j.job_date <= horizon && isLive(j));
+  const jobWx = await jobsForecast(upcoming, stockton);
+
+  // ---- Today ----
+  const todays = jobs.filter((j) => j.job_date === today && j.status !== "canceled");
+  const working = new Set(todays.flatMap(jobCrew));
+
+  // ---- Needs attention ----
+  const attention: Attention[] = [];
+  const when = (j: Job) => `${j.job_date === today ? "Today" : fmtDay(j.job_date)} · ${timeSpan(j)}`;
+  for (const j of upcoming) {
+    const people = jobCrew(j).length;
+    if (!people) attention.push({ key: `nc${j.id}`, tone: "bad", text: `No crew: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}/edit` });
+    else if (openSpots(j) > 0)
+      attention.push({ key: `os${j.id}`, tone: "warn", text: `Needs ${openSpots(j)} more: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}/edit` });
+    const clash = conflicts(j, jobs.filter((o) => o.job_date === j.job_date));
+    if (clash.length)
+      attention.push({
+        key: `db${j.id}`,
+        tone: "bad",
+        text: `Double-booked: ${names.get(clash[0].crewId) ?? "Someone"} on ${j.customer_name}`,
+        sub: when(j),
+        href: `/jobs/${j.id}`,
+      });
+    if (j.nte == null) attention.push({ key: `nte${j.id}`, tone: "warn", text: `No not-to-exceed price: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}/edit` });
   }
+  // Weather: one line per day, not per job.
+  const wxDays = new Map<string, { kind: JobWx["kind"]; jobs: Job[] }>();
+  for (const j of upcoming) {
+    const w = jobWx.get(j.id);
+    if (!w || !WX_WATCH.includes(w.kind)) continue;
+    const day = wxDays.get(j.job_date);
+    if (day) {
+      day.jobs.push(j);
+      day.kind = worse(day, w)!.kind;
+    } else wxDays.set(j.job_date, { kind: w.kind, jobs: [j] });
+  }
+  for (const [d, x] of wxDays)
+    attention.push({
+      key: `wx${d}`,
+      tone: "warn",
+      text: `${WX_EMOJI[x.kind]} ${WX_LABEL[x.kind]}: ${x.jobs.length === 1 ? x.jobs[0].customer_name : `${x.jobs.length} jobs`}`,
+      sub: d === today ? "Today" : fmtDay(d),
+      href: x.jobs.length === 1 ? `/jobs/${x.jobs[0].id}` : `/schedule?view=today&date=${d}`,
+    });
+  const newQuotes = quotes.filter((q) => q.status === "new");
+  for (const q of newQuotes.slice(0, 5))
+    attention.push({ key: `q${q.id}`, tone: "warn", text: `Quote waiting on a reply: ${q.customer_name}`, sub: q.move_date ? `Move ${fmtDay(q.move_date)}` : "No move date yet", href: `/quotes/${q.id}` });
+  if (newQuotes.length > 5)
+    attention.push({ key: "qmore", tone: "warn", text: `${newQuotes.length - 5} more quotes waiting`, sub: "Open Quotes", href: "/quotes" });
+  attention.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === "bad" ? -1 : 1));
 
-  const { data: jobRows, error } = await supabase
-    .from("jobs")
-    .select(JOB_COLUMNS)
-    .gte("job_date", from)
-    .lte("job_date", to)
-    .order("job_date")
-    .order("start_time", { nullsFirst: false });
-  const allJobs = (jobRows ?? []) as Job[];
-  const jobs = who ? allJobs.filter((j) => jobCrew(j).includes(who)) : allJobs;
+  // ---- This week ----
+  const week = jobs.filter((j) => j.job_date >= weekStart && j.job_date <= weekEnd && j.status !== "canceled");
+  const weekHours = week.reduce((s, j) => s + (Number(j.est_hours) || 0), 0);
+  const weekCrewHours = week.reduce((s, j) => s + (Number(j.est_hours) || 0) * jobCrew(j).length, 0);
+  const weekStartUtc = new Date(`${weekStart}T08:00:00Z`).toISOString(); // Monday, about midnight in Stockton
+  const weekQuotes = quotes.filter((q) => q.created_at >= weekStartUtc);
+  const weekBooked = weekQuotes.filter((q) => q.status === "booked").length;
+  const openQuoteValue = quotes.filter((q) => q.status === "new" || q.status === "quoted").reduce((s, q) => s + (Number(q.quote_total) || 0), 0);
 
-  const href = (p: Partial<{ view: View; date: string; who: string }>) => {
-    const s = new URLSearchParams();
-    const v = p.view ?? view;
-    const d = p.date ?? date;
-    const w = p.who ?? who;
-    s.set("view", v);
-    if (d !== today) s.set("date", d);
-    if (w) s.set("who", w);
-    return `/?${s.toString()}`;
-  };
+  // ---- Greeting ----
+  const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: ZMC_TZ, hour: "numeric", hourCycle: "h23" }).format(new Date()));
+  const hello = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const todayWx = stockton[today];
 
-  // Weather: Stockton for every day, plus each job's own cities (next 7 days).
-  const stockton = await stocktonForecast();
-  const jobWx = await jobsForecast(jobs.filter((j) => j.status !== "canceled"), stockton);
-  const dayWx = (d: string) => {
-    const home = stockton[d] ? { ...stockton[d], atSite: false } : null;
-    let w: JobWx | null = home;
-    for (const j of jobs) if (j.job_date === d && j.status !== "canceled") w = worse(w, jobWx.get(j.id));
-    return w;
-  };
-
-  const dayJobs = (d: string) => jobs.filter((j) => j.job_date === d);
-  const isDoubleBooked = (j: Job) => conflicts(j, allJobs.filter((o) => o.job_date === j.job_date)).length > 0;
-  const whoName = who ? names.get(who) : "";
-
-  const previewHrefs: Record<string, string> = { "": href({ who: "" }) };
-  crew.forEach((c) => (previewHrefs[c.id] = href({ who: c.id })));
+  const card = "rounded-2xl border border-line bg-card p-4";
+  const h2 = "font-display text-lg font-extrabold uppercase text-ink";
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader
-        title={isOwner ? "Schedule" : "My jobs"}
-        isOwner={isOwner}
-        name={me.full_name}
-        roleLabel={ROLE_LABEL[me.role]}
-        newJobHref={`/jobs/new?date=${view === "month" ? (date.slice(0, 7) === today.slice(0, 7) ? today : firstOfMonth(date)) : date}`}
-        preview={isOwner ? { options: crew.map((c) => ({ id: c.id, name: c.full_name })), current: who, hrefFor: previewHrefs } : undefined}
-      />
+      <AppHeader title="Home" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} newJobHref={`/jobs/new?date=${today}`} />
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
-        {whoName && (
-          <div className="flex items-center justify-between gap-3 rounded-2xl bg-tape/15 px-4 py-3 text-sm text-ink">
-            <span>
-              Showing only <b>{whoName}</b>&apos;s jobs. This is what {whoName} sees.
-            </span>
-            <Link href={href({ who: "" })} className="shrink-0 font-semibold text-primary">
-              Show everyone
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
+        {/* Greeting */}
+        <section className="rise">
+          <p className="text-sm text-muted">{fmtDayLong(today)}</p>
+          <h1 className="font-display text-3xl font-extrabold uppercase leading-tight text-ink">
+            {hello}, {me.full_name.split(" ")[0]}
+          </h1>
+          {todayWx && (
+            <p className="mt-0.5 text-sm tabular-nums text-muted">
+              {WX_EMOJI[todayWx.kind]} {todayWx.text || WX_LABEL[todayWx.kind]} in Stockton
+              {todayWx.hi != null ? ` · high ${todayWx.hi}°` : ""}
+            </p>
+          )}
+        </section>
+
+        {/* Today at a glance */}
+        <section className={card}>
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className={h2}>Today</h2>
+            <Link href="/schedule?view=today" className="text-sm font-semibold text-primary">
+              Open ›
             </Link>
           </div>
-        )}
-
-        <Toolbar view={view} date={date} today={today} href={href} />
-
-        {error && (
-          <p className="rounded-2xl bg-bad/10 px-4 py-3 text-sm text-bad">
-            Couldn&apos;t load the jobs. If this is the first time, the jobs table may not be set up yet in Supabase.
-          </p>
-        )}
-
-        {isOwner && view !== "today" && <Summary jobs={jobs.filter((j) => j.job_date >= (view === "month" ? firstOfMonth(date) : from) && j.job_date <= (view === "month" ? lastOfMonth(date) : to))} />}
-
-        {view === "week" && (
-          <div className="grid gap-3 md:grid-cols-7 md:gap-2">
-            {Array.from({ length: 7 }, (_, i) => addDays(from, i)).map((d, i) => {
-              const list = dayJobs(d);
-              const isToday = d === today;
-              return (
-                <section key={d} aria-label={fmtDayLong(d)} className="flex flex-col gap-2">
-                  <div className={`flex items-center gap-2 border-b pb-1 ${isToday ? "border-tape" : "border-line"}`}>
-                    <span className={`font-display text-lg font-extrabold uppercase ${isToday ? "text-ink" : "text-muted"}`}>
-                      {DAY_SHORT[i]}
-                    </span>
-                    <span className="text-sm tabular-nums text-muted">{fmtShort(d)}</span>
-                    {isToday && <span className="rounded-full bg-tape/20 px-2 py-0.5 text-[11px] font-semibold text-ink">Today</span>}
-                    <DayWeather wx={dayWx(d)} />
-                    {isOwner && (
-                      <Link
-                        href={`/jobs/new?date=${d}`}
-                        aria-label={`Add a job on ${fmtDayLong(d)}`}
-                        className="press ml-auto flex h-9 items-center rounded-lg px-2 text-sm font-semibold text-primary"
+          {todays.length ? (
+            <ul className="mt-2 divide-y divide-line">
+              {todays.map((j) => {
+                const n = jobCrew(j).length;
+                return (
+                  <li key={j.id}>
+                    <Link href={`/jobs/${j.id}`} className="flex items-center gap-3 py-2.5">
+                      <span className="w-16 shrink-0 text-sm font-semibold tabular-nums text-ink">{timeSpan(j).split(" – ")[0]}</span>
+                      <span className="min-w-0 flex-1 truncate text-[15px] text-ink">{j.customer_name}</span>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
+                          !n ? "bg-bad/10 text-bad" : openSpots(j) ? "bg-warn/12 text-warn" : "bg-ok/12 text-ok"
+                        }`}
                       >
-                        + Add
-                      </Link>
-                    )}
-                  </div>
-                  {list.map((j) => (
-                    <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={isOwner} wx={jobWx.get(j.id)} />
-                  ))}
-                  {!list.length && <p className="pb-1 text-sm text-muted">No jobs</p>}
-                </section>
+                        {n}/{j.movers_needed} crew
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="mt-1 text-[15px] text-muted">No jobs today.</p>
+          )}
+          {todays.length > 0 && (
+            <p className="mt-2 text-sm text-muted">
+              Working today:{" "}
+              <span className="text-ink">{working.size ? [...working].map((id) => names.get(id) ?? "Removed").join(", ") : "nobody assigned yet"}</span>
+            </p>
+          )}
+          {todayWx && WX_WATCH.includes(todayWx.kind) && (
+            <div className="mt-3">
+              <WeatherNote wx={{ ...todayWx, atSite: false }} />
+            </div>
+          )}
+        </section>
+
+        {/* Needs attention */}
+        <section className={card}>
+          <h2 className={h2}>
+            Needs attention {attention.length > 0 && <span className="tabular-nums text-muted">({attention.length})</span>}
+          </h2>
+          {attention.length ? (
+            <ul className="mt-2 divide-y divide-line">
+              {attention.slice(0, 12).map((a) => (
+                <li key={a.key}>
+                  <Link href={a.href} className="flex items-center gap-3 py-2.5">
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${a.tone === "bad" ? "bg-bad" : "bg-warn"}`} aria-hidden />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-medium text-ink">{a.text}</span>
+                      <span className="block truncate text-xs tabular-nums text-muted">{a.sub}</span>
+                    </span>
+                    <span className="text-lg text-muted" aria-hidden>
+                      ›
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-[15px] font-medium text-ok">✓ All clear for the next two weeks.</p>
+          )}
+          {attention.length > 12 && <p className="mt-1 text-sm text-muted">+{attention.length - 12} more on the schedule.</p>}
+        </section>
+
+        {/* Tiles */}
+        <nav aria-label="Go to" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Tile href="/schedule" icon="calendar" label="Schedule" />
+          <Tile href={`/jobs/new?date=${today}`} icon="plus" label="New job" primary />
+          <Tile href="/quotes" icon="chat" label="Quotes" badge={newQuotes.length ? `${newQuotes.length} new` : undefined} />
+          <Tile href="/quotes/new" icon="plus" label="New quote" />
+          <Tile href="/team" icon="people" label="Crew" />
+          <Tile href="/settings" icon="tag" label="Prices" />
+        </nav>
+
+        {/* Next 7 days */}
+        <section className={card}>
+          <h2 className={h2}>Next 7 days</h2>
+          <div className="mt-3 grid grid-cols-7 gap-1">
+            {Array.from({ length: 7 }, (_, i) => addDays(today, i)).map((d) => {
+              const list = jobs.filter((j) => j.job_date === d && j.status !== "canceled");
+              const short = list.some((j) => isLive(j) && openSpots(j) > 0);
+              let w: JobWx | null = stockton[d] ? { ...stockton[d], atSite: false } : null;
+              for (const j of list) w = worse(w, jobWx.get(j.id));
+              const dow = DAY_SHORT[(new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7];
+              return (
+                <Link
+                  key={d}
+                  href={`/schedule?view=today&date=${d}`}
+                  aria-label={`${fmtDayLong(d)}: ${list.length} job${list.length === 1 ? "" : "s"}${short ? ", needs crew" : ""}${w ? `, ${WX_LABEL[w.kind]}` : ""}`}
+                  className={`press flex min-w-0 flex-col items-center gap-1 rounded-xl border py-2 ${d === today ? "border-tape" : "border-line"}`}
+                >
+                  <span className="text-[10px] font-semibold uppercase text-muted">{dow}</span>
+                  <span className="text-sm font-semibold tabular-nums text-ink">{dayOfMonth(d)}</span>
+                  <span className="relative h-5 text-base leading-5" aria-hidden>
+                    {w ? WX_EMOJI[w.kind] : ""}
+                    {w?.atSite && <span className="absolute -bottom-0.5 -right-1 h-2 w-2 rounded-full bg-warn" />}
+                  </span>
+                  <span
+                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold tabular-nums ${
+                      !list.length ? "text-muted" : short ? "bg-bad text-white dark:text-navy" : "bg-primary text-white dark:text-navy"
+                    }`}
+                  >
+                    {list.length || "–"}
+                  </span>
+                </Link>
               );
             })}
           </div>
-        )}
+        </section>
 
-        {view === "month" && <Month date={date} today={today} from={from} jobs={jobs} href={href} dayWx={dayWx} />}
-
-        {view === "today" &&
-          (isOwner && !who ? (
-            <section className="flex flex-col gap-3">
-              <h1 className="font-display text-2xl font-extrabold uppercase text-ink">{fmtDayLong(date)}</h1>
-              {stockton[date] && <WeatherNote wx={{ ...stockton[date], atSite: false }} />}
-              <WorkingToday jobs={jobs} crew={crew} />
-              <div className="grid gap-3 md:grid-cols-2">
-                {jobs.map((j) => (
-                  <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner wx={jobWx.get(j.id)} />
-                ))}
-              </div>
-              {!jobs.length && <p className="text-[15px] text-muted">No jobs on this day.</p>}
-              <Link href={`/jobs/new?date=${date}`} className="press rounded-xl border border-dashed border-line py-3 text-center text-sm font-medium text-primary">
-                + Add job
-              </Link>
-            </section>
-          ) : (
-            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} />
-          ))}
+        {/* This week's numbers */}
+        <section className={card}>
+          <h2 className={h2}>This week</h2>
+          <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Jobs" value={String(week.length)} />
+            <Stat label="Est. hours" value={fmtHours(weekHours)} sub={`${fmtHours(weekCrewHours)} crew-hrs`} />
+            <Stat label="Quotes" value={String(weekQuotes.length)} sub={`${weekBooked} booked`} />
+            <Stat label="Open quotes" value={money(openQuoteValue)} sub="new + quoted" />
+          </dl>
+          <p className="mt-3 text-xs text-muted">Money you&apos;ve invoiced and collected shows here once invoices are built.</p>
+        </section>
       </main>
     </div>
   );
 }
 
-function Toolbar({
-  view,
-  date,
-  today,
-  href,
-}: {
-  view: View;
-  date: string;
-  today: string;
-  href: (p: Partial<{ view: View; date: string }>) => string;
-}) {
-  const step = (n: number) =>
-    view === "month" ? addMonths(date, n) : view === "week" ? addDays(mondayOf(date), 7 * n) : addDays(date, n);
-  const label =
-    view === "month"
-      ? fmtMonth(date)
-      : view === "week"
-        ? mondayOf(date) === mondayOf(today)
-          ? "This week"
-          : `${fmtShort(mondayOf(date))} – ${fmtShort(addDays(mondayOf(date), 6))}`
-        : date === today
-          ? "Today"
-          : fmtShort(date);
-  const atCurrent =
-    view === "month" ? date.slice(0, 7) === today.slice(0, 7) : view === "week" ? mondayOf(date) === mondayOf(today) : date === today;
+const ICONS: Record<string, React.ReactNode> = {
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  chat: <path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17h-8l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z" />,
+  people: (
+    <>
+      <circle cx="9" cy="8.5" r="3" />
+      <path d="M3.5 19c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5" />
+      <circle cx="16.5" cy="9.5" r="2.3" />
+      <path d="M15.5 14.6c2.3-.3 4.3.9 5 3.9" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1 1 0 0 1 0 1.4l-7.3 7.3a1 1 0 0 1-1.4 0z" />
+      <circle cx="8" cy="8" r="1.4" />
+    </>
+  ),
+};
 
-  const tab = (v: View, text: string) => (
+function Tile({ href, icon, label, badge, primary }: { href: string; icon: keyof typeof ICONS; label: string; badge?: string; primary?: boolean }) {
+  return (
     <Link
-      href={href({ view: v })}
-      aria-current={view === v ? "page" : undefined}
-      className={`press flex h-9 flex-1 items-center justify-center rounded-lg text-sm font-semibold ${
-        view === v ? "bg-card text-ink shadow-sm" : "text-muted"
+      href={href}
+      className={`press relative flex h-24 flex-col justify-between rounded-2xl p-4 ${
+        primary ? "bg-primary text-white dark:text-navy" : "border border-line bg-card text-ink"
       }`}
     >
-      {text}
+      <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {ICONS[icon]}
+      </svg>
+      <span className="font-display text-lg font-extrabold uppercase leading-none">{label}</span>
+      {badge && (
+        <span className="absolute right-3 top-3 rounded-full bg-warn/15 px-2 py-0.5 text-xs font-semibold text-warn">{badge}</span>
+      )}
     </Link>
   );
-  const arrow = "press flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-card text-lg text-ink";
-
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="flex rounded-xl bg-line/60 p-1 sm:w-72">
-        {tab("today", "Today")}
-        {tab("week", "Week")}
-        {tab("month", "Month")}
-      </div>
-      <div className="flex items-center gap-2 sm:ml-auto">
-        <Link href={href({ date: step(-1) })} className={arrow} aria-label="Back">
-          ‹
-        </Link>
-        <span className="min-w-0 flex-1 text-center font-display text-lg font-bold uppercase tabular-nums text-ink sm:w-44 sm:flex-none">
-          {label}
-        </span>
-        <Link href={href({ date: step(1) })} className={arrow} aria-label="Forward">
-          ›
-        </Link>
-        {/* Fixed-width slot so the arrows never move */}
-        <span className="w-16">
-          {!atCurrent && (
-            <Link href={href({ date: today })} className="press flex h-10 items-center justify-center rounded-xl text-sm font-semibold text-primary">
-              Today
-            </Link>
-          )}
-        </span>
-      </div>
-    </div>
-  );
 }
 
-function Summary({ jobs }: { jobs: Job[] }) {
-  const live = jobs.filter((j) => j.status !== "canceled");
-  const hrs = live.reduce((s, j) => s + (Number(j.est_hours) || 0), 0);
-  const noCrew = live.filter((j) => isLive(j) && !jobCrew(j).length).length;
-  const open = live.filter(isLive).reduce((s, j) => s + openSpots(j), 0);
-  const chip = "rounded-full border px-3 py-1 text-xs font-medium tabular-nums";
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
-      <span className={`${chip} border-line text-ink`}>
-        <b>{live.length}</b> job{live.length === 1 ? "" : "s"}
-        {hrs ? ` · ${fmtHours(hrs)} est. hrs` : ""}
-      </span>
-      {noCrew > 0 && (
-        <span className={`${chip} border-bad/40 text-bad`}>
-          ⚠ No crew: <b>{noCrew}</b>
-        </span>
-      )}
-      {live.length > 0 &&
-        (open > 0 ? (
-          <span className={`${chip} border-warn/40 text-warn`}>
-            <b>{open}</b> open spot{open === 1 ? "" : "s"}
-          </span>
-        ) : (
-          <span className={`${chip} border-ok/40 text-ok`}>✓ Every job fully staffed</span>
-        ))}
+    <div className="rounded-xl bg-bg p-3">
+      <dt className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</dt>
+      <dd className="mt-1 font-display text-2xl font-extrabold tabular-nums leading-none text-ink">{value}</dd>
+      {sub && <dd className="mt-1 text-xs tabular-nums text-muted">{sub}</dd>}
     </div>
-  );
-}
-
-function Month({
-  date,
-  today,
-  from,
-  jobs,
-  href,
-  dayWx,
-}: {
-  date: string;
-  today: string;
-  from: string;
-  jobs: Job[];
-  href: (p: Partial<{ view: View; date: string }>) => string;
-  dayWx: (d: string) => JobWx | null;
-}) {
-  const month = date.slice(0, 7);
-  const last = addDays(mondayOf(lastOfMonth(date)), 6);
-  const days: string[] = [];
-  for (let d = from; d <= last; d = addDays(d, 1)) days.push(d);
-  return (
-    <div>
-      <div className="grid grid-cols-7 gap-1 pb-1">
-        {DAY_SHORT.map((d) => (
-          <span key={d} className="text-center text-[11px] font-semibold uppercase text-muted">
-            {d}
-          </span>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((d) => {
-          const list = jobs.filter((j) => j.job_date === d && j.status !== "canceled");
-          const short = list.some((j) => isLive(j) && openSpots(j) > 0);
-          const inMonth = d.slice(0, 7) === month;
-          const isToday = d === today;
-          const wx = dayWx(d);
-          const wxText = wx ? `${WX_LABEL[wx.kind]}${wx.atSite ? " at a job site" : " in Stockton"}${wx.hi != null ? `, high ${wx.hi}°` : ""}` : "";
-          return (
-            <Link
-              key={d}
-              href={href({ view: "week", date: d })}
-              aria-label={`${fmtDayLong(d)}: ${list.length} job${list.length === 1 ? "" : "s"}${short ? ", needs crew" : ""}${wxText ? ". " + wxText : ""}`}
-              title={wxText || undefined}
-              className={`press relative h-16 min-w-0 overflow-hidden rounded-lg border bg-card md:h-24 ${
-                inMonth ? "border-line" : "border-transparent bg-transparent opacity-40"
-              }`}
-            >
-              {/* Fixed spot: date, top-left */}
-              <span
-                className={`absolute left-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums md:left-1 md:top-1 ${
-                  isToday ? "bg-tape text-navy" : "text-ink"
-                }`}
-              >
-                {dayOfMonth(d)}
-              </span>
-              {/* Fixed spot: weather, top-right. Orange dot = weather at a job site, not Stockton. */}
-              <span className="absolute right-0.5 top-1 flex h-4 w-4 items-center justify-center text-[11px] leading-none sm:text-[13px] md:right-1 md:text-base" aria-hidden>
-                {wx ? WX_EMOJI[wx.kind] : ""}
-                {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
-              </span>
-              {/* Fixed spot: job count, bottom-center */}
-              {list.length > 0 && (
-                <span
-                  className={`absolute bottom-1 left-1/2 flex h-5 min-w-5 -translate-x-1/2 items-center justify-center rounded-full px-1.5 text-[11px] font-bold tabular-nums ${
-                    short ? "bg-bad text-white dark:text-navy" : "bg-primary text-white dark:text-navy"
-                  }`}
-                >
-                  {list.length}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-primary" /> Jobs that day
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-bad" /> A job still needs crew
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-warn" /> Weather at a job site
-        </span>
-        <span>Weather shows for the next 7 days. Tap a day to open its week.</span>
-      </div>
-    </div>
-  );
-}
-
-function WorkingToday({ jobs, crew }: { jobs: Job[]; crew: { id: string; full_name: string }[] }) {
-  const live = jobs.filter((j) => j.status !== "canceled");
-  const on = new Set(live.flatMap(jobCrew));
-  if (!crew.length) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {crew.map((c) => (
-        <span
-          key={c.id}
-          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${on.has(c.id) ? "bg-ok/12 text-ok" : "bg-line/60 text-muted"}`}
-        >
-          {c.full_name} {on.has(c.id) ? "working" : "off"}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function CrewToday({
-  jobs,
-  names,
-  meId,
-  today,
-  isDoubleBooked,
-  jobWx,
-}: {
-  jobs: Job[];
-  names: Map<string, string>;
-  meId: string;
-  today: string;
-  isDoubleBooked: (j: Job) => boolean;
-  jobWx: Map<string, JobWx>;
-}) {
-  const upcoming = jobs.filter((j) => j.job_date >= today && isLive(j));
-  const [next, ...rest] = upcoming;
-  return (
-    <div className="flex flex-col gap-4">
-      {next ? (
-        <NextJob job={next} names={names} meId={meId} today={today} wx={jobWx.get(next.id)} />
-      ) : (
-        <section className="rounded-2xl border border-line bg-card p-5">
-          <h2 className="font-display text-xl font-extrabold uppercase text-ink">No jobs coming up</h2>
-          <p className="mt-1 text-[15px] text-muted">New jobs show up here as soon as Zach adds you.</p>
-        </section>
-      )}
-      {rest.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="font-display text-lg font-extrabold uppercase text-muted">Coming up (next 3 weeks)</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            {rest.map((j) => (
-              <div key={j.id} className="flex flex-col gap-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted">{fmtDayLong(j.job_date)}</span>
-                <JobCard job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={false} wx={jobWx.get(j.id)} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-/** Emoji + high for a day heading. Fixed width so headings line up. */
-function DayWeather({ wx }: { wx: (DayWx & { atSite?: boolean }) | null }) {
-  if (!wx) return null;
-  return (
-    <span
-      className="flex items-center gap-1 text-sm tabular-nums text-muted"
-      title={`${WX_LABEL[wx.kind]}${wx.atSite ? " at a job site" : " in Stockton"}`}
-    >
-      <span aria-hidden className="relative">
-        {WX_EMOJI[wx.kind]}
-        {wx.atSite && <span className="absolute -bottom-0.5 -right-1 h-2 w-2 rounded-full bg-warn" />}
-      </span>
-      <span className="sr-only">{WX_LABEL[wx.kind]}</span>
-      {wx.hi != null && <span>{wx.hi}°</span>}
-    </span>
   );
 }

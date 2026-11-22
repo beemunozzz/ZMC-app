@@ -96,5 +96,5 @@ export async function deleteJob(form: FormData) {
   const date = String(form.get("job_date") ?? "");
   if (me?.role !== "owner" || !UUID.test(id)) redirect("/");
   await supabase.from("jobs").delete().eq("id", id);
-  redirect(isISODate(date) ? `/?view=week&date=${date}` : "/");
+  redirect(isISODate(date) ? `/schedule?view=week&date=${date}` : "/schedule");
 }

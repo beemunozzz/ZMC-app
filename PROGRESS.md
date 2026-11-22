@@ -40,8 +40,16 @@
   - Database setup: `supabase/migrations/0003_quotes_and_prices.sql`.
   - Not built yet: "✦ Suggest hours and crew" (needs a paid Claude API key; ask first) and customer photos on quotes (comes with crew photos).
 
+- Owner home dashboard (first screen after login, at `/`). The calendar moved to `/schedule`.
+  - Greeting with today's date and Stockton weather.
+  - Today: today's jobs with crew counts, who's working, and a weather tip on bad-weather days.
+  - Needs attention (next 2 weeks): no crew, open spots, double-bookings, missing not-to-exceed price, bad weather (one line per day), quotes waiting on a reply. Red = fix now, orange = check.
+  - Big tiles: Schedule, New job, Quotes (with "N new" badge), New quote, Crew, Prices.
+  - Next 7 days strip: weather emoji and job count per day (red = needs crew); tap a day to open it.
+  - This week: jobs, estimated hours and crew-hours, quotes and how many booked, open quote value. Money totals come with invoices.
+  - Crew still land on their "next job" screen (Brandon's choice).
+
 ## Next
-- Brandon: run `0003_quotes_and_prices.sql` in Supabase, then try a quote and Book it.
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
 - Before crew log in: add their emails on the Crew page, and set up a free email sender (Resend) so "Forgot password" emails reach them.

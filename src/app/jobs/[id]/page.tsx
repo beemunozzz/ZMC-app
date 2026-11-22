@@ -54,7 +54,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
     <div className="flex flex-1 flex-col">
       <AppHeader title="Job" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-        <Link href={`/?view=week&date=${job.job_date}`} className="text-sm font-semibold text-primary">
+        <Link href={`/schedule?view=week&date=${job.job_date}`} className="text-sm font-semibold text-primary">
           ‹ Back to the schedule
         </Link>
 

@@ -69,9 +69,20 @@ export function AppHeader({
             <p className="px-4 pb-1 pt-2 text-xs text-muted">
               Signed in as <span className="font-semibold text-ink">{name}</span> · {roleLabel}
             </p>
-            <Link href="/" className={item} onClick={() => setOpen(false)}>
-              {isOwner ? "Schedule" : "My jobs"}
-            </Link>
+            {isOwner ? (
+              <>
+                <Link href="/" className={item} onClick={() => setOpen(false)}>
+                  Home
+                </Link>
+                <Link href="/schedule" className={item} onClick={() => setOpen(false)}>
+                  Schedule
+                </Link>
+              </>
+            ) : (
+              <Link href="/" className={item} onClick={() => setOpen(false)}>
+                My jobs
+              </Link>
+            )}
 
             {isOwner && preview && (
               <label className="flex flex-col gap-1 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted">
@@ -81,7 +92,7 @@ export function AppHeader({
                   value={preview.current}
                   onChange={(e) => {
                     setOpen(false);
-                    router.push(preview.hrefFor[e.target.value] ?? "/");
+                    router.push(preview.hrefFor[e.target.value] ?? "/schedule");
                   }}
                 >
                   <option value="">Everyone</option>
