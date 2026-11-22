@@ -30,8 +30,19 @@
   - Month: emoji in each day's top-right corner; orange dot = weather at a job site, not Stockton. Week: emoji and high next to each date. Job cards: orange chip for rain, heat (100°F+), wind or fog. Crew next-job card and job details: weather line plus a tip.
   - Couldn't test against the live weather service from the build computer; tested the sorting logic with sample forecasts.
 
+- Phase 5: quotes and price settings.
+  - ☰ > Prices: every pricing number in one place (rate, minimums, trip charge, truck per mile, materials, water, NTE cushion, business phone), with a live example. Stored in the `settings` table.
+  - ☰ > Quotes: list (open first), New quote request, and the quote page.
+  - Quote form in Brandon's field order. The price builds itself as you type (labor, trip charge, truck miles, supplies), with a suggested not-to-exceed price (estimate + 1 hour, rounded up to $10), a warning if the NTE is below the estimate, the 3rd-mover hint and the piano / hot tub warning.
+  - Copy text: ready-to-send reply (also flips a New quote to Quoted). Book it: makes the job (with the NTE and house details) and links the quote.
+  - Jobs now have a not-to-exceed price (job form and job page).
+  - Price math tested against every example in the handoff (`priceQuote` in `src/lib/pricing.ts`).
+  - Database setup: `supabase/migrations/0003_quotes_and_prices.sql`.
+  - Not built yet: "✦ Suggest hours and crew" (needs a paid Claude API key; ask first) and customer photos on quotes (comes with crew photos).
+
 ## Next
-- Brandon: check the weather on the live app.
+- Brandon: run `0003_quotes_and_prices.sql` in Supabase, then try a quote and Book it.
+- Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
 - Before crew log in: add their emails on the Crew page, and set up a free email sender (Resend) so "Forgot password" emails reach them.
 

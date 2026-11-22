@@ -8,6 +8,7 @@ import { PageLoading } from "@/components/PageLoading";
 import { ROLE_LABEL, requireMember } from "@/lib/crew";
 import { fmtDayLong, fmtHours } from "@/lib/dates";
 import { WeatherNote } from "@/components/WeatherNote";
+import { money } from "@/lib/pricing";
 import { jobForecast, stocktonForecast } from "@/lib/weather";
 import { JOB_COLUMNS, STATUS, conflicts, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
 
@@ -58,6 +59,11 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
         </Link>
 
         {sp.saved && <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">✓ Saved to the schedule</p>}
+        {sp.booked && (
+          <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">
+            ✓ Booked from the quote. Next: tap Edit job to pick the crew.
+          </p>
+        )}
 
         <section className="flex flex-col gap-1">
           <span className={`self-start rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
@@ -102,6 +108,16 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
             ),
           )}
           {job.heavy_items && row("Heavy items", job.heavy_items)}
+          {isOwner &&
+            row(
+              "Not to exceed",
+              job.nte != null ? (
+                <span className="font-semibold tabular-nums">{money(Number(job.nte))}</span>
+              ) : (
+                <span className="text-warn">Not set. Add one with Edit job.</span>
+              ),
+            )}
+          {isOwner && job.quote_id && row("Quote", <Link href={`/quotes/${job.quote_id}`} className="font-semibold text-primary">View the quote ›</Link>)}
         </dl>
 
         <section className="rounded-2xl border border-line bg-card p-4">

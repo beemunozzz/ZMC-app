@@ -34,10 +34,12 @@ export type Job = {
   crew_ids: string[];
   heavy_items: string;
   notes: string;
+  nte: number | null;
+  quote_id: string | null;
 };
 
 export const JOB_COLUMNS =
-  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes";
+  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id";
 
 export const JOB_TYPES = [
   "Full move",

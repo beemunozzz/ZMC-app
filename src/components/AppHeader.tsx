@@ -96,6 +96,13 @@ export function AppHeader({
 
             {isOwner && (
               <>
+                <p className={section}>Business</p>
+                <Link href="/quotes" className={item} onClick={() => setOpen(false)}>
+                  Quotes
+                </Link>
+                <Link href="/settings" className={item} onClick={() => setOpen(false)}>
+                  Prices
+                </Link>
                 <p className={section}>Team</p>
                 <Link href="/team" className={item} onClick={() => setOpen(false)}>
                   Crew members

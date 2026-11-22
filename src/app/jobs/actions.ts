@@ -44,6 +44,9 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
     .map(String)
     .filter((c) => UUID.test(c) && c !== lead_id);
 
+  const nteRaw = text(form, "nte", 12);
+  const nte = nteRaw ? Number(nteRaw) : null;
+  if (nte != null && (!Number.isFinite(nte) || nte < 0)) return { error: "The not-to-exceed price should be a dollar amount." };
   if (!isISODate(job_date)) return { error: "Pick a date." };
   if (!customer_name) return { error: "Add the customer's name." };
   if (est_hours != null && (!Number.isFinite(est_hours) || est_hours < 0 || est_hours > 24))
@@ -72,6 +75,7 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
     crew_ids,
     heavy_items: text(form, "heavy_items", 500),
     notes: text(form, "notes", 4000),
+    nte,
   };
 
   let savedId = id;

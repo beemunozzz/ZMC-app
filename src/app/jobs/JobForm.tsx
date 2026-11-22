@@ -3,7 +3,9 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { ROLE_LABEL, type Role } from "@/lib/crew-types";
-import { HOUSE_FIELDS, JOB_TYPES, STATUS, type House, type Job } from "@/lib/jobs";
+import { HouseFields } from "@/components/HouseFields";
+import { JOB_TYPES, STATUS, type Job } from "@/lib/jobs";
+import { REFER_ITEMS } from "@/lib/pricing";
 import { deleteJob, saveJob, type JobFormState } from "./actions";
 
 type CrewOption = { id: string; full_name: string; role: Role };
@@ -14,41 +16,6 @@ const label = "flex min-w-0 flex-col gap-1 text-sm font-medium text-ink";
 const section = "flex flex-col gap-3 rounded-2xl border border-line bg-card p-4";
 const heading = "font-display text-lg font-extrabold uppercase text-ink";
 
-const REFER = /piano|hot ?tub|jacuzzi|spa tub/i;
-
-function HouseFields({ prefix, house, onStories }: { prefix: string; house: House; onStories: (v: string) => void }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {HOUSE_FIELDS.map((f) => (
-        <label key={f.key} className={label}>
-          {f.label}
-          {f.options ? (
-            <select
-              name={`${prefix}_${f.key}`}
-              defaultValue={house[f.key] ?? ""}
-              className={input}
-              onChange={f.key === "stories" ? (e) => onStories(e.target.value) : undefined}
-            >
-              <option value="">?</option>
-              {f.options.map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
-          ) : (
-            <input
-              name={`${prefix}_${f.key}`}
-              defaultValue={house[f.key] ?? ""}
-              inputMode={f.mode}
-              placeholder={f.placeholder}
-              className={input}
-              autoComplete="off"
-            />
-          )}
-        </label>
-      ))}
-    </div>
-  );
-}
 
 export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOption[]; defaultDate: string }) {
   const [state, action, pending] = useActionState<JobFormState, FormData>(saveJob, {});
@@ -181,6 +148,19 @@ export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOptio
               </select>
             </label>
           </div>
+          <label className={label}>
+            Not-to-exceed price ($)
+            <input
+              name="nte"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step={10}
+              defaultValue={job?.nte ?? ""}
+              placeholder="California requires one on hourly moves"
+              className={input}
+            />
+          </label>
           {twoStory && movers < 3 && (
             <p className="rounded-xl bg-warn/12 px-3 py-2 text-sm text-warn">Two-story home: think about a 3rd mover.</p>
           )}
@@ -241,7 +221,7 @@ export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOptio
               onChange={(e) => setSpecial(e.target.value)}
             />
           </label>
-          {REFER.test(special) && (
+          {REFER_ITEMS.test(special) && (
             <p className="rounded-xl bg-bad/10 px-3 py-2 text-sm text-bad">
               ⚠ ZMC doesn&apos;t move pianos or hot tubs. Refer the customer to a partner mover for that item.
             </p>
