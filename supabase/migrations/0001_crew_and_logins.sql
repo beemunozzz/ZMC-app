@@ -94,3 +94,12 @@ from (values
   ('Mark', 'mover')
 ) as v (full_name, role)
 where not exists (select 1 from public.crew_members c where c.full_name = v.full_name);
+
+-- 6. If someone created a login before this setup ran, make the earliest login the owner.
+insert into public.crew_members (user_id, email, full_name, role)
+select u.id, lower(u.email), split_part(u.email, '@', 1), 'owner'
+from auth.users u
+where not exists (select 1 from public.crew_members where user_id is not null)
+order by u.created_at
+limit 1
+on conflict (email) do update set user_id = excluded.user_id, role = 'owner', active = true;
