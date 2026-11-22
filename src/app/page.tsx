@@ -79,7 +79,7 @@ async function Home() {
     const day = wxDays.get(j.job_date);
     if (day) {
       day.jobs.push(j);
-      day.kind = worse(day, w)!.kind;
+      day.kind = worse({ kind: day.kind }, { kind: w.kind })!.kind;
     } else wxDays.set(j.job_date, { kind: w.kind, jobs: [j] });
   }
   for (const [d, x] of wxDays)
