@@ -119,6 +119,19 @@
 5. ~~**Notifications**~~ (built, needs the two keys): home-screen app (needs the ZMC logo) plus phone notifications, so offers, answers, swap requests and nudges arrive right away, free. Until then, one-tap texts from Zach's phone with a link to answer. Replying "Confirmed" to a text needs automatic texts (Twilio, paid) later.
 6. **Later, with the website booking form (Phase 10)**: customers asking for a move within 72 hours see "Moves within 72 hours need confirmation" and can offer up to 3 dates or times. Zach gets the request, checks who's free, and sends job offers from the app.
 
+## Questions for Zach (from Brandon's feature review)
+- California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
+- Customer e-signs the not-to-exceed estimate when they book (before the move)?
+- Payroll export file for an accountant / QuickBooks? Brandon's question: only for jobs paid by Zelle or card?
+- Employee documents (driver's license, W-4, I-9) in the employee file? Goes with the overtime question.
+
+## Next to build (Brandon said yes)
+- Job photos (before / damage / after), customer photos on quotes.
+- Ask for a Google review after an invoice is paid (one-tap text).
+- Profit per job (invoice total vs crew pay from hours × rate).
+- PDF invoice and receipt to text or email.
+- "Depth" look: preview built (`src/app/look-depth.css`, only active with data-look="depth"). Waiting on Brandon's yes/no from before-and-after screenshots.
+
 ## To do later
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.
 - [ ] Turn off "Confirm email" in Supabase (Authentication > Sign In / Providers > Email) before crew create passwords, if not done yet.
