@@ -52,7 +52,8 @@ export function JobCard({
       {crew.length ? (
         <div className="mt-2 space-y-0.5 text-sm text-ink">
           <p className="break-words">
-            <Icon name="star" className="mr-1 inline h-3.5 w-3.5 -translate-y-px text-tape" label="Crew lead" />
+            <Icon name="star" filled className="mr-1 inline h-3.5 w-3.5 -translate-y-px text-tape" />
+            <span className="text-muted">Lead:</span>{" "}
             {job.lead_id ? <b>{name(job.lead_id)}</b> : <span className="text-warn">not picked</span>}
           </p>
           {job.crew_ids.length > 0 && (

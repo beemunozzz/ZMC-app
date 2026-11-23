@@ -34,12 +34,12 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS;
 
-export function Icon({ name, className = "h-5 w-5", label }: { name: IconName; className?: string; label?: string }) {
+export function Icon({ name, className = "h-5 w-5", label, filled }: { name: IconName; className?: string; label?: string; filled?: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
       className={`shrink-0 ${className}`}
-      fill="none"
+      fill={filled ? "currentColor" : "none"}
       stroke="currentColor"
       strokeWidth="1.8"
       strokeLinecap="round"

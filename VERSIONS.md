@@ -12,6 +12,15 @@ Saved versions of the app, so we can always go back.
 - **What it is:** everything built so far with the approved "depth" look, before any changes from the
   Impeccable, Emil Kowalski motion, or taste skills.
 
+## Version 2 (in progress): refined redesign
+
+- **Where:** Claude's working copy (`claude/new-session-thne14`), on its Vercel preview link.
+- **What changed (refinement, same colors and fonts):** one drawn icon set instead of emoji and symbols
+  (weather keeps its emoji); headings say what the card is, with no small labels above them; tiles and
+  buttons in Inter; cards no longer slide in on every page open; the ☰ menu grows from its button;
+  branded text highlight and keyboard focus ring; hover highlights on computers.
+- **Status:** waiting on Brandon's yes or no. Not on the live app yet.
+
 ## How the redesign works
 
 - **Main version (`main`) = what everyone uses** at https://zmc-app.vercel.app. It stays on Version 1

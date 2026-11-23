@@ -183,7 +183,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
                     <span className="min-w-0 break-words text-ink">
                       {pid === job.lead_id ? (
                         <b className="inline-flex items-center gap-1">
-                          <Icon name="star" className="h-4 w-4 text-tape" /> {c?.full_name ?? "Removed"}
+                          <Icon name="star" filled className="h-4 w-4 text-tape" /> {c?.full_name ?? "Removed"}
                         </b>
                       ) : (
                         (c?.full_name ?? "Removed")
