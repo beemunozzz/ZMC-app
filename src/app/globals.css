@@ -69,14 +69,14 @@
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-barlow);
+  --font-sans: var(--font-archivo);
+  --font-display: var(--font-archivo);
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-archivo), system-ui, sans-serif;
 }
 
 /* Quick, calm entrance. Turned off for people who ask for less motion. */
@@ -196,4 +196,10 @@ p {
 }
 .hero .bg-primary {
   color: #0f1b2a;
+}
+
+/* Headlines: Archivo at its narrow width, bold, uppercase (where the class says so). */
+.font-display {
+  font-stretch: 62%;
+  font-variation-settings: "wdth" 62;
 }

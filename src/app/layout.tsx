@@ -1,14 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Inter } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import "./look-depth.css"; // the "depth" look (shadows, glass header, glowing buttons); on via data-look="depth" below
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
-const barlow = Barlow_Condensed({
-  variable: "--font-barlow",
-  subsets: ["latin"],
-  weight: ["700", "800"],
-});
+// One family for everything (Brandon's pick): Archivo. Headlines use its narrow width (see .font-display).
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
 
 export const metadata: Metadata = {
   title: "ZMC Hub",
@@ -27,7 +23,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${barlow.variable} h-full antialiased`} data-look="depth" suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} h-full antialiased`} data-look="depth" suppressHydrationWarning>
       <head>
         {/* Apply the saved Light / Dark choice before the page paints, so it never flashes. */}
         <script
