@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
@@ -24,7 +25,7 @@ import {
 } from "@/lib/dates";
 import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, type Job } from "@/lib/jobs";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
-import { WX_EMOJI, WX_LABEL, worse, type DayWx, type JobWx } from "@/lib/weather-kinds";
+import { WX_EMOJI, WX_LABEL, worse, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
@@ -179,33 +180,51 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
         {isOwner && view !== "today" && <Summary jobs={jobs.filter((j) => j.job_date >= (view === "month" ? firstOfMonth(date) : from) && j.job_date <= (view === "month" ? lastOfMonth(date) : to))} />}
 
         {view === "week" && (
-          <div className="grid gap-3 md:grid-cols-7 md:gap-2">
+          // Phone: a calendar-style agenda (big day number on the left, that day's jobs on the right).
+          // Computer: seven columns, as before.
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-7 md:gap-2">
             {Array.from({ length: 7 }, (_, i) => addDays(from, i)).map((d, i) => {
               const list = dayJobs(d);
               const isToday = d === today;
+              const wx = dayWx(d);
               return (
-                <section key={d} aria-label={fmtDayLong(d)} className="flex flex-col gap-2">
-                  <div className={`flex items-center gap-2 border-b pb-1 ${isToday ? "border-tape" : "border-line"}`}>
-                    <span className={`font-display text-lg font-extrabold uppercase ${isToday ? "text-ink" : "text-muted"}`}>
-                      {DAY_SHORT[i]}
+                <section key={d} aria-label={fmtDayLong(d)} className="grid grid-cols-[3.75rem_1fr] gap-3 md:flex md:flex-col md:gap-2">
+                  {/* Day column: fixed width so every row lines up */}
+                  <div
+                    className={`flex h-min flex-col items-center rounded-2xl py-2 md:flex-row md:justify-start md:gap-2 md:rounded-xl md:px-2 md:py-1 ${
+                      isToday ? "hero" : ""
+                    }`}
+                  >
+                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${isToday ? "text-tape" : "text-muted"}`}>{DAY_SHORT[i]}</span>
+                    <span className="font-display text-3xl font-extrabold tabular-nums leading-none text-ink md:text-xl">{dayOfMonth(d)}</span>
+                    <span className="mt-1 h-5 text-base leading-5 md:mt-0 md:ml-auto" title={wx ? `${WX_LABEL[wx.kind]}${wx.hi != null ? `, high ${wx.hi}°` : ""}` : undefined}>
+                      <span aria-hidden>{wx ? WX_EMOJI[wx.kind] : ""}</span>
+                      {wx && <span className="sr-only">{WX_LABEL[wx.kind]}</span>}
                     </span>
-                    <span className="text-sm tabular-nums text-muted">{fmtShort(d)}</span>
-                    {isToday && <span className="rounded-full bg-tape/20 px-2 py-0.5 text-[11px] font-semibold text-ink">Today</span>}
-                    <DayWeather wx={dayWx(d)} />
-                    {isOwner && (
-                      <Link
-                        href={`/jobs/new?date=${d}`}
-                        aria-label={`Add a job on ${fmtDayLong(d)}`}
-                        className="press ml-auto flex h-9 items-center rounded-lg px-2 text-sm font-semibold text-primary"
-                      >
-                        + Add
+                    {wx?.hi != null && <span className="text-[11px] tabular-nums text-muted md:hidden">{wx.hi}°</span>}
+                  </div>
+
+                  {/* That day's jobs */}
+                  <div className="flex min-w-0 flex-col gap-2">
+                    {list.map((j) => (
+                      <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={isOwner} wx={jobWx.get(j.id)} />
+                    ))}
+                    {!list.length && (
+                      <div className="flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-dashed border-line px-4">
+                        <span className="text-sm text-muted">No jobs</span>
+                        {isOwner && (
+                          <Link href={`/jobs/new?date=${d}`} className="press flex h-10 items-center gap-1 text-sm font-semibold text-primary" aria-label={`Add a job on ${fmtDayLong(d)}`}>
+                            <Icon name="plus" className="h-4 w-4" /> Add
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                    {list.length > 0 && isOwner && (
+                      <Link href={`/jobs/new?date=${d}`} className="press flex h-9 items-center gap-1 self-start px-1 text-sm font-semibold text-primary" aria-label={`Add another job on ${fmtDayLong(d)}`}>
+                        <Icon name="plus" className="h-4 w-4" /> Add
                       </Link>
                     )}
                   </div>
-                  {list.map((j) => (
-                    <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={isOwner} wx={jobWx.get(j.id)} />
-                  ))}
-                  {!list.length && <p className="pb-1 text-sm text-muted">No jobs</p>}
                 </section>
               );
             })}
@@ -286,13 +305,13 @@ function Toolbar({
       </div>
       <div className="flex items-center gap-2 sm:ml-auto">
         <Link href={href({ date: step(-1) })} className={arrow} aria-label="Back">
-          ‹
+          <Icon name="back" className="h-4 w-4" />
         </Link>
         <span className="min-w-0 flex-1 text-center font-display text-lg font-bold uppercase tabular-nums text-ink sm:w-44 sm:flex-none">
           {label}
         </span>
         <Link href={href({ date: step(1) })} className={arrow} aria-label="Forward">
-          ›
+          <Icon name="chevron" className="h-4 w-4" />
         </Link>
         {/* Fixed-width slot so the arrows never move */}
         <span className="w-16">
@@ -312,7 +331,7 @@ function Summary({ jobs }: { jobs: Job[] }) {
   const hrs = live.reduce((s, j) => s + (Number(j.est_hours) || 0), 0);
   const noCrew = live.filter((j) => isLive(j) && !jobCrew(j).length).length;
   const open = live.filter(isLive).reduce((s, j) => s + openSpots(j), 0);
-  const chip = "rounded-full border px-3 py-1 text-xs font-medium tabular-nums";
+  const chip = "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium tabular-nums";
   return (
     <div className="flex flex-wrap gap-1.5">
       <span className={`${chip} border-line text-ink`}>
@@ -321,7 +340,7 @@ function Summary({ jobs }: { jobs: Job[] }) {
       </span>
       {noCrew > 0 && (
         <span className={`${chip} border-bad/40 text-bad`}>
-          ⚠ No crew: <b>{noCrew}</b>
+          <Icon name="alert" className="h-3.5 w-3.5" /> No crew: <b>{noCrew}</b>
         </span>
       )}
       {live.length > 0 &&
@@ -330,7 +349,9 @@ function Summary({ jobs }: { jobs: Job[] }) {
             <b>{open}</b> open spot{open === 1 ? "" : "s"}
           </span>
         ) : (
-          <span className={`${chip} border-ok/40 text-ok`}>✓ Every job fully staffed</span>
+          <span className={`${chip} border-ok/40 text-ok`}>
+            <Icon name="check" className="h-3.5 w-3.5" /> Every job fully staffed
+          </span>
         ))}
     </div>
   );
@@ -510,20 +531,3 @@ function CrewToday({
   );
 }
 
-/** Emoji + high for a day heading. Fixed width so headings line up. */
-function DayWeather({ wx }: { wx: (DayWx & { atSite?: boolean }) | null }) {
-  if (!wx) return null;
-  return (
-    <span
-      className="flex items-center gap-1 text-sm tabular-nums text-muted"
-      title={`${WX_LABEL[wx.kind]}${wx.atSite ? " at a job site" : " in Stockton"}`}
-    >
-      <span aria-hidden className="relative">
-        {WX_EMOJI[wx.kind]}
-        {wx.atSite && <span className="absolute -bottom-0.5 -right-1 h-2 w-2 rounded-full bg-warn" />}
-      </span>
-      <span className="sr-only">{WX_LABEL[wx.kind]}</span>
-      {wx.hi != null && <span>{wx.hi}°</span>}
-    </span>
-  );
-}

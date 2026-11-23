@@ -177,7 +177,7 @@ These come from Brandon's feedback and the `zmc-app-design` skill.
   - primary blue `#1F4E8C` / `#8FB2E6`
   - tape accent `#D9A25B` / `#E0B072`
   - lines `#E2DBD0`
-- Fonts: **Barlow Condensed** (bold, uppercase headings) and **Inter** (body).
+- Fonts: **Archivo** for everything (Brandon's pick, Nov 2026): its narrow width (`.font-display`, wdth 62) for bold uppercase headings, regular width for body. Before that: Barlow Condensed + Inter (Version 1).
 - The ZMC logo exists in black and white versions; ask Brandon for the files.
 - Motion: subtle and quick, ease-out, animate only transform and opacity, press scale 0.97, and respect "reduce motion".
 - Things should sit in **consistent fixed spots**. Brandon notices when layouts shift from one card to the next.

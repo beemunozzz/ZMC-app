@@ -69,14 +69,14 @@
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-barlow);
+  --font-sans: var(--font-archivo);
+  --font-display: var(--font-archivo);
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-archivo), system-ui, sans-serif;
 }
 
 /* Quick, calm entrance. Turned off for people who ask for less motion. */
@@ -116,4 +116,91 @@ label:has(> input[type="radio"]) {
 }
 button:disabled {
   cursor: not-allowed;
+}
+
+/* ---------- Browser surfaces carry the brand too ---------- */
+::selection {
+  background: color-mix(in srgb, var(--tape) 45%, transparent);
+  color: var(--ink);
+}
+html {
+  accent-color: var(--primary);
+  caret-color: var(--primary);
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 0.75rem;
+}
+h1, h2, h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+* {
+  scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
+}
+
+/* ---------- The ☰ menu grows from the button that opened it ---------- */
+@keyframes menu-pop {
+  from { opacity: 0; transform: scale(.96) translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.menu-pop {
+  transform-origin: top right;
+  animation: menu-pop 180ms cubic-bezier(.23, 1, .32, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-pop { animation: none; }
+}
+
+/* ---------- Bold: the navy band ("hero") ----------
+   Re-maps the color tokens inside it, so every existing piece (chips, buttons, weather notes)
+   automatically reads correctly on navy. Uses only colors ZMC already owns. */
+.hero {
+  --ink: #f4f2ee;
+  --muted: #a9b4c2;
+  --line: rgb(255 255 255 / 0.14);
+  --card: rgb(255 255 255 / 0.06);
+  --bg: rgb(255 255 255 / 0.08);
+  --primary: #8fb2e6;
+  --ok: #8fd3a6;
+  --warn: #f0b27a;
+  --bad: #f2b8b5;
+  color: var(--ink);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(31 78 140 / 0.55), transparent 60%),
+    linear-gradient(170deg, #0f1b2a, #13243a);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 18px 40px -20px rgb(15 27 42 / 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero {
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgb(143 178 230 / 0.30), transparent 62%),
+      linear-gradient(170deg, #12233b, #1b3256);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06) inset, 0 18px 40px -20px rgb(0 0 0 / 0.8);
+  }
+}
+:root[data-theme="dark"] .hero {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(143 178 230 / 0.30), transparent 62%),
+    linear-gradient(170deg, #12233b, #1b3256);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06) inset, 0 18px 40px -20px rgb(0 0 0 / 0.8);
+}
+/* Cards inside the band stay glassy, not white. */
+:root[data-look="depth"] .hero .bg-card {
+  background-image: none;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset;
+}
+.hero .bg-primary {
+  color: #0f1b2a;
+}
+
+/* Headlines: Archivo at its narrow width, bold, uppercase (where the class says so). */
+.font-display {
+  font-stretch: 62%;
+  font-variation-settings: "wdth" 62;
+  word-spacing: 0.06em;
 }

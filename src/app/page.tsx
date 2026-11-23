@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
@@ -6,8 +7,8 @@ import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ROLE_LABEL, requireMember } from "@/lib/crew";
-import { DAY_SHORT, ZMC_TZ, addDays, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
-import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
+import { DAY_SHORT, ZMC_TZ, addDays, minutes as minutesOf, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
+import { JOB_COLUMNS, cityOf, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
 import { money } from "@/lib/pricing";
 import type { QuoteStatus } from "@/lib/quotes";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
@@ -16,6 +17,7 @@ import { TIME_COLUMNS, clockTime, type TimeEntry } from "@/lib/time";
 import { reminderText } from "@/lib/texts";
 import { ReminderLink } from "@/components/ReminderLink";
 import { LimitedHome } from "@/components/LimitedHome";
+import { Avatars } from "@/components/Avatars";
 import { answerOnCall } from "@/app/payroll/employee-actions";
 import { decideTimeOff, resolveCover } from "@/app/availability/actions";
 import { COVER_COLUMNS, TIME_OFF_COLUMNS, timeOffText, type CoverRequest, type TimeOff } from "@/lib/availability";
@@ -108,6 +110,17 @@ async function Home() {
   // ---- Today ----
   const todays = jobs.filter((j) => j.job_date === today && j.status !== "canceled");
   const working = new Set(todays.flatMap(jobCrew));
+  const nowMin = minutesOf(
+    new Intl.DateTimeFormat("en-GB", { timeZone: ZMC_TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()),
+  )!;
+  const liveToday = todays.filter(isLive);
+  // Next up: the first job today that hasn't finished yet.
+  const nextUp =
+    liveToday.find((j) => {
+      const st = minutesOf(j.start_time);
+      return st == null || st + (Number(j.est_hours) || 2) * 60 > nowMin;
+    }) ?? null;
+  const laterToday = nextUp ? liveToday.filter((j) => j !== nextUp && liveToday.indexOf(j) > liveToday.indexOf(nextUp)) : [];
 
   // ---- Needs attention ----
   const attention: Attention[] = [];
@@ -176,18 +189,85 @@ async function Home() {
       <AppHeader title="Home" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} newJobHref={`/jobs/new?date=${today}`} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-        {/* Greeting */}
-        <section className="rise">
-          <p className="text-sm text-muted">{fmtDayLong(today)}</p>
-          <h1 className="font-display text-3xl font-extrabold uppercase leading-tight text-ink">
-            {hello}, {me.full_name.split(" ")[0]}
-          </h1>
-          {todayWx && (
-            <p className="mt-0.5 text-sm tabular-nums text-muted">
-              {WX_EMOJI[todayWx.kind]} {todayWx.text || WX_LABEL[todayWx.kind]} in Stockton
-              {todayWx.hi != null ? ` · high ${todayWx.hi}°` : ""}
+        {/* Today: the one thing that matters now, on the navy band */}
+        <section className="hero -mx-4 -mt-4 flex flex-col gap-4 px-4 pb-6 pt-5 sm:mx-0 sm:mt-0 sm:rounded-3xl sm:px-6">
+          <div>
+            <h1 className="font-display text-4xl font-extrabold uppercase leading-[0.95] text-ink">
+              {hello},<br />
+              {me.full_name.split(" ")[0]}
+            </h1>
+            <p className="mt-2 text-sm tabular-nums text-muted">
+              {fmtDayLong(today)}
+              {todayWx && (
+                <>
+                  {" · "}
+                  <span aria-hidden>{WX_EMOJI[todayWx.kind]}</span> {todayWx.text || WX_LABEL[todayWx.kind]}
+                  {todayWx.hi != null ? `, high ${todayWx.hi}°` : ""}
+                </>
+              )}
             </p>
+          </div>
+
+          {nextUp ? (
+            <Link href={`/jobs/${nextUp.id}`} className="press block rounded-2xl border border-line bg-card p-4 transition-colors hover:border-tape/50">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="font-display text-lg font-extrabold uppercase text-muted">{todays.indexOf(nextUp) === 0 && nowMin < (minutesOf(nextUp.start_time) ?? 0) ? "First job" : "Next up"}</h2>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
+                    !jobCrew(nextUp).length ? "bg-bad/15 text-bad" : openSpots(nextUp) ? "bg-warn/15 text-warn" : "bg-ok/15 text-ok"
+                  }`}
+                >
+                  {jobCrew(nextUp).length}/{nextUp.movers_needed} crew
+                </span>
+              </div>
+              <p className="mt-1 font-display text-5xl font-extrabold tabular-nums leading-none text-tape">{timeSpan(nextUp).split(" – ")[0]}</p>
+              <p className="mt-2 break-words text-base font-semibold text-ink">{nextUp.customer_name}</p>
+              <p className="break-words text-sm text-muted">
+                {[cityOf(nextUp.pickup_address), cityOf(nextUp.dropoff_address)].filter(Boolean).join(" → ") || nextUp.job_type}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <Avatars people={jobCrew(nextUp).map((id) => ({ id, name: names.get(id) ?? "?" }))} leadId={nextUp.lead_id} />
+                <span className="flex items-center gap-1 text-sm font-semibold text-primary">
+                  Open <Icon name="chevron" className="h-4 w-4" />
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <p className="rounded-2xl border border-line bg-card p-4 text-[15px] text-muted">{todays.length ? "That's every job for today." : "No jobs today."}</p>
           )}
+
+          {laterToday.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {laterToday.map((j) => (
+                <li key={j.id}>
+                  <Link href={`/jobs/${j.id}`} className="flex items-center gap-3 rounded-xl px-1 py-1.5 transition-colors hover:bg-bg">
+                    <span className="w-16 shrink-0 text-sm font-semibold tabular-nums text-ink">{timeSpan(j).split(" – ")[0]}</span>
+                    <span className="min-w-0 flex-1 truncate text-[15px] text-ink">{j.customer_name}</span>
+                    <Avatars size="sm" max={3} people={jobCrew(j).map((id) => ({ id, name: names.get(id) ?? "?" }))} leadId={j.lead_id} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+            <span className="tabular-nums">
+              <b className="text-ink">{todays.length}</b> job{todays.length === 1 ? "" : "s"} today
+            </span>
+            <span className="tabular-nums">
+              <b className="text-ink">{working.size}</b> crew working
+            </span>
+            {clockOn && (
+              <span className="tabular-nums">
+                <b className="text-ink">{onClock.length}</b> on the clock{onClock.length ? ` (${onClock.map((e) => `${names.get(e.crew_id) ?? "?"} since ${clockTime(e.clock_in)}`).join(", ")})` : ""}
+              </span>
+            )}
+            <Link href="/schedule?view=today" className="ml-auto font-semibold text-primary">
+              Full day
+            </Link>
+          </div>
+
+          {todayWx && WX_WATCH.includes(todayWx.kind) && <WeatherNote wx={{ ...todayWx, atSite: false }} />}
         </section>
 
         {/* Can't make a job */}
@@ -287,59 +367,6 @@ async function Home() {
           </section>
         )}
 
-        {/* Today at a glance */}
-        <section className={card}>
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className={h2}>Today</h2>
-            <Link href="/schedule?view=today" className="text-sm font-semibold text-primary">
-              Open ›
-            </Link>
-          </div>
-          {todays.length ? (
-            <ul className="mt-2 divide-y divide-line">
-              {todays.map((j) => {
-                const n = jobCrew(j).length;
-                return (
-                  <li key={j.id}>
-                    <Link href={`/jobs/${j.id}`} className="flex items-center gap-3 py-2.5">
-                      <span className="w-16 shrink-0 text-sm font-semibold tabular-nums text-ink">{timeSpan(j).split(" – ")[0]}</span>
-                      <span className="min-w-0 flex-1 truncate text-[15px] text-ink">{j.customer_name}</span>
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                          !n ? "bg-bad/10 text-bad" : openSpots(j) ? "bg-warn/12 text-warn" : "bg-ok/12 text-ok"
-                        }`}
-                      >
-                        {n}/{j.movers_needed} crew
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="mt-1 text-[15px] text-muted">No jobs today.</p>
-          )}
-          {todays.length > 0 && (
-            <p className="mt-2 text-sm text-muted">
-              Working today:{" "}
-              <span className="text-ink">{working.size ? [...working].map((id) => names.get(id) ?? "Removed").join(", ") : "nobody assigned yet"}</span>
-            </p>
-          )}
-          {clockOn && (
-            <p className="mt-1 text-sm text-muted">
-              On the clock:{" "}
-              <span className="text-ink">
-                {onClock.length ? onClock.map((e) => `${names.get(e.crew_id) ?? "Removed"} (since ${clockTime(e.clock_in)})`).join(", ") : "nobody right now"}
-              </span>
-            </p>
-          )}
-          {todayWx && WX_WATCH.includes(todayWx.kind) && (
-            <div className="mt-3">
-              <WeatherNote wx={{ ...todayWx, atSite: false }} />
-            </div>
-          )}
-        </section>
-
         {/* Needs attention */}
         <section className={card}>
           <h2 className={h2}>
@@ -349,21 +376,21 @@ async function Home() {
             <ul className="mt-2 divide-y divide-line">
               {attention.slice(0, 12).map((a) => (
                 <li key={a.key}>
-                  <Link href={a.href} className="flex items-center gap-3 py-2.5">
+                  <Link href={a.href} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-bg">
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${a.tone === "bad" ? "bg-bad" : "bg-warn"}`} aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-medium text-ink">{a.text}</span>
                       <span className="block truncate text-xs tabular-nums text-muted">{a.sub}</span>
                     </span>
-                    <span className="text-lg text-muted" aria-hidden>
-                      ›
-                    </span>
+                    <Icon name="chevron" className="h-4 w-4 text-muted" />
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-[15px] font-medium text-ok">✓ All clear for the next two weeks.</p>
+            <p className="mt-1 flex items-center gap-1.5 text-[15px] font-medium text-ok">
+              <Icon name="check" className="h-4 w-4" /> All clear for the next two weeks.
+            </p>
           )}
           {attention.length > 12 && <p className="mt-1 text-sm text-muted">+{attention.length - 12} more on the schedule.</p>}
         </section>
@@ -395,15 +422,15 @@ async function Home() {
         )}
 
         {/* Tiles */}
-        <nav aria-label="Go to" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <nav aria-label="Go to" className="grid grid-cols-4 gap-2">
           <Tile href="/schedule" icon="calendar" label="Schedule" />
           <Tile href={`/jobs/new?date=${today}`} icon="plus" label="New job" primary />
-          <Tile href="/quotes" icon="chat" label="Quotes" badge={newQuotes.length ? `${newQuotes.length} new` : undefined} />
+          <Tile href="/quotes" icon="chat" label="Quotes" badge={newQuotes.length ? String(newQuotes.length) : undefined} />
           <Tile href="/quotes/new" icon="plus" label="New quote" />
           <Tile href="/team" icon="people" label="Crew" />
           <Tile href="/settings" icon="tag" label="Prices" />
           <Tile href="/invoices" icon="receipt" label="Invoices" />
-          <Tile href="/payroll" icon="clock" label="Payroll" badge={clockOn ? undefined : "Clock-in off"} quiet={!clockOn} />
+          <Tile href="/payroll" icon="clock" label="Payroll" />
         </nav>
 
         {/* Next 7 days */}
@@ -496,19 +523,22 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 function Tile({ href, icon, label, badge, primary, quiet }: { href: string; icon: keyof typeof ICONS; label: string; badge?: string; primary?: boolean; quiet?: boolean }) {
+  // Compact quick action: icon over a short label, four across, so today's work leads the page.
   return (
     <Link
       href={href}
-      className={`press relative flex h-24 flex-col justify-between rounded-2xl p-4 ${
+      className={`press relative flex h-20 flex-col items-center justify-center gap-1.5 rounded-2xl px-1 text-center ${
         primary ? "bg-primary text-white dark:text-navy" : "border border-line bg-card text-ink"
       }`}
     >
-      <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         {ICONS[icon]}
       </svg>
-      <span className="font-display text-lg font-extrabold uppercase leading-none">{label}</span>
-      {badge && (
-        <span className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-xs font-semibold ${quiet ? "bg-line/70 text-muted" : "bg-warn/15 text-warn"}`}>{badge}</span>
+      <span className="text-[13px] font-semibold leading-tight">{label}</span>
+      {badge && !quiet && (
+        <span className="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-warn px-1 text-[11px] font-bold text-white dark:text-navy">
+          {badge}
+        </span>
       )}
     </Link>
   );
