@@ -89,7 +89,7 @@
   - After saving, only the owner can change hours or charges (invoice page → "Change hours (owner only)"). The invoice and job page then show "Changed by Zach to …" next to what the customer verified. Crew leads can still record payment.
   - Enforced in the database (`invoice_guard` trigger). Tested on the live database with a throwaway invoice: hours change blocked for non-owner, verified hours can't change at all, marking paid still works. The test left nothing behind.
 
-- Employee files (Payroll → Employees → tap a person). Setup steps 0010 (applied) and 0011 (terminate/rehire, needs Brandon's approval in Supabase).
+- Employee files (Payroll → Employees → tap a person). Setup steps 0010 and 0011 applied (Brandon approved 0011). Tested: a non-owner trying to terminate is blocked.
   - Contact info on file: name, phone, email (login), home address, emergency contact, start date, notes. Private info is in the owner-only `crew_pay` table.
   - Pay: current rate, this week / last 4 weeks hours and estimated pay, "Give a raise" (new rate, start date, note) and pay history (`pay_changes`).
   - Employment type: Full-time, Part-time (normal access), On call (sees a job only from the day before to the day after; otherwise a home screen), Leave of absence (home screen only). Enforced in the database (`can_see_job_date` in the jobs rule).
