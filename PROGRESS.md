@@ -119,6 +119,8 @@
 5. ~~**Notifications**~~ (built, needs the two keys): home-screen app (needs the ZMC logo) plus phone notifications, so offers, answers, swap requests and nudges arrive right away, free. Until then, one-tap texts from Zach's phone with a link to answer. Replying "Confirmed" to a text needs automatic texts (Twilio, paid) later.
 6. **Later, with the website booking form (Phase 10)**: customers asking for a move within 72 hours see "Moves within 72 hours need confirmation" and can offer up to 3 dates or times. Zach gets the request, checks who's free, and sends job offers from the app.
 
+- Design skills added to the project (`.claude/skills/`): Impeccable (design rules only; its auto-running program and hooks left out for safety) and Emil Kowalski's web motion skills. The taste skill is held for the zmcmove.com redesign. They load automatically in new Claude Code sessions.
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?

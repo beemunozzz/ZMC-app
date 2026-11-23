@@ -183,6 +183,8 @@ These come from Brandon's feedback and the `zmc-app-design` skill.
 - Things should sit in **consistent fixed spots**. Brandon notices when layouts shift from one card to the next.
 - Use smaller text on phones, an app-style header, and a ☰ menu for secondary screens.
 - Support light and dark mode.
+- Design skills in `.claude/skills/` (Impeccable and Emil Kowalski's motion skills, text only; see `.claude/skills/README.md`). ZMC's own brand rules win when they disagree.
+- The approved "depth" look lives in `src/app/look-depth.css` (soft layered shadows, glass header, glowing main buttons).
 
 ---
 
