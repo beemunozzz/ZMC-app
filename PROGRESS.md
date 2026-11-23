@@ -129,6 +129,8 @@
 
 - Built (setup step 0015): Notifications is one on/off switch. Crew also get a **Night-before reminder** switch (around 6 PM, tomorrow's start time and address; Vercel's free daily timer, `vercel.json`), **My jobs in my calendar** on My settings (a private link their iPhone or Google calendar keeps up to date; "Reset link" makes a new one), and **My hours** (this week and last week, hours only) on the crew home.
 
+- Built (setup step 0016): **Meet up**. Every job says where the crew meets: the shop (Zach's house) by default, at a meet time = start − drive from the shop − buffer (Prices page → "Meeting at the shop": shop address + extra minutes, default 10). Drive time: what Zach types on the job, else the job's miles out, else an estimate from the addresses (free map lookup; Google Maps can make it exact later). Crew can tap "I'll meet at the site (own car)" until 8 PM the night before; Zach and the crew lead are notified. Zach (any time) or the crew lead (until the cutoff) can switch everyone to "meet at the job site".
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
@@ -153,6 +155,7 @@
   4. The same box also makes a third key, `CRON_SECRET` (type Secret), for the night-before reminders. Add it too.
   5. Tell Claude "keys added" so it can republish the app.
   6. Turn notifications on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → Turn on → Allow. Android or computer: ☰ → My settings → Notifications → Turn on → Allow. Then tap "Send me a test".
+- [ ] Add the shop address (Zach's house) on ☰ → Prices → Meeting at the shop, so meet times use the real drive.
 - [ ] Add Zach's payment details (☰ → Prices → Getting paid: Zelle, Cash App, Venmo, Apple Cash) so those show as choices on invoices.
 - [ ] Send Claude the ZMC logo files (black and white) for the app icon.
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.
