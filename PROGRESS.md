@@ -136,13 +136,21 @@
 - PDF invoice and receipt to text or email.
 - ~~"Depth" look~~: approved and turned on for everyone (`src/app/look-depth.css`; switch off by removing data-look="depth" in `layout.tsx`).
 
-## To do later
+## To do later (Brandon's to-do list: "bring up my to-do list")
+- [ ] **Turn on phone notifications (one time, about 5 minutes):**
+  1. Logged in as the owner, open the app → ☰ → My settings → Notifications.
+  2. Scroll to "One-time setup (owner)" → tap "Make the two keys". They're made on your device and sent nowhere.
+  3. vercel.com → zmc-app → Settings → Environment Variables: add `VAPID_PUBLIC_KEY` (type Config) and `VAPID_PRIVATE_KEY` (type Secret), copying each value from the app. Keep the app page open until both are saved.
+  4. Tell Claude "keys added" so it can republish the app.
+  5. Turn notifications on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → Turn on → Allow. Android or computer: ☰ → My settings → Notifications → Turn on → Allow. Then tap "Send me a test".
+- [ ] Add Zach's payment details (☰ → Prices → Getting paid: Zelle, Cash App, Venmo, Apple Cash) so those show as choices on invoices.
+- [ ] Send Claude the ZMC logo files (black and white) for the app icon.
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.
 - [ ] Turn off "Confirm email" in Supabase (Authentication > Sign In / Providers > Email) before crew create passwords, if not done yet.
-
 - [ ] Decide on a shared ZMC business email (for example a new Gmail) to use for new service sign-ups, so fewer accounts need transferring. See `TRANSFER.md`.
-
 - [ ] Zach: review `WHAT-TO-EXPECT.md` (fix the [bracketed] guesses), publish it on zmcmove.com, then paste the link into ☰ → Prices.
+- [ ] Ask Zach the questions in "Questions for Zach" above.
+- [ ] Say yes or no to the redesign preview (see `VERSIONS.md`).
 
 ## Known limits
 - Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. It's only needed for "Forgot password" now. Before crew rely on it, set up a free email sender (Resend) in Supabase > Authentication > SMTP.
