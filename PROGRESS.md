@@ -101,6 +101,14 @@
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
 - Before crew log in: add their emails on the Crew page, and set up a free email sender (Resend) so "Forgot password" emails reach them.
 
+## Planned: crew availability, short-notice job offers, swaps (agreed with Brandon, not built yet)
+1. **Not available**: crew mark days or times they can't work. 7+ days ahead = automatic; under 7 days = a request Zach approves or denies. Zach's crew picker shows each person as Free / On another job / Not available.
+2. **Job offers**: assigning someone to a job within 3 days (72 hours) sends them an offer: Accept / Can't make it, with the estimated finish time. Zach sees Waiting / Accepted / Can't make it. No answer after N minutes (Zach sets it on Payroll; starts at 30) → Zach gets a nudge.
+3. **Job changes**: if Zach moves an accepted job (new day or time, more hours), the crew on it are asked to confirm again ("Job moved from Thu 8 AM to Fri 2 PM. Confirm?").
+4. **Swaps and cover** (Zach can switch it on or off): crew can request a swap with a coworker (coworker accepts, then Zach approves), or "I need someone to cover" (goes to Zach, who finds someone; available crew can offer to take it).
+5. **Notifications**: home-screen app (needs the ZMC logo) plus phone notifications, so offers, answers, swap requests and nudges arrive right away, free. Until then, one-tap texts from Zach's phone with a link to answer. Replying "Confirmed" to a text needs automatic texts (Twilio, paid) later.
+6. **Later, with the website booking form (Phase 10)**: customers asking for a move within 72 hours see "Moves within 72 hours need confirmation" and can offer up to 3 dates or times. Zach gets the request, checks who's free, and sends job offers from the app.
+
 ## To do later
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.
 - [ ] Turn off "Confirm email" in Supabase (Authentication > Sign In / Providers > Email) before crew create passwords, if not done yet.
