@@ -70,6 +70,10 @@
   - Database setup: `supabase/migrations/0005_invoices.sql`.
   - Not built yet: PDF invoice, card payments in the app (Square or Stripe, in Zach's name), Zelle QR picture.
 
+- Supabase and Vercel connectors connected (Brandon signed in at claude.ai). Claude now runs database setup steps directly instead of Brandon pasting SQL.
+  - Database setup status: 0001–0006 all applied. 0004 (texts) and 0005 (invoices) were applied by Claude; 0006 locks down helper functions per the Supabase security check.
+  - Remaining Supabase security note: "Leaked password protection" is off. It's a Pro-plan feature; fine for now.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
