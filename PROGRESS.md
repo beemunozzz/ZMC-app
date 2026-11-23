@@ -148,7 +148,7 @@
 ## To do later (Brandon's to-do list: "bring up my to-do list")
 - [ ] **Turn on phone notifications (one time, about 5 minutes):**
   1. Logged in as the owner, open the app → ☰ → My settings → Notifications.
-  2. Scroll to "One-time setup (owner)" → tap "Make the two keys". They're made on your device and sent nowhere.
+  2. Scroll to "One-time setup (owner)" → tap "Make the 3 keys". They're made on your device and sent nowhere.
   3. vercel.com → zmc-app → Settings → Environment Variables: add `VAPID_PUBLIC_KEY` (type Config) and `VAPID_PRIVATE_KEY` (type Secret), copying each value from the app. Keep the app page open until both are saved.
   4. The same box also makes a third key, `CRON_SECRET` (type Secret), for the night-before reminders. Add it too.
   5. Tell Claude "keys added" so it can republish the app.

@@ -18,6 +18,7 @@ Updated each time a new service is added.
 | Setting (in Vercel) | What it is | On hand-over |
 |---|---|---|
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Keys that let the app send phone notifications | They move with the Vercel project. Nothing to do. (If they're ever changed, everyone has to turn notifications on again.) |
+| `CRON_SECRET` | Key for the nightly "job tomorrow" reminder timer | Moves with the Vercel project. If it is ever changed, make a new one in the app (Notifications → One-time setup) so the database fingerprint matches. |
 
 ## Coming soon (Phase 3)
 
