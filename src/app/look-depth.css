@@ -1,6 +1,6 @@
 /*
- * "Depth" look: PREVIEW ONLY. Nothing here applies unless <html data-look="depth"> is set,
- * so the live app looks exactly the same until Brandon approves it.
+ * "Depth" look (approved by Brandon). Turned on for everyone with <html data-look="depth"> in layout.tsx.
+ * Remove that attribute to go back to the flat look.
  * Ideas: layered soft shadows, a faint top highlight on cards, a glassy header and menu,
  * buttons with a gentle gradient and inner light, inputs that sit slightly "into" the card.
  */

@@ -130,7 +130,7 @@
 - Ask for a Google review after an invoice is paid (one-tap text).
 - Profit per job (invoice total vs crew pay from hours × rate).
 - PDF invoice and receipt to text or email.
-- "Depth" look: preview built (`src/app/look-depth.css`, only active with data-look="depth"). Waiting on Brandon's yes/no from before-and-after screenshots.
+- ~~"Depth" look~~: approved and turned on for everyone (`src/app/look-depth.css`; switch off by removing data-look="depth" in `layout.tsx`).
 
 ## To do later
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.

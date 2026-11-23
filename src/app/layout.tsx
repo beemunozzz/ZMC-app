@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
 import "./globals.css";
-import "./look-depth.css"; // preview only: does nothing unless data-look="depth" is set
+import "./look-depth.css"; // the "depth" look (shadows, glass header, glowing buttons); on via data-look="depth" below
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const barlow = Barlow_Condensed({
@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${barlow.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${barlow.variable} h-full antialiased`} data-look="depth" suppressHydrationWarning>
       <head>
         {/* Apply the saved Light / Dark choice before the page paints, so it never flashes. */}
         <script
