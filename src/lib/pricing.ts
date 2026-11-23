@@ -13,6 +13,7 @@ export type Prices = {
   water: number; // per job, quotes only
   nte_cushion_hours: number; // suggested not-to-exceed = estimate + this many hours
   business_phone: string;
+  expect_url: string; // "What to expect" page, linked in texts
 };
 
 export const DEFAULT_PRICES: Prices = {
@@ -27,10 +28,11 @@ export const DEFAULT_PRICES: Prices = {
   water: 5,
   nte_cushion_hours: 1,
   business_phone: "(209) 326-5601",
+  expect_url: "",
 };
 
 export const PRICE_COLUMNS =
-  "rate, min_hours, min_movers, trip_free_miles, trip_step_miles, trip_step_hours, truck_per_mile, materials, water, nte_cushion_hours, business_phone";
+  "rate, min_hours, min_movers, trip_free_miles, trip_step_miles, trip_step_hours, truck_per_mile, materials, water, nte_cushion_hours, business_phone, expect_url";
 
 export type QuoteInputs = {
   movers: number | string | null;

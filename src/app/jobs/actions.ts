@@ -98,3 +98,10 @@ export async function deleteJob(form: FormData) {
   await supabase.from("jobs").delete().eq("id", id);
   redirect(isISODate(date) ? `/schedule?view=week&date=${date}` : "/schedule");
 }
+
+/** Remember that the day-before reminder was sent (owner only). */
+export async function markReminderSent(id: string) {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner" || !UUID.test(id)) return;
+  await supabase.from("jobs").update({ reminder_sent_at: new Date().toISOString() }).eq("id", id);
+}

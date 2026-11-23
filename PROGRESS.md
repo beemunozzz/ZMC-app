@@ -50,6 +50,14 @@
   - Crew still land on their "next job" screen (Brandon's choice).
 - Navigate buttons open Apple Maps on iPhones and iPads, and Google Maps on Android and computers (detected automatically). "See the house" stays on Google Maps for Street View.
 
+- Customer texts, one-tap (free; Brandon chose this over automatic texts for now). The app writes the text and opens the phone's Messages app with the customer's number; the sender taps Send, so texts come from their own phone.
+  - On my way: crew lead (on their next-job card and the job page) or owner picks the drive time (10 min to 1 hr); the text gives the arrival time, rounded up to 5 minutes.
+  - Day-before reminder: dashboard "Tomorrow's reminders" list and the job page. Ticks off once tapped (`jobs.reminder_sent_at`).
+  - Booking confirmation: offered right after Book it, and on the job page.
+  - Texts link to a "What to expect" page when its link is set (☰ → Prices). Draft wording for zmcmove.com is in `WHAT-TO-EXPECT.md`.
+  - Database setup: `supabase/migrations/0004_texts.sql`.
+  - Later: automatic texts from a ZMC number (Twilio), in Zach's business name, with "OK to text" consent and STOP handling. Exact drive-time ETA needs Google Maps (Phase 3).
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
@@ -60,6 +68,8 @@
 - [ ] Turn off "Confirm email" in Supabase (Authentication > Sign In / Providers > Email) before crew create passwords, if not done yet.
 
 - [ ] Decide on a shared ZMC business email (for example a new Gmail) to use for new service sign-ups, so fewer accounts need transferring. See `TRANSFER.md`.
+
+- [ ] Zach: review `WHAT-TO-EXPECT.md` (fix the [bracketed] guesses), publish it on zmcmove.com, then paste the link into ☰ → Prices.
 
 ## Known limits
 - Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. It's only needed for "Forgot password" now. Before crew rely on it, set up a free email sender (Resend) in Supabase > Authentication > SMTP.

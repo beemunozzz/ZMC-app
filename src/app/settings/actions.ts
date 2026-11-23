@@ -17,6 +17,11 @@ export async function savePrices(_: SettingsState, form: FormData): Promise<Sett
       row.business_phone = raw.slice(0, 40) || DEFAULT_PRICES.business_phone;
       continue;
     }
+    if (k === "expect_url") {
+      if (raw && !/^https:\/\/\S+$/.test(raw)) return { error: "The What to expect link should start with https://" };
+      row.expect_url = raw.slice(0, 300);
+      continue;
+    }
     const n = Number(raw);
     if (raw === "" || !Number.isFinite(n) || n < 0) return { error: "Every price needs a number (0 or more)." };
     (row as Record<string, number>)[k] = n;

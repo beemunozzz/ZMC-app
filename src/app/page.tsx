@@ -11,6 +11,9 @@ import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job 
 import { money } from "@/lib/pricing";
 import type { QuoteStatus } from "@/lib/quotes";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
+import { getPrices } from "@/lib/settings";
+import { reminderText } from "@/lib/texts";
+import { ReminderLink } from "@/components/ReminderLink";
 import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, type JobWx } from "@/lib/weather-kinds";
 
 export default function HomePage() {
@@ -47,6 +50,17 @@ async function Home() {
 
   const upcoming = jobs.filter((j) => j.job_date >= today && j.job_date <= horizon && isLive(j));
   const jobWx = await jobsForecast(upcoming, stockton);
+
+  // ---- Tomorrow's reminders ----
+  const tomorrow = addDays(today, 1);
+  const tomorrows = jobs.filter((j) => j.job_date === tomorrow && isLive(j));
+  const prices = await getPrices(supabase);
+  const sent = new Set<string>();
+  if (tomorrows.length) {
+    const { data } = await supabase.from("jobs").select("id, reminder_sent_at").in("id", tomorrows.map((j) => j.id));
+    for (const r of (data ?? []) as { id: string; reminder_sent_at: string | null }[]) if (r.reminder_sent_at) sent.add(r.id);
+  }
+  const remindersLeft = tomorrows.filter((j) => !sent.has(j.id)).length;
 
   // ---- Today ----
   const todays = jobs.filter((j) => j.job_date === today && j.status !== "canceled");
@@ -205,6 +219,32 @@ async function Home() {
           )}
           {attention.length > 12 && <p className="mt-1 text-sm text-muted">+{attention.length - 12} more on the schedule.</p>}
         </section>
+
+        {/* Tomorrow's reminders */}
+        {tomorrows.length > 0 && (
+          <section className={card}>
+            <h2 className={h2}>
+              Tomorrow&apos;s reminders{" "}
+              <span className={`tabular-nums ${remindersLeft ? "text-warn" : "text-ok"}`}>
+                {remindersLeft ? `(${remindersLeft} to send)` : "✓ all sent"}
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-muted">Tap to open Messages with the reminder written. Check it, then tap Send.</p>
+            <ul className="mt-2 divide-y divide-line">
+              {tomorrows.map((j) => (
+                <li key={j.id} className="flex items-center gap-3 py-2.5">
+                  <Link href={`/jobs/${j.id}`} className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-medium text-ink">{j.customer_name}</span>
+                    <span className="block truncate text-xs tabular-nums text-muted">{timeSpan(j)}</span>
+                  </Link>
+                  <div className="w-40 shrink-0">
+                    <ReminderLink jobId={j.id} phone={j.customer_phone} body={reminderText(j, prices)} sent={sent.has(j.id)} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Tiles */}
         <nav aria-label="Go to" className="grid grid-cols-2 gap-3 sm:grid-cols-3">

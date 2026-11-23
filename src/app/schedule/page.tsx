@@ -194,7 +194,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
               </Link>
             </section>
           ) : (
-            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} />
+            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} />
           ))}
       </main>
     </div>
@@ -413,6 +413,7 @@ function CrewToday({
   today,
   isDoubleBooked,
   jobWx,
+  senderName,
 }: {
   jobs: Job[];
   names: Map<string, string>;
@@ -420,13 +421,14 @@ function CrewToday({
   today: string;
   isDoubleBooked: (j: Job) => boolean;
   jobWx: Map<string, JobWx>;
+  senderName?: string;
 }) {
   const upcoming = jobs.filter((j) => j.job_date >= today && isLive(j));
   const [next, ...rest] = upcoming;
   return (
     <div className="flex flex-col gap-4">
       {next ? (
-        <NextJob job={next} names={names} meId={meId} today={today} wx={jobWx.get(next.id)} />
+        <NextJob job={next} names={names} meId={meId} today={today} wx={jobWx.get(next.id)} senderName={senderName} />
       ) : (
         <section className="rounded-2xl border border-line bg-card p-5">
           <h2 className="font-display text-xl font-extrabold uppercase text-ink">No jobs coming up</h2>

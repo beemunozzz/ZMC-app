@@ -3,6 +3,7 @@ import { fmtDayLong } from "@/lib/dates";
 import { jobCrew, telUrl, timeSpan, type Job } from "@/lib/jobs";
 import { AddressBlock } from "./AddressBlock";
 import { WeatherNote } from "./WeatherNote";
+import { OnMyWay } from "./TextButtons";
 import type { JobWx } from "@/lib/weather-kinds";
 
 export function NextJob({
@@ -11,12 +12,15 @@ export function NextJob({
   meId,
   today,
   wx,
+  senderName,
 }: {
   job: Job;
   names: Map<string, string>;
   meId: string;
   today: string;
   wx?: JobWx | null;
+  /** Set when the viewer leads this job: shows the "On my way" text button. */
+  senderName?: string;
 }) {
   const others = jobCrew(job)
     .filter((id) => id !== meId)
@@ -35,6 +39,10 @@ export function NextJob({
       </div>
 
       <WeatherNote wx={wx} />
+
+      {senderName && job.lead_id === meId && (
+        <OnMyWay phone={job.customer_phone} customerName={job.customer_name} senderName={senderName} primary />
+      )}
 
       <AddressBlock label="Pickup" address={job.pickup_address} house={job.pickup_house} primary />
       <AddressBlock label="Drop-off" address={job.dropoff_address} house={job.dropoff_house} />

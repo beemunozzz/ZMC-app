@@ -10,6 +10,10 @@ import { fmtDayLong, fmtHours } from "@/lib/dates";
 import { WeatherNote } from "@/components/WeatherNote";
 import { money } from "@/lib/pricing";
 import { jobForecast, stocktonForecast } from "@/lib/weather";
+import { getPrices } from "@/lib/settings";
+import { bookingText, reminderText } from "@/lib/texts";
+import { OnMyWay, TextLink } from "@/components/TextButtons";
+import { ReminderLink } from "@/components/ReminderLink";
 import { JOB_COLUMNS, STATUS, conflicts, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
 
 export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]">) {
@@ -43,6 +47,15 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   const clashes = conflicts(job, (sameDay ?? []) as Job[]);
   const wx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
 
+  // Texting: the owner can send all three; the job's crew lead can send "On my way".
+  const isLead = job.lead_id === me.id;
+  const canText = (isOwner || isLead) && job.status !== "canceled" && job.status !== "done";
+  const prices = canText ? await getPrices(supabase) : null;
+  const { data: sentRow } = isOwner
+    ? await supabase.from("jobs").select("reminder_sent_at").eq("id", job.id).maybeSingle()
+    : { data: null };
+  const reminderSent = !!(sentRow as { reminder_sent_at?: string | null } | null)?.reminder_sent_at;
+
   const row = (label: string, value: React.ReactNode) => (
     <div className="flex gap-3 py-2">
       <dt className="w-24 shrink-0 text-sm text-muted">{label}</dt>
@@ -60,9 +73,10 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
 
         {sp.saved && <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">✓ Saved to the schedule</p>}
         {sp.booked && (
-          <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">
-            ✓ Booked from the quote. Next: tap Edit job to pick the crew.
-          </p>
+          <div className="rise flex flex-col gap-2 rounded-xl bg-ok/12 px-4 py-3">
+            <p className="text-sm font-medium text-ok">✓ Booked from the quote. Next: text the customer, then tap Edit job to pick the crew.</p>
+            {prices && <TextLink phone={job.customer_phone} body={bookingText(job, prices)} label="Text booking confirmation" primary />}
+          </div>
         )}
 
         <section className="flex flex-col gap-1">
@@ -148,6 +162,20 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
           )}
           {short > 0 && people.length > 0 && <p className="mt-2 text-sm font-medium text-warn">Need {short} more.</p>}
         </section>
+
+        {canText && prices && (
+          <section className="flex flex-col gap-2 rounded-2xl border border-line bg-card p-4">
+            <h2 className="font-display text-lg font-extrabold uppercase text-ink">Text the customer</h2>
+            <p className="text-sm text-muted">Opens Messages with the text written for you. Check it, then tap Send.</p>
+            <OnMyWay phone={job.customer_phone} customerName={job.customer_name} senderName={me.full_name} primary={isLead} />
+            {isOwner && (
+              <div className="grid grid-cols-2 gap-2">
+                <TextLink phone={job.customer_phone} body={bookingText(job, prices)} label="Booking confirmation" />
+                <ReminderLink jobId={job.id} phone={job.customer_phone} body={reminderText(job, prices)} sent={reminderSent} />
+              </div>
+            )}
+          </section>
+        )}
 
         {job.notes && (
           <section className="rounded-2xl border border-line bg-card p-4">

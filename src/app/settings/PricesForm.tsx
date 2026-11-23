@@ -47,7 +47,7 @@ export function PricesForm({ prices }: { prices: Prices }) {
   );
   const live: Prices = {
     ...prices,
-    ...Object.fromEntries(Object.entries(v).map(([k, val]) => [k, k === "business_phone" ? val : Number(val) || 0])),
+    ...Object.fromEntries(Object.entries(v).map(([k, val]) => [k, typeof prices[k as keyof Prices] === "string" ? val : Number(val) || 0])),
     trip_step_miles: Number(v.trip_step_miles) || 1,
   };
   const ex = priceQuote({ movers: 2, est_hours: 4, miles_out: 15, miles_between: 12, miles_back: 20, truck: "ours" }, live);
@@ -92,6 +92,19 @@ export function PricesForm({ prices }: { prices: Prices }) {
             onChange={(e) => setV((o) => ({ ...o, business_phone: e.target.value }))}
             className={input}
           />
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+          &ldquo;What to expect&rdquo; page link
+          <input
+            name="expect_url"
+            type="url"
+            inputMode="url"
+            value={v.expect_url}
+            onChange={(e) => setV((o) => ({ ...o, expect_url: e.target.value }))}
+            placeholder="https://www.zmcmove.com/what-to-expect"
+            className={input}
+          />
+          <span className="text-xs font-normal text-muted">Added to booking and reminder texts. Leave blank until the page is up.</span>
         </label>
       </section>
 
