@@ -49,6 +49,10 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
   const nteRaw = text(form, "nte", 12);
   const nte = nteRaw ? Number(nteRaw) : null;
   if (nte != null && (!Number.isFinite(nte) || nte < 0)) return { error: "The not-to-exceed price should be a dollar amount." };
+  const meet_at = text(form, "meet_at", 5) === "site" ? "site" : "shop";
+  const driveRaw = text(form, "drive_min", 4);
+  const drive_min = driveRaw ? Number(driveRaw) : null;
+  if (drive_min != null && (!Number.isInteger(drive_min) || drive_min < 0 || drive_min > 600)) return { error: "Drive time should be whole minutes (0 to 600)." };
   if (!isISODate(job_date)) return { error: "Pick a date." };
   if (!customer_name) return { error: "Add the customer's name." };
   if (est_hours != null && (!Number.isFinite(est_hours) || est_hours < 0 || est_hours > 24))
@@ -78,6 +82,8 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
     heavy_items: text(form, "heavy_items", 500),
     notes: text(form, "notes", 4000),
     nte,
+    meet_at,
+    drive_min,
   };
 
   // Who to tell: compare the crew and the time before and after saving.

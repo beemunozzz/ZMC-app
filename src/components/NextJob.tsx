@@ -8,6 +8,7 @@ import { Icon } from "./Icon";
 import { RouteLine } from "./RouteLine";
 import { OnMyWay } from "./TextButtons";
 import { WeatherNote } from "./WeatherNote";
+import { MeetUp, type MeetInfo } from "./MeetUp";
 
 /**
  * The crew's job "ticket": a navy band with the time big, the route drawn as a line with
@@ -21,6 +22,7 @@ export function NextJob({
   wx,
   senderName,
   cover,
+  meet,
 }: {
   job: Job;
   names: Map<string, string>;
@@ -31,6 +33,8 @@ export function NextJob({
   senderName?: string;
   /** "Can't make this job?" (own screen only). */
   cover?: { zachPhone: string; open: { id: string; reason: string } | null };
+  /** Where and when the crew meets. */
+  meet?: MeetInfo;
 }) {
   const crew = jobCrew(job).map((id) => ({ id, name: names.get(id) ?? "Removed" }));
   const others = crew.filter((c) => c.id !== meId);
@@ -77,6 +81,7 @@ export function NextJob({
 
       {/* Below the ticket: what to bring and what to do */}
       <div className="flex flex-col gap-3 p-5">
+        {meet && <MeetUp {...meet} />}
         <WeatherNote wx={wx} />
 
         {leading && <OnMyWay phone={job.customer_phone} customerName={job.customer_name} senderName={senderName} primary />}

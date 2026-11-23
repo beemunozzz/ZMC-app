@@ -36,10 +36,15 @@ export type Job = {
   notes: string;
   nte: number | null;
   quote_id: string | null;
+  /** Where the crew meets: the shop (Zach's house) or the job site. */
+  meet_at: "shop" | "site";
+  /** Drive time shop -> pickup that Zach typed in (minutes). Null = worked out automatically. */
+  drive_min: number | null;
+  miles_out: number | null;
 };
 
 export const JOB_COLUMNS =
-  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id";
+  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out";
 
 export const JOB_TYPES = [
   "Full move",

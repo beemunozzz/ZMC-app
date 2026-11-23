@@ -240,6 +240,27 @@ export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: Cr
           </fieldset>
         </section>
 
+        {/* Meeting up */}
+        <section className={section}>
+          <h2 className={heading}>Meeting up</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <label className={label}>
+              Crew meets
+              <select name="meet_at" defaultValue={job?.meet_at ?? "shop"} className={input}>
+                <option value="shop">At the shop</option>
+                <option value="site">At the job site</option>
+              </select>
+            </label>
+            <label className={label}>
+              Drive from shop (min)
+              <input name="drive_min" type="number" inputMode="numeric" min={0} max={600} defaultValue={job?.drive_min ?? ""} placeholder="Auto" className={input} />
+            </label>
+          </div>
+          <p className="text-xs text-muted">
+            Meet time at the shop = start time − drive − the buffer on the Prices page. Leave the drive blank to work it out from the addresses.
+          </p>
+        </section>
+
         {/* 7. Notes */}
         <section className={section}>
           <h2 className={heading}>Notes</h2>

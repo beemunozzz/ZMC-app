@@ -10,6 +10,8 @@ import { PageLoading } from "@/components/PageLoading";
 import { ROLE_LABEL, requireMember } from "@/lib/crew";
 import { fmtDayLong, fmtHours } from "@/lib/dates";
 import { WeatherNote } from "@/components/WeatherNote";
+import { MeetUp } from "@/components/MeetUp";
+import { loadMeet } from "@/lib/meet";
 import { money } from "@/lib/pricing";
 import { jobForecast, stocktonForecast } from "@/lib/weather";
 import { getPrices } from "@/lib/settings";
@@ -19,7 +21,7 @@ import { ReminderLink } from "@/components/ReminderLink";
 import { CantMakeIt } from "@/components/CantMakeIt";
 import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
 import { fmtDay } from "@/lib/dates";
-import { JOB_COLUMNS, STATUS, conflicts, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
+import { JOB_COLUMNS, STATUS, conflicts, isLive, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
 
 export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]">) {
   return (
@@ -67,6 +69,10 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   const covers = (coverRows ?? []) as CoverRequest[];
   const myCover = covers.find((c) => c.crew_id === me.id) ?? null;
   const zachPhone = onJob ? (await getPrices(supabase)).business_phone : "";
+
+  // Where and when the crew meets (live jobs only).
+  const names = new Map([...crewById.values()].map((c) => [c.id, c.full_name]));
+  const meet = isLive(job) ? (await loadMeet(supabase, [job], me, names)).get(job.id) : undefined;
 
   // Invoice: the owner or this job's crew lead can finish the job and invoice it.
   const canInvoice = (isOwner || isLead) && job.status !== "canceled";
@@ -147,6 +153,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
           </p>
         )}
 
+        {meet && <MeetUp {...meet} />}
         <WeatherNote wx={wx} />
 
         {isOwner &&

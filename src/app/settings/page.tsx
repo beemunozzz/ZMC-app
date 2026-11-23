@@ -5,6 +5,8 @@ import { PageLoading } from "@/components/PageLoading";
 import { ROLE_LABEL, requireMember } from "@/lib/crew";
 import { getPrices } from "@/lib/settings";
 import { PricesForm } from "./PricesForm";
+import { MeetForm } from "./MeetForm";
+import { getMeetSettings } from "@/lib/meet";
 
 export default function SettingsPage() {
   return (
@@ -17,7 +19,7 @@ export default function SettingsPage() {
 async function Settings() {
   const { supabase, me } = await requireMember();
   if (!me || me.role !== "owner") redirect("/");
-  const prices = await getPrices(supabase);
+  const [prices, meet] = await Promise.all([getPrices(supabase), getMeetSettings(supabase)]);
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader title="Prices" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
@@ -28,6 +30,7 @@ async function Settings() {
           their price until you open and save them again.
         </p>
         <PricesForm prices={prices} />
+        <MeetForm shop={meet.shop_address} buffer={meet.meet_buffer_min} />
       </main>
     </div>
   );

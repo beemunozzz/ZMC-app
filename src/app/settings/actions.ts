@@ -38,3 +38,17 @@ export async function savePrices(_: SettingsState, form: FormData): Promise<Sett
   revalidatePath("/settings");
   return { ok: "Prices saved. New quotes use them right away." };
 }
+
+/** Owner: the shop address (where crew meet) and the extra minutes before leaving. */
+export async function saveMeetSettings(_: { error?: string; ok?: string }, form: FormData): Promise<{ error?: string; ok?: string }> {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner") return { error: "Only the owner can change this." };
+  const shop_address = String(form.get("shop_address") ?? "").trim().slice(0, 300);
+  const meet_buffer_min = Number(form.get("meet_buffer_min") ?? 10);
+  if (!Number.isInteger(meet_buffer_min) || meet_buffer_min < 0 || meet_buffer_min > 120) return { error: "Buffer should be 0 to 120 minutes." };
+  const { error } = await supabase.from("settings").update({ shop_address, meet_buffer_min }).eq("id", 1);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath("/settings");
+  revalidatePath("/schedule");
+  return { ok: "Saved." };
+}
