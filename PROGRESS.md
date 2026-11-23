@@ -121,6 +121,8 @@
 
 - Design skills added to the project (`.claude/skills/`): Impeccable (design rules only; its auto-running program and hooks left out for safety) and Emil Kowalski's web motion skills. The taste skill is held for the zmcmove.com redesign. They load automatically in new Claude Code sessions.
 
+- **Version 1 saved** (commit `4906bbe`, Vercel deployment `dpl_4R8f4Akt81hMoUwhzSCZDp2Z44ao`). See `VERSIONS.md` for how to go back. From here, redesign work goes to the working copy (`claude/new-session-thne14`) and its Vercel preview link only; `main` stays on Version 1 until Brandon approves.
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
