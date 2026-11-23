@@ -48,7 +48,12 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
   const p = priceInvoice({ ...v, est_hours: v.hours }, prices);
   const nte = Number(v.nte) || 0;
   const over = nte > 0 && p.total > nte;
-  const ready = !over && nte > 0 && Number(v.hours) > 0 && signed && agree && !!method && !!v.signed_name.trim();
+  // The customer verifies the hours. If the hours or movers change afterwards, they need to verify again.
+  const [verifiedFor, setVerifiedFor] = useState<string | null>(null);
+  const verifyKey = `${p.hours}|${p.movers}|${p.total}`;
+  const verified = verifiedFor === verifyKey;
+  const signOk = !signed || (agree && !!v.signed_name.trim());
+  const ready = !over && nte > 0 && Number(v.hours) > 0 && verified && signOk && !!method;
 
   const line = (text: React.ReactNode, amount: number) => (
     <div className="flex items-start justify-between gap-3 py-2 text-sm">
@@ -152,13 +157,54 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
         )}
       </section>
 
-      {/* 3. Customer signs */}
-      <section className={section}>
-        <h2 className={heading}>Customer signature</h2>
+      {/* 3. Customer verifies the hours (required) */}
+      <section className={`${section} ${verified ? "border-ok/50" : "border-primary/50"}`}>
+        <h2 className={heading}>Customer: verify the hours</h2>
         <p className="text-sm text-muted">Hand the phone to the customer.</p>
+        <div className="grid grid-cols-3 gap-2 rounded-xl bg-bg p-3 text-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Hours</p>
+            <p className="font-display text-2xl font-extrabold tabular-nums text-ink">{p.hours}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Movers</p>
+            <p className="font-display text-2xl font-extrabold tabular-nums text-ink">{p.movers}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Total</p>
+            <p className="font-display text-2xl font-extrabold tabular-nums text-ink">{money(p.total)}</p>
+          </div>
+        </div>
+        <input type="hidden" name="verified" value={verified ? "1" : ""} />
+        {verified ? (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-ok/12 px-3 py-3">
+            <span className="pop text-[15px] font-semibold text-ok">✓ Hours verified by the customer</span>
+            <button type="button" onClick={() => setVerifiedFor(null)} className="text-sm font-medium text-muted">
+              Undo
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={!(Number(v.hours) > 0) || over}
+            onClick={() => setVerifiedFor(verifyKey)}
+            className="press flex h-14 items-center justify-center rounded-xl bg-ok text-lg font-semibold text-white disabled:opacity-50 dark:text-navy"
+          >
+            ✓ I verify these hours
+          </button>
+        )}
+        <p className="text-xs text-muted">Once saved, only Zach can change these hours.</p>
+      </section>
+
+      {/* 4. Signature (optional) */}
+      <section className={section}>
+        <h2 className={heading}>
+          Signature <span className="text-muted">(optional)</span>
+        </h2>
+        <p className="text-sm text-muted">If the customer doesn&apos;t want to sign, leave this blank. The invoice will say they didn&apos;t sign.</p>
         <label className={label}>
           Printed name
-          <input name="signed_name" required value={v.signed_name} onChange={set("signed_name")} className={input} autoComplete="off" />
+          <input name="signed_name" value={v.signed_name} onChange={set("signed_name")} className={input} autoComplete="off" />
         </label>
         <SignaturePad name="signature" onChange={setSigned} />
         <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-bg p-3 text-[15px] text-ink">
@@ -169,7 +215,7 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
         </label>
       </section>
 
-      {/* 4. How they'll pay */}
+      {/* 5. How they'll pay */}
       <section className={section}>
         <h2 className={heading}>How are you paying?</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -198,10 +244,12 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
           <p className="text-center text-xs text-muted">
             {over
               ? "Total is over the not-to-exceed price"
-              : !signed
-                ? "Waiting for the customer to sign"
-                : !agree
-                  ? "Waiting for “I agree”"
+              : !verified
+                ? "Waiting for the customer to verify the hours"
+                : signed && !agree
+                  ? "They signed, so they also need to tick “I agree”"
+                  : signed && !v.signed_name.trim()
+                    ? "Type their printed name next to the signature"
                   : !method
                     ? "Pick how they're paying"
                     : "Fill in the hours and the not-to-exceed price"}

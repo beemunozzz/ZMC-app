@@ -84,6 +84,11 @@
   - Invoices: with clock-in on, hours fill in from the crew lead's clock time (rounded up to 15 minutes).
   - Dashboard: "On the clock" line in Today; new Invoices and Payroll tiles.
 
+- Verify hours (setup step 0009): on the invoice screen the customer must tap "✓ I verify these hours" (hours, movers, total shown big). If the hours or movers change after that, they must verify again. Signing is now optional; unsigned invoices say "Customer did not sign."
+  - Saved on the invoice: when they verified and exactly what (verified hours and movers). These never change.
+  - After saving, only the owner can change hours or charges (invoice page → "Change hours (owner only)"). The invoice and job page then show "Changed by Zach to …" next to what the customer verified. Crew leads can still record payment.
+  - Enforced in the database (`invoice_guard` trigger). Tested on the live database with a throwaway invoice: hours change blocked for non-owner, verified hours can't change at all, marking paid still works. The test left nothing behind.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.

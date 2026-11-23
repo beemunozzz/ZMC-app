@@ -13,6 +13,7 @@ import { money, type Prices } from "@/lib/pricing";
 import { getPrices } from "@/lib/settings";
 import { changeMethod, markPaid } from "../actions";
 import { CopyButton } from "./CopyButton";
+import { EditHours } from "./EditHours";
 
 export default function InvoicePage({ params, searchParams }: PageProps<"/invoices/[id]">) {
   return (
@@ -21,6 +22,9 @@ export default function InvoicePage({ params, searchParams }: PageProps<"/invoic
     </Suspense>
   );
 }
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 const qrSvg = (text: string) => QRCode.toString(text, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#15202b", light: "#ffffff" } });
 
@@ -203,18 +207,39 @@ async function InvoiceView({ params, searchParams }: Pick<PageProps<"/invoices/[
           </div>
           <p className="text-xs tabular-nums text-muted">Written not-to-exceed price: {money(Number(inv.nte))}</p>
 
-          <div className="mt-3 rounded-xl border border-line bg-white p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element -- signature is stored as a small picture */}
-            <img src={inv.signature} alt={`Signature of ${inv.signed_name}`} className="h-24 w-full object-contain" />
+          {/* What the customer verified. Locked: only Zach can change the hours afterwards. */}
+          <div className="mt-3 rounded-xl bg-ok/12 px-3 py-2.5 text-sm">
+            <p className="font-semibold text-ok">
+              ✓ Hours verified by the customer
+              {inv.hours_verified_at && <span className="font-normal"> · {when(inv.hours_verified_at)}</span>}
+            </p>
+            <p className="tabular-nums text-ink">
+              {Number(inv.verified_hours ?? inv.hours)} hrs · {inv.verified_movers ?? inv.movers} movers
+            </p>
+            {inv.owner_edited_at && (
+              <p className="mt-1 text-warn">
+                Changed by Zach on {when(inv.owner_edited_at)} to {Number(inv.hours)} hrs · {inv.movers} movers.
+              </p>
+            )}
           </div>
-          <p className="text-sm text-ink">
-            Signed by <b>{inv.signed_name}</b>
-            <span className="text-muted">
-              {" · "}
-              {new Date(inv.signed_at).toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-            </span>
-          </p>
+
+          {inv.signature ? (
+            <>
+              <div className="mt-3 rounded-xl border border-line bg-white p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element -- signature is stored as a small picture */}
+                <img src={inv.signature} alt={`Signature of ${inv.signed_name ?? "the customer"}`} className="h-24 w-full object-contain" />
+              </div>
+              <p className="text-sm text-ink">
+                Signed by <b>{inv.signed_name}</b>
+                {inv.signed_at && <span className="text-muted"> · {when(inv.signed_at)}</span>}
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 rounded-xl border border-dashed border-line px-3 py-2.5 text-sm text-muted">Customer did not sign.</p>
+          )}
         </section>
+
+        {isOwner && <EditHours id={inv.id} hours={Number(inv.hours)} movers={inv.movers} />}
 
         <TextLink phone={inv.customer_phone} body={receiptText(inv, jobDate, prices)} label="Text the customer a receipt" />
 

@@ -59,9 +59,19 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   // Invoice: the owner or this job's crew lead can finish the job and invoice it.
   const canInvoice = (isOwner || isLead) && job.status !== "canceled";
   const { data: invRow } = canInvoice
-    ? await supabase.from("invoices").select("id, total, paid_at").eq("job_id", job.id).maybeSingle()
+    ? await supabase.from("invoices").select("id, total, paid_at, hours, movers, verified_hours, verified_movers, hours_verified_at, owner_edited_at").eq("job_id", job.id).maybeSingle()
     : { data: null };
-  const invoice = invRow as { id: string; total: number; paid_at: string | null } | null;
+  const invoice = invRow as {
+    id: string;
+    total: number;
+    paid_at: string | null;
+    hours: number;
+    movers: number;
+    verified_hours: number | null;
+    verified_movers: number | null;
+    hours_verified_at: string | null;
+    owner_edited_at: string | null;
+  } | null;
 
   const row = (label: string, value: React.ReactNode) => (
     <div className="flex gap-3 py-2">
@@ -193,6 +203,20 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
 
         {(isOwner || canInvoice) && (
           <div className="flex flex-col gap-2 pb-4">
+            {invoice && (
+              <p className="rounded-xl bg-ok/12 px-3 py-2.5 text-sm text-ok">
+                <b>✓ Hours verified by the customer:</b>{" "}
+                <span className="tabular-nums">
+                  {Number(invoice.verified_hours ?? invoice.hours)} hrs · {invoice.verified_movers ?? invoice.movers} movers
+                </span>
+                {invoice.owner_edited_at && (
+                  <span className="block text-warn">
+                    Changed by Zach to {Number(invoice.hours)} hrs · {invoice.movers} movers.
+                  </span>
+                )}
+                <span className="block text-xs text-muted">Locked. Only Zach can change the hours.</span>
+              </p>
+            )}
             {canInvoice &&
               (invoice ? (
                 <Link

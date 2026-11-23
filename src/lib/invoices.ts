@@ -31,16 +31,23 @@ export type Invoice = {
   truck_charge: number;
   total: number;
   nte: number;
-  signature: string;
-  signed_name: string;
-  signed_at: string;
+  /** Optional: the customer may choose not to sign. */
+  signature: string | null;
+  signed_name: string | null;
+  signed_at: string | null;
+  /** When the customer tapped "I verify these hours", and what they verified (never changes). */
+  hours_verified_at: string | null;
+  verified_hours: number | null;
+  verified_movers: number | null;
+  /** Set when the owner changed the hours afterwards. */
+  owner_edited_at: string | null;
   payment_method: PayMethod;
   paid_at: string | null;
   created_at: string;
 };
 
 export const INVOICE_COLUMNS =
-  "id, job_id, customer_name, customer_phone, hours, movers, truck, miles_out, miles_between, miles_back, labor, trip, truck_charge, total, nte, signature, signed_name, signed_at, payment_method, paid_at, created_at";
+  "id, job_id, customer_name, customer_phone, hours, movers, truck, miles_out, miles_between, miles_back, labor, trip, truck_charge, total, nte, signature, signed_name, signed_at, hours_verified_at, verified_hours, verified_movers, owner_edited_at, payment_method, paid_at, created_at";
 
 const amount = (n: number) => (Math.round(n * 100) / 100).toString();
 

@@ -46,10 +46,12 @@ export async function createInvoice(_: InvoiceFormState, form: FormData): Promis
   for (const [v, n] of [[miles_out, "Miles to pickup"], [miles_between, "Miles between"], [miles_back, "Miles back"]] as const)
     if (Number.isNaN(v)) return { error: `${n} should be a number.` };
   if (nteIn == null || Number.isNaN(nteIn) || nteIn <= 0) return { error: "Enter the written not-to-exceed price the customer was given." };
-  if (!signature.startsWith("data:image/png;base64,") || signature.length < 1500) return { error: "The customer needs to sign in the box." };
-  if (signature.length > 600_000) return { error: "That signature is too large. Clear it and sign again." };
-  if (!signed_name) return { error: "Type the customer's printed name." };
-  if (form.get("agree") !== "on") return { error: "The customer needs to tick “I agree”." };
+  if (form.get("verified") !== "1") return { error: "The customer needs to tap “I verify these hours”." };
+  // Signing is optional. If they signed, we need their printed name and "I agree".
+  const signed = signature.startsWith("data:image/png;base64,") && signature.length >= 1500;
+  if (signed && signature.length > 600_000) return { error: "That signature is too large. Clear it and sign again." };
+  if (signed && !signed_name) return { error: "Type the customer's printed name next to their signature." };
+  if (signed && form.get("agree") !== "on") return { error: "The customer signed, so they also need to tick “I agree”." };
   if (!METHODS.includes(method)) return { error: "Pick how the customer is paying." };
 
   const prices = await getPrices(supabase);
@@ -75,8 +77,12 @@ export async function createInvoice(_: InvoiceFormState, form: FormData): Promis
       truck_charge: p.truck,
       total: p.total,
       nte: nteIn,
-      signature,
-      signed_name,
+      signature: signed ? signature : null,
+      signed_name: signed ? signed_name : null,
+      signed_at: signed ? new Date().toISOString() : null,
+      hours_verified_at: new Date().toISOString(),
+      verified_hours: p.hours,
+      verified_movers: p.movers,
       payment_method: method,
       created_by: me.id,
     })
@@ -111,4 +117,30 @@ export async function changeMethod(form: FormData) {
   if (!me || !UUID.test(id) || !METHODS.includes(method)) return;
   await supabase.from("invoices").update({ payment_method: method }).eq("id", id).is("paid_at", null);
   revalidatePath(`/invoices/${id}`);
+}
+
+/** Owner only: change the hours (and movers) after the customer verified them. The database also enforces this. */
+export async function ownerEditHours(_: InvoiceFormState, form: FormData): Promise<InvoiceFormState> {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner") return { error: "Only Zach can change the hours after the customer verified them." };
+  const id = text(form, "id", 40);
+  const hours = num(form, "hours");
+  const movers = Math.round(Number(text(form, "movers", 3)));
+  if (!UUID.test(id)) return { error: "Invoice not found." };
+  if (hours == null || Number.isNaN(hours) || hours <= 0 || hours > 24) return { error: "Enter the hours (more than 0)." };
+  if (!(movers >= 1 && movers <= 12)) return { error: "Movers should be between 1 and 12." };
+
+  const { data: inv } = await supabase.from("invoices").select("truck, miles_out, miles_between, miles_back, nte").eq("id", id).maybeSingle();
+  if (!inv) return { error: "Invoice not found." };
+  const prices = await getPrices(supabase);
+  const p = priceInvoice({ movers, est_hours: hours, miles_out: inv.miles_out, miles_between: inv.miles_between, miles_back: inv.miles_back, truck: inv.truck }, prices);
+  if (p.total > Number(inv.nte)) return { error: `That makes the total ${p.total.toFixed(2)}, over the not-to-exceed price of ${Number(inv.nte).toFixed(2)}.` };
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({ hours: p.hours, movers: p.movers, labor: p.labor, trip: p.trip, truck_charge: p.truck, total: p.total })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath(`/invoices/${id}`);
+  return {};
 }
