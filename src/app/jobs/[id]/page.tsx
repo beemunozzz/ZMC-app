@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { AddressBlock } from "@/components/AddressBlock";
+import { RouteLine } from "@/components/RouteLine";
+import { Avatars } from "@/components/Avatars";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
@@ -95,8 +96,8 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
     <div className="flex flex-1 flex-col">
       <AppHeader title="Job" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-        <Link href={`/schedule?view=week&date=${job.job_date}`} className="text-sm font-semibold text-primary">
-          ‹ Back to the schedule
+        <Link href={`/schedule?view=week&date=${job.job_date}`} className="flex items-center gap-1 self-start text-sm font-semibold text-primary">
+          <Icon name="back" className="h-4 w-4" /> Back to the schedule
         </Link>
 
         {sp.saved && <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">✓ Saved to the schedule</p>}
@@ -107,26 +108,41 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
           </div>
         )}
 
-        <section className="flex flex-col gap-1">
-          <h1 className="break-words font-display text-3xl font-extrabold uppercase leading-tight text-ink">{job.customer_name}</h1>
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] tabular-nums text-ink">
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
-            {fmtDayLong(job.job_date)} · {timeSpan(job)}
-          </p>
-          <p className="text-sm tabular-nums text-muted">
-            {hrs ? `About ${fmtHours(hrs)} hrs` : "Hours not set"}
-            {hrs && people.length ? ` · ${fmtHours(hrs * people.length)} crew-hrs` : ""}
-          </p>
+        {/* Navy header band: who, when, and the route */}
+        <section className="hero -mx-4 flex flex-col gap-4 px-4 pb-5 pt-5 sm:mx-0 sm:rounded-3xl sm:px-6">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="min-w-0 break-words font-display text-3xl font-extrabold uppercase leading-[0.95] text-ink">{job.customer_name}</h1>
+              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
+            </div>
+            <p className="text-[15px] tabular-nums text-muted">{fmtDayLong(job.job_date)}</p>
+            <p className="font-display text-4xl font-extrabold tabular-nums leading-none text-tape">{timeSpan(job)}</p>
+            <p className="text-sm tabular-nums text-muted">
+              {hrs ? `About ${fmtHours(hrs)} hrs` : "Hours not set"}
+              {hrs && people.length ? ` · ${fmtHours(hrs * people.length)} crew-hrs` : ""}
+              {" · "}
+              {job.job_type}
+            </p>
+          </div>
+          <RouteLine pickup={job.pickup_address} pickupHouse={job.pickup_house} dropoff={job.dropoff_address} dropoffHouse={job.dropoff_house} />
+          {people.length > 0 && (
+            <div className="flex items-center gap-3 border-t border-line pt-4">
+              <Avatars people={people.map((pid) => ({ id: pid, name: crewById.get(pid)?.full_name ?? "Removed" }))} leadId={job.lead_id} />
+              <span className="text-sm tabular-nums text-muted">
+                {people.length} of {job.movers_needed} crew
+              </span>
+            </div>
+          )}
         </section>
 
         {!people.length && job.status !== "canceled" && (
           <p className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
-            <b>⚠ No crew assigned yet.</b> {isOwner ? "Tap Edit job to pick a lead and movers." : "Zach will assign a crew soon."}
+            <b>No crew assigned yet.</b> {isOwner ? "Tap Edit job to pick a lead and movers." : "Zach will assign a crew soon."}
           </p>
         )}
         {clashes.length > 0 && (
           <p className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
-            <b>⚠ Double-booked:</b>{" "}
+            <b>Double-booked:</b>{" "}
             {clashes.map((c) => `${crewById.get(c.crewId)?.full_name ?? "Someone"} is also on ${c.other.customer_name}`).join("; ")}.
           </p>
         )}
@@ -136,13 +152,11 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
         {isOwner &&
           covers.map((c) => (
             <p key={c.id} className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
-              <b>⚠ {crewById.get(c.crew_id)?.full_name ?? "Someone"} can&apos;t make this job.</b>
+              <b>{crewById.get(c.crew_id)?.full_name ?? "Someone"} can&apos;t make this job.</b>
               {c.reason ? ` “${c.reason}”` : ""} Tap Edit job to pick someone else.
             </p>
           ))}
 
-        <AddressBlock label="Pickup" address={job.pickup_address} house={job.pickup_house} primary />
-        <AddressBlock label="Drop-off" address={job.dropoff_address} house={job.dropoff_house} />
 
         <dl className="divide-y divide-line rounded-2xl border border-line bg-card px-4">
           {row("Job", job.job_type)}

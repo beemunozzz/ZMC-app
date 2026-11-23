@@ -155,3 +155,45 @@ p {
 @media (prefers-reduced-motion: reduce) {
   .menu-pop { animation: none; }
 }
+
+/* ---------- Bold: the navy band ("hero") ----------
+   Re-maps the color tokens inside it, so every existing piece (chips, buttons, weather notes)
+   automatically reads correctly on navy. Uses only colors ZMC already owns. */
+.hero {
+  --ink: #f4f2ee;
+  --muted: #a9b4c2;
+  --line: rgb(255 255 255 / 0.14);
+  --card: rgb(255 255 255 / 0.06);
+  --bg: rgb(255 255 255 / 0.08);
+  --primary: #8fb2e6;
+  --ok: #8fd3a6;
+  --warn: #f0b27a;
+  --bad: #f2b8b5;
+  color: var(--ink);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(31 78 140 / 0.55), transparent 60%),
+    linear-gradient(170deg, #0f1b2a, #13243a);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 18px 40px -20px rgb(15 27 42 / 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero {
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgb(143 178 230 / 0.16), transparent 60%),
+      linear-gradient(170deg, #0b131e, #142033);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06) inset, 0 18px 40px -20px rgb(0 0 0 / 0.8);
+  }
+}
+:root[data-theme="dark"] .hero {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(143 178 230 / 0.16), transparent 60%),
+    linear-gradient(170deg, #0b131e, #142033);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06) inset, 0 18px 40px -20px rgb(0 0 0 / 0.8);
+}
+/* Cards inside the band stay glassy, not white. */
+:root[data-look="depth"] .hero .bg-card {
+  background-image: none;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset;
+}
+.hero .bg-primary {
+  color: #0f1b2a;
+}
