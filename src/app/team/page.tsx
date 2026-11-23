@@ -25,6 +25,10 @@ async function TeamPageContent() {
     .select("id, user_id, email, full_name, phone, role, active")
     .returns<CrewMember[]>();
 
+  // Pay rates: owner-only table.
+  const { data: payRows } = await supabase.from("crew_pay").select("crew_id, hourly_rate");
+  const pay = new Map((payRows ?? []).map((r) => [r.crew_id as string, r.hourly_rate == null ? null : Number(r.hourly_rate)]));
+
   const crew = (data ?? []).sort(
     (a, b) => Number(b.active) - Number(a.active) || ORDER[a.role] - ORDER[b.role] || a.full_name.localeCompare(b.full_name),
   );
@@ -37,11 +41,11 @@ async function TeamPageContent() {
         <section>
           <h1 className="font-display text-2xl font-extrabold uppercase text-ink">Crew members</h1>
           <p className="mt-1 text-sm text-muted">
-            Tap a person to change their details. Add someone&apos;s email so they can log in.
+            Tap a person to see their details. Add someone&apos;s email so they can log in.
           </p>
           <ul className="mt-4 overflow-hidden rounded-2xl border border-line bg-card">
             {crew.map((m) => (
-              <CrewRow key={m.id} member={m} isMe={m.id === me.id} />
+              <CrewRow key={m.id} member={m} isMe={m.id === me.id} hourlyRate={pay.get(m.id) ?? null} />
             ))}
           </ul>
         </section>

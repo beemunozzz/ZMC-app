@@ -8,7 +8,7 @@ const input =
   "h-11 w-full rounded-xl border border-line bg-bg px-3 text-base text-ink outline-none focus:border-primary";
 const label = "flex flex-col gap-1 text-sm font-medium text-ink";
 
-export function MemberForm({ member, onDone }: { member?: CrewMember; onDone?: () => void }) {
+export function MemberForm({ member, hourlyRate, onDone }: { member?: CrewMember; hourlyRate?: number | null; onDone?: () => void }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     async (prev, form) => {
       const result = await (member ? updateMember : addMember)(prev, form);
@@ -60,6 +60,23 @@ export function MemberForm({ member, onDone }: { member?: CrewMember; onDone?: (
           </label>
         )}
       </div>
+      <label className={label}>
+        Hourly pay <span className="font-normal text-muted">(only the owner sees this)</span>
+        <div className="flex items-center gap-2">
+          <span className="text-muted">$</span>
+          <input
+            className={`${input} max-w-32 tabular-nums`}
+            name="hourly_rate"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step={0.5}
+            defaultValue={hourlyRate ?? ""}
+            placeholder="e.g. 22"
+          />
+          <span className="text-sm text-muted">per hour</span>
+        </div>
+      </label>
 
       {state.error && (
         <p role="alert" className="rounded-xl bg-[#B3261E]/10 px-3 py-2 text-sm text-[#B3261E] dark:text-[#F2B8B5]">
