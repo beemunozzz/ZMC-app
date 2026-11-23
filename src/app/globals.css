@@ -205,7 +205,19 @@ p {
   word-spacing: 0.06em;
 }
 
-/* iPhone date/time boxes: left-aligned like the other boxes, and the same height when empty. */
+/* iPhone date/time boxes: Safari gives them a built-in minimum width, so they overflow side-by-side
+   layouts. Strip Safari's styling so they shrink to fit like every other box. */
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Left-aligned like the other boxes, and the same height when empty. */
 input[type="date"]::-webkit-date-and-time-value,
 input[type="time"]::-webkit-date-and-time-value {
   text-align: left;
