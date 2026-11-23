@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
 import "./globals.css";
+import "./look-depth.css"; // preview only: does nothing unless data-look="depth" is set
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const barlow = Barlow_Condensed({

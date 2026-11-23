@@ -1,0 +1,94 @@
+/*
+ * "Depth" look: PREVIEW ONLY. Nothing here applies unless <html data-look="depth"> is set,
+ * so the live app looks exactly the same until Brandon approves it.
+ * Ideas: layered soft shadows, a faint top highlight on cards, a glassy header and menu,
+ * buttons with a gentle gradient and inner light, inputs that sit slightly "into" the card.
+ */
+:root[data-look="depth"] {
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 1px 2px rgb(21 32 43 / 0.06), 0 8px 24px -8px rgb(21 32 43 / 0.14);
+  --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.25) inset, 0 6px 16px -6px rgb(31 78 140 / 0.55);
+  --glow: rgb(31 78 140 / 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-look="depth"]:not([data-theme="light"]) {
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 0 0 1px rgb(255 255 255 / 0.03), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+    --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 8px 22px -8px rgb(143 178 230 / 0.45);
+    --glow: rgb(143 178 230 / 0.08);
+  }
+}
+:root[data-look="depth"][data-theme="dark"] {
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 0 0 1px rgb(255 255 255 / 0.03), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 8px 22px -8px rgb(143 178 230 / 0.45);
+  --glow: rgb(143 178 230 / 0.08);
+}
+
+/* Page: a soft light falling from the top, instead of a flat color. */
+:root[data-look="depth"] body {
+  background:
+    radial-gradient(1200px 520px at 50% -180px, var(--glow), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* Cards and lists float a little above the page. */
+:root[data-look="depth"] .bg-card {
+  box-shadow: var(--shadow-card);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--card) 100%, white 4%), var(--card) 40%);
+  border-color: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+/* Header and ☰ menu: frosted glass. */
+:root[data-look="depth"] header.sticky {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 80%, transparent), 0 8px 24px -16px rgb(0 0 0 / 0.25);
+  border-bottom-color: transparent;
+}
+:root[data-look="depth"] header nav .bg-card {
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Main buttons: a gentle top-to-bottom gradient with an inner light and a soft colored shadow. */
+:root[data-look="depth"] .bg-primary {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--primary) 100%, white 14%), var(--primary));
+  box-shadow: var(--shadow-raise);
+}
+:root[data-look="depth"] .bg-ok {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--ok) 100%, white 14%), var(--ok));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.25) inset, 0 6px 16px -6px color-mix(in srgb, var(--ok) 60%, transparent);
+}
+:root[data-look="depth"] .bg-bad {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--bad) 100%, white 12%), var(--bad));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 6px 16px -6px color-mix(in srgb, var(--bad) 60%, transparent);
+}
+
+/* Text boxes sit slightly into the card. */
+:root[data-look="depth"] input.bg-bg,
+:root[data-look="depth"] select.bg-bg,
+:root[data-look="depth"] textarea.bg-bg {
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+/* Small stat boxes inside cards. */
+:root[data-look="depth"] .bg-card .rounded-xl.bg-bg {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 60%, transparent);
+}
+
+/* Status chips get a hairline edge so they read as "pills". */
+:root[data-look="depth"] .rounded-full[class*="/1"] {
+  box-shadow: inset 0 0 0 1px currentColor;
+  --tw-shadow-color: transparent;
+}
+
+/* The big gold bar and "today" marks glow slightly. */
+:root[data-look="depth"] .bg-tape {
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--tape) 70%, transparent);
+}
+
+/* Press feedback stays quick and subtle. */
+:root[data-look="depth"] .press:active {
+  transform: scale(0.97) translateY(1px);
+}
