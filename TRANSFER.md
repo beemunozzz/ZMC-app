@@ -13,6 +13,12 @@ Updated each time a new service is added.
 | **Vercel** (`zmc-app`) | Puts the app online at the web link | No (just settings) | Project **Settings → Transfer** to Zach's Vercel team. The environment variables come with it. Then connect `app.zmcmove.com`. Decide on the Pro plan ($20/mo) or another host at this point: the free plan is for non-business use. | 10 min |
 | **Supabase** (`zmc-hub`) | Database, logins, photos | **Yes: all of it** | Zach makes a Supabase account and organization. Brandon invites Zach into his organization, then **Project Settings → General → Transfer project** to Zach's organization. Data, logins and settings stay exactly as they are. Nothing to export. | 10 min |
 
+## Notification keys
+
+| Setting (in Vercel) | What it is | On hand-over |
+|---|---|---|
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Keys that let the app send phone notifications | They move with the Vercel project. Nothing to do. (If they're ever changed, everyone has to turn notifications on again.) |
+
 ## Coming soon (Phase 3)
 
 | Service | What it does | Holds data? | How it moves to Zach | Time |

@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/crew";
+import { notify } from "@/lib/push";
+import { fmtDay, fmtTime } from "@/lib/dates";
 import { isISODate } from "@/lib/dates";
 import { HOUSE_FIELDS, JOB_TYPES, type House, type JobStatus, type Truck } from "@/lib/jobs";
 
@@ -78,6 +80,15 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
     nte,
   };
 
+  // Who to tell: compare the crew and the time before and after saving.
+  const newCrew = [lead_id, ...crew_ids].filter(Boolean) as string[];
+  type Before = { lead_id: string | null; crew_ids: string[]; job_date: string; start_time: string | null; status: string };
+  let before: Before | null = null;
+  if (id) {
+    const { data } = await supabase.from("jobs").select("lead_id, crew_ids, job_date, start_time, status").eq("id", id).maybeSingle();
+    before = (data as Before | null) ?? null;
+  }
+
   let savedId = id;
   if (id) {
     const { error } = await supabase.from("jobs").update(row).eq("id", id);
@@ -92,6 +103,31 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
     if (error) return { error: `Couldn't save: ${error.message}` };
     savedId = data.id;
   }
+
+  // Phone notifications (best-effort; never blocks saving).
+  const oldCrew = before ? ([before.lead_id, ...(before.crew_ids ?? [])].filter(Boolean) as string[]) : [];
+  const when = `${fmtDay(job_date)}${start_time ? ` · ${fmtTime(start_time)}` : ""}`;
+  const url = `/jobs/${savedId}`;
+  const notMe = (ids: string[]) => ids.filter((c) => c !== me.id);
+  const added = notMe(newCrew.filter((c) => !oldCrew.includes(c)));
+  const removed = notMe(oldCrew.filter((c) => !newCrew.includes(c)));
+  const stayed = notMe(newCrew.filter((c) => oldCrew.includes(c)));
+  const moved = !!before && (before.job_date !== job_date || (before.start_time ?? "").slice(0, 5) !== (start_time ?? "").slice(0, 5));
+  const canceled = !!before && before.status !== "canceled" && status === "canceled";
+  if (status !== "canceled" && added.length)
+    await notify(supabase, { crew: added }, { title: "New job", body: `${when} · ${row.job_type} · ${customer_name}`, url, tag: `job-${savedId}` });
+  if (removed.length)
+    await notify(supabase, { crew: removed }, { title: "Taken off a job", body: `You're no longer on ${customer_name} (${fmtDay(before!.job_date)}).`, url: "/", tag: `job-${savedId}` });
+  if (canceled && stayed.length)
+    await notify(supabase, { crew: stayed }, { title: "Job canceled", body: `${customer_name} on ${fmtDay(job_date)} is canceled.`, url, tag: `job-${savedId}` });
+  else if (moved && stayed.length)
+    await notify(supabase, { crew: stayed }, {
+      title: "Your job changed",
+      body: `${customer_name}: now ${when} (was ${fmtDay(before!.job_date)}${before!.start_time ? ` · ${fmtTime(before!.start_time)}` : ""}).`,
+      url,
+      tag: `job-${savedId}`,
+    });
+
   redirect(`/jobs/${savedId}?saved=1`);
 }
 

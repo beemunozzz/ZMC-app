@@ -132,6 +132,9 @@ export function AppHeader({
                 My time off
               </Link>
             )}
+            <Link href="/notifications" className={item} onClick={() => setOpen(false)}>
+              Notifications
+            </Link>
             <Link href="/account/password" className={item} onClick={() => setOpen(false)}>
               Change password
             </Link>

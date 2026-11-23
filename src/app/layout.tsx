@@ -12,6 +12,9 @@ const barlow = Barlow_Condensed({
 export const metadata: Metadata = {
   title: "ZMC Hub",
   description: "Jobs, crew and invoices for Zachery's Moving Co.",
+  applicationName: "ZMC Hub",
+  appleWebApp: { capable: true, title: "ZMC Hub", statusBarStyle: "default" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

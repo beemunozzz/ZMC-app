@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/crew";
-import { isISODate } from "@/lib/dates";
+import { fmtDay, isISODate } from "@/lib/dates";
+import { notify } from "@/lib/push";
 
 export type AvailState = { error?: string; ok?: string };
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -33,6 +34,13 @@ export async function addTimeOff(_: AvailState, form: FormData): Promise<AvailSt
     .select("status")
     .single();
   if (error) return { error: `Couldn't save: ${error.message}` };
+  if (data.status === "pending")
+    await notify(supabase, { owners: true }, {
+      title: "Time-off request",
+      body: `${me.full_name} asked off ${fmtDay(start)}${end !== start ? ` – ${fmtDay(end)}` : ""}${until ? ` after ${until}` : ""}. Approve or deny?`,
+      url: "/",
+      tag: "time-off",
+    });
   refresh();
   return {
     ok:
@@ -56,7 +64,15 @@ export async function decideTimeOff(form: FormData) {
   const id = t(form, "id", 40);
   const answer = t(form, "answer", 10) === "deny" ? "denied" : "approved";
   if (me?.role !== "owner" || !UUID.test(id)) return;
+  const { data: row } = await supabase.from("time_off").select("crew_id, start_date, end_date").eq("id", id).maybeSingle();
   await supabase.from("time_off").update({ status: answer, decided_at: new Date().toISOString() }).eq("id", id);
+  if (row)
+    await notify(supabase, { crew: [row.crew_id as string] }, {
+      title: answer === "approved" ? "Time off approved" : "Time off denied",
+      body: `${fmtDay(row.start_date as string)}${row.end_date !== row.start_date ? ` – ${fmtDay(row.end_date as string)}` : ""}: ${answer === "approved" ? "you're off. Enjoy!" : "Zach needs you that day. Call him if you have questions."}`,
+      url: "/availability",
+      tag: "time-off",
+    });
   refresh();
 }
 
@@ -71,6 +87,13 @@ export async function requestCover(_: AvailState, form: FormData): Promise<Avail
     if (error.message.includes("cover_requests_one_open") || error.message.includes("duplicate")) return { ok: "You already told Zach. He's finding cover." };
     return { error: `Couldn't send: ${error.message}` };
   }
+  const { data: job } = await supabase.from("jobs").select("customer_name, job_date").eq("id", jobId).maybeSingle();
+  await notify(supabase, { owners: true }, {
+    title: "Needs cover",
+    body: `${me.full_name} can't make ${job ? `${job.customer_name} (${fmtDay(job.job_date as string)})` : "a job"}${t(form, "reason", 300) ? `: “${t(form, "reason", 300)}”` : ""}.`,
+    url: `/jobs/${jobId}`,
+    tag: `cover-${jobId}`,
+  });
   revalidatePath(`/jobs/${jobId}`);
   refresh();
   return { ok: "Sent to Zach. You're still on the job until he finds cover, so text or call him too." };

@@ -103,12 +103,17 @@
 
 - Built (setup step 0012): crew "My time off" (☰ menu): whole days or "can work until" a time. 7+ days ahead is automatic; less is a request Zach approves or denies (the database decides). "Can't make this job?" on the crew's job card and job page goes to Zach as "Needs cover", with a one-tap "Text Zach". Dashboard: "Needs cover" (Find cover / Sorted) and "Time-off requests" (Approve / Deny). The job form's crew picker shows each person as Free / Not available / Only until X / On another job / Asked for time off. Payroll: "Time off coming up". Saving a job without the person who couldn't make it closes their request.
 
+- Phone notifications (setup step 0013) and home-screen install, with a placeholder "ZMC" icon until the real logo arrives (swap the files in `public/icons/`).
+  - ☰ → Notifications: Turn on notifications / Send me a test / Turn off. iPhone needs "Add to Home Screen" first (iOS 16.4+); the page walks through it.
+  - Zach is notified when someone can't make a job, or asks for time off with less than 7 days' notice. Crew are notified when they're put on a job, taken off one, their job's day or time changes, a job is canceled, or their time off is approved or denied.
+  - Needs two Vercel settings: VAPID_PUBLIC_KEY (Config) and VAPID_PRIVATE_KEY (Secret). The owner makes them on the Notifications page (in the browser; nothing is sent anywhere) and pastes them into Vercel, then the app is republished.
+
 ## Planned: crew availability, short-notice job offers, swaps (agreed with Brandon, not built yet)
 1. ~~**Not available**~~ (built): crew mark days or times they can't work. 7+ days ahead = automatic; under 7 days = a request Zach approves or denies. Zach's crew picker shows each person as Free / On another job / Not available.
 2. **Job offers**: assigning someone to a job within 3 days (72 hours) sends them an offer: Accept / Can't make it, with the estimated finish time. Zach sees Waiting / Accepted / Can't make it. No answer after N minutes (Zach sets it on Payroll; starts at 30) → Zach gets a nudge.
 3. **Job changes**: if Zach moves an accepted job (new day or time, more hours), the crew on it are asked to confirm again ("Job moved from Thu 8 AM to Fri 2 PM. Confirm?").
 4. **Swaps and cover** (Zach can switch it on or off): crew can request a swap with a coworker (coworker accepts, then Zach approves), or "I need someone to cover" (goes to Zach, who finds someone; available crew can offer to take it).
-5. **Notifications**: home-screen app (needs the ZMC logo) plus phone notifications, so offers, answers, swap requests and nudges arrive right away, free. Until then, one-tap texts from Zach's phone with a link to answer. Replying "Confirmed" to a text needs automatic texts (Twilio, paid) later.
+5. ~~**Notifications**~~ (built, needs the two keys): home-screen app (needs the ZMC logo) plus phone notifications, so offers, answers, swap requests and nudges arrive right away, free. Until then, one-tap texts from Zach's phone with a link to answer. Replying "Confirmed" to a text needs automatic texts (Twilio, paid) later.
 6. **Later, with the website booking form (Phase 10)**: customers asking for a move within 72 hours see "Moves within 72 hours need confirmation" and can offer up to 3 dates or times. Zach gets the request, checks who's free, and sends job offers from the app.
 
 ## To do later
