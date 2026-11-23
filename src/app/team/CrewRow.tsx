@@ -76,6 +76,9 @@ export function CrewRow({ member, isMe, hourlyRate }: { member: CrewMember; isMe
                   hourlyRate != null ? <span className="font-semibold tabular-nums">${Number(hourlyRate).toFixed(2)} / hr</span> : <span className="text-muted">Not set</span>,
                 )}
               </dl>
+              <a href={`/payroll/${member.id}`} className="mt-3 flex h-11 w-full items-center justify-center rounded-xl border border-line font-semibold text-ink">
+                Open employee file ›
+              </a>
               <button
                 type="button"
                 onClick={() => setEditing(true)}

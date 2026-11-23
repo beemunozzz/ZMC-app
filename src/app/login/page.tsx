@@ -13,6 +13,8 @@ function friendly(message: string) {
     return "That email isn't on the ZMC crew list. Ask Zach to add it on the Crew page, then try again.";
   if (m.includes("already registered") || m.includes("already been registered"))
     return "You already have a password. Log in instead, or tap “Forgot password”.";
+  if (m.includes("banned"))
+    return "This account has been turned off. If you think that's a mistake, call Zach.";
   if (m.includes("invalid login credentials"))
     return "Wrong email or password. Try again, or tap “Forgot password”.";
   if (m.includes("email not confirmed"))

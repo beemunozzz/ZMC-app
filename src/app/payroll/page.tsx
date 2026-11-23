@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { EMPLOYMENT, ROLE_LABEL, requireMember, type Employment } from "@/lib/crew";
 import { addDays, fmtShort, isISODate, mondayOf, todayISO } from "@/lib/dates";
 import { money } from "@/lib/pricing";
 import { getClockInEnabled } from "@/lib/settings";
@@ -44,12 +44,13 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
   const enabled = await getClockInEnabled(supabase);
 
   const [{ data: crewRows }, { data: payRows }, { data: entryRows }, { data: openRows }] = await Promise.all([
-    supabase.from("crew_members").select("id, full_name, role, active").order("full_name"),
-    supabase.from("crew_pay").select("crew_id, hourly_rate"),
+    supabase.from("crew_members").select("id, full_name, role, active, employment, phone").order("full_name"),
+    supabase.from("crew_pay").select("crew_id, hourly_rate, terminated_at"),
     supabase.from("time_entries").select(TIME_COLUMNS).gte("clock_in", start).lt("clock_in", end).order("clock_in"),
     supabase.from("time_entries").select(TIME_COLUMNS).is("clock_out", null),
   ]);
-  const crew = (crewRows ?? []) as { id: string; full_name: string; role: keyof typeof ROLE_LABEL; active: boolean }[];
+  const crew = (crewRows ?? []) as { id: string; full_name: string; role: keyof typeof ROLE_LABEL; active: boolean; employment: Employment; phone: string | null }[];
+  const terminatedIds = new Set((payRows ?? []).filter((r) => r.terminated_at).map((r) => r.crew_id as string));
   const names = new Map(crew.map((c) => [c.id, c.full_name]));
   const pay = new Map((payRows ?? []).map((r) => [r.crew_id as string, r.hourly_rate == null ? null : Number(r.hourly_rate)]));
   const entries = (entryRows ?? []) as TimeEntry[];
@@ -100,6 +101,42 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
               ? "Crew see a Clock in / Clock out button on their job screen. Times come from the server clock, so they can't be changed on a phone. Invoices fill in the hours from the crew lead's time."
               : "Turned off: crew don't see any clock-in button, and invoices use the estimated hours. Turn it on to track hours and pay."}
           </p>
+        </section>
+
+        {/* Employees */}
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-lg font-extrabold uppercase text-ink">Employees</h2>
+          <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
+            {[...crew]
+              .sort((a, b) => Number(terminatedIds.has(a.id)) - Number(terminatedIds.has(b.id)) || a.full_name.localeCompare(b.full_name))
+              .map((c) => {
+                const gone = terminatedIds.has(c.id) && !c.active;
+                const r = pay.get(c.id);
+                return (
+                  <li key={c.id}>
+                    <Link href={`/payroll/${c.id}`} className={`press flex items-center gap-3 px-4 py-3 transition-colors hover:bg-bg ${gone ? "opacity-60" : ""}`}>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-semibold text-ink">{c.full_name}</span>
+                        <span className="block truncate text-xs text-muted">
+                          {ROLE_LABEL[c.role]} · {r != null ? `${money(r)}/hr` : "No pay rate"}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          gone ? "bg-bad/10 text-bad" : c.employment === "leave" ? "bg-warn/12 text-warn" : c.employment === "on_call" ? "bg-primary/10 text-primary" : "bg-ok/12 text-ok"
+                        }`}
+                      >
+                        {gone ? "Terminated" : EMPLOYMENT[c.employment ?? "full_time"].label}
+                      </span>
+                      <span className="text-lg text-muted" aria-hidden>
+                        ›
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+          </ul>
+          <p className="text-xs text-muted">Tap someone to see their file: contact info, pay and raises, employment type, or terminate.</p>
         </section>
 
         {/* On the clock now */}

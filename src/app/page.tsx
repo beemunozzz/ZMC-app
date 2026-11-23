@@ -15,6 +15,8 @@ import { getClockInEnabled, getPrices } from "@/lib/settings";
 import { TIME_COLUMNS, clockTime, type TimeEntry } from "@/lib/time";
 import { reminderText } from "@/lib/texts";
 import { ReminderLink } from "@/components/ReminderLink";
+import { LimitedHome } from "@/components/LimitedHome";
+import { answerOnCall } from "@/app/payroll/employee-actions";
 import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, type JobWx } from "@/lib/weather-kinds";
 
 export default function HomePage() {
@@ -30,7 +32,15 @@ type Attention = { key: string; tone: "bad" | "warn"; text: string; sub: string;
 async function Home() {
   const { supabase, me } = await requireMember();
   if (!me) return <NotActive />;
-  if (me.role !== "owner") redirect("/schedule"); // crew keep their "next job" screen
+  if (me.role !== "owner") {
+    // On leave: home screen only. On call: home screen unless a job is in their window (day before to day after).
+    if (me.employment === "leave") return <LimitedHome me={me} kind="leave" phone={(await getPrices(supabase)).business_phone} />;
+    if (me.employment === "on_call") {
+      const { data: visible } = await supabase.from("jobs").select("id").neq("status", "canceled").limit(1);
+      if (!visible?.length) return <LimitedHome me={me} kind="on_call" phone={(await getPrices(supabase)).business_phone} />;
+    }
+    redirect("/schedule"); // crew keep their "next job" screen
+  }
 
   const today = todayISO();
   const weekStart = mondayOf(today);
@@ -40,7 +50,7 @@ async function Home() {
 
   const [{ data: jobRows }, { data: crewRows }, { data: quoteRows }, stockton] = await Promise.all([
     supabase.from("jobs").select(JOB_COLUMNS).gte("job_date", from).lte("job_date", horizon > weekEnd ? horizon : weekEnd).order("job_date").order("start_time", { nullsFirst: false }),
-    supabase.from("crew_members").select("id, full_name, email, user_id").eq("active", true).order("full_name"),
+    supabase.from("crew_members").select("id, full_name, email, user_id, employment").eq("active", true).order("full_name"),
     supabase.from("quotes").select("id, customer_name, status, created_at, quote_total, move_date").order("created_at", { ascending: false }).limit(300),
     stocktonForecast(),
   ]);
@@ -55,6 +65,20 @@ async function Home() {
   // ---- Tomorrow's reminders ----
   const tomorrow = addDays(today, 1);
   const tomorrows = jobs.filter((j) => j.job_date === tomorrow && isLive(j));
+
+  // ---- On-call check: "Is this person still working tomorrow?" ----
+  const onCallIds = new Set(crew.filter((c) => c.employment === "on_call").map((c) => c.id as string));
+  const checkJobs = jobs.filter((j) => (j.job_date === tomorrow || j.job_date === today) && isLive(j) && jobCrew(j).some((id) => onCallIds.has(id)));
+  const answered = new Set<string>();
+  if (checkJobs.length) {
+    const { data } = await supabase.from("oncall_checks").select("job_id, crew_id").in("job_id", checkJobs.map((j) => j.id));
+    for (const r of data ?? []) answered.add(`${r.job_id}|${r.crew_id}`);
+  }
+  const onCallQuestions = checkJobs.flatMap((j) =>
+    jobCrew(j)
+      .filter((id) => onCallIds.has(id) && !answered.has(`${j.id}|${id}`))
+      .map((id) => ({ job: j, crewId: id, name: names.get(id) ?? "Someone" })),
+  );
   const prices = await getPrices(supabase);
   const sent = new Set<string>();
   if (tomorrows.length) {
@@ -152,6 +176,36 @@ async function Home() {
             </p>
           )}
         </section>
+
+        {/* On-call check */}
+        {onCallQuestions.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-2xl border-2 border-primary/40 bg-card p-4">
+            <h2 className={h2}>On-call crew: still working?</h2>
+            <ul className="divide-y divide-line">
+              {onCallQuestions.map((q) => (
+                <li key={`${q.job.id}${q.crewId}`} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
+                  <p className="min-w-0 flex-1 text-[15px] text-ink">
+                    Is <b>{q.name}</b> still working {q.job.job_date === today ? "today" : "tomorrow"}?
+                    <span className="block text-xs text-muted">
+                      {q.job.customer_name} · {timeSpan(q.job)}
+                    </span>
+                  </p>
+                  <form action={answerOnCall} className="flex shrink-0 gap-2">
+                    <input type="hidden" name="job_id" value={q.job.id} />
+                    <input type="hidden" name="crew_id" value={q.crewId} />
+                    <button name="answer" value="yes" className="press h-11 w-20 rounded-xl bg-ok font-semibold text-white dark:text-navy">
+                      Yes
+                    </button>
+                    <button name="answer" value="no" className="press h-11 w-20 rounded-xl border border-bad/50 font-semibold text-bad">
+                      No
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted">No takes them off that job (it will show as needing crew). They keep their login but only see their home screen.</p>
+          </section>
+        )}
 
         {/* Today at a glance */}
         <section className={card}>

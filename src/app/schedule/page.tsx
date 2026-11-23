@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { JobCard } from "@/components/JobCard";
 import { NextJob } from "@/components/NextJob";
@@ -46,8 +47,10 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   if (!me) return <NotActive />;
 
   const isOwner = me.role === "owner";
+  if (!isOwner && me.employment === "leave") redirect("/"); // on leave: no schedule
+  const onCall = !isOwner && me.employment === "on_call"; // on call: only today's view (their job window)
   const today = todayISO();
-  const view: View = sp.view === "month" || sp.view === "today" || sp.view === "week" ? sp.view : isOwner ? "week" : "today";
+  const view: View = onCall ? "today" : sp.view === "month" || sp.view === "today" || sp.view === "week" ? sp.view : isOwner ? "week" : "today";
   const date = isISODate(sp.date) ? sp.date : today;
 
   // Everyone on the active crew (names for the cards).
@@ -151,7 +154,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
           </div>
         )}
 
-        <Toolbar view={view} date={date} today={today} href={href} />
+        {!onCall && <Toolbar view={view} date={date} today={today} href={href} />}
 
         {error && (
           <p className="rounded-2xl bg-bad/10 px-4 py-3 text-sm text-bad">
