@@ -1,5 +1,6 @@
 // Who's free for a job? Uses time off and other jobs. Safe to use on the server and the phone.
 import { fmtTime, fmtMinutes, minutes } from "./dates";
+import { WEEKLY_COLUMNS, cleanWeek, currentOf, regularConflict, type Week, type WeeklySchedule } from "./regular";
 
 export type TimeOff = {
   id: string;
@@ -50,6 +51,7 @@ export function timeOffText(t: Pick<TimeOff, "until_time">) {
 /**
  * Is this person free for a job on `date` from `start` (e.g. "08:00") for `hours`?
  * Worst news first: not available > on another job > only part of the day > asked off (waiting) > free.
+ * `regular` = each person's regular weekly schedule ("off Mondays", "off by 6 PM Tuesdays").
  */
 export function availabilityFor(
   crewId: string,
@@ -59,6 +61,7 @@ export function availabilityFor(
   timeOff: TimeOff[],
   jobs: JobSlot[],
   excludeJobId?: string,
+  regular?: Record<string, Week>,
 ): Availability {
   const s = minutes(start) ?? 8 * 60;
   const e = s + (hours || 2) * 60;
@@ -66,6 +69,8 @@ export function availabilityFor(
 
   const approved = mine.filter((t) => t.status === "approved");
   if (approved.some((t) => !t.until_time)) return { kind: "off", text: "Not available" };
+  const usual = regularConflict(regular?.[crewId], date, s, e);
+  if (usual?.off) return { kind: "off", text: usual.text };
 
   const clash = jobs.find(
     (j) =>
@@ -90,6 +95,7 @@ export function availabilityFor(
     const cutoff = Math.min(...until);
     if (cutoff < e) return { kind: "limited", text: `Only until ${fmtMinutes(cutoff)}` };
   }
+  if (usual) return { kind: "limited", text: usual.text };
   if (mine.some((t) => t.status === "pending")) return { kind: "pending", text: "Asked for time off" };
   return { kind: "free", text: "Free" };
 }
@@ -106,10 +112,21 @@ export const AVAIL_STYLE: Record<Availability["kind"], { icon: string; cls: stri
 export async function loadAvailability(
   supabase: { from: (t: string) => any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   from: string,
-): Promise<{ timeOff: TimeOff[]; jobs: JobSlot[] }> {
-  const [{ data: off }, { data: jobs }] = await Promise.all([
+): Promise<{ timeOff: TimeOff[]; jobs: JobSlot[]; regular: Record<string, Week> }> {
+  const [{ data: off }, { data: jobs }, { data: weekly }] = await Promise.all([
     supabase.from("time_off").select(TIME_OFF_COLUMNS).neq("status", "denied").gte("end_date", from),
     supabase.from("jobs").select("id, job_date, start_time, est_hours, lead_id, crew_ids, status, customer_name").gte("job_date", from).neq("status", "canceled"),
+    supabase.from("weekly_schedules").select(WEEKLY_COLUMNS).eq("status", "approved"),
   ]);
-  return { timeOff: (off ?? []) as TimeOff[], jobs: (jobs ?? []) as JobSlot[] };
+  return { timeOff: (off ?? []) as TimeOff[], jobs: (jobs ?? []) as JobSlot[], regular: currentWeeks((weekly ?? []) as WeeklySchedule[]) };
+}
+
+/** crew id -> the regular schedule in effect for them. */
+export function currentWeeks(rows: WeeklySchedule[]): Record<string, Week> {
+  const out: Record<string, Week> = {};
+  for (const id of new Set(rows.map((r) => r.crew_id))) {
+    const cur = currentOf(rows.filter((r) => r.crew_id === id));
+    if (cur) out[id] = cleanWeek(cur.days);
+  }
+  return out;
 }

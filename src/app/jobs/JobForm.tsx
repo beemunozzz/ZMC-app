@@ -7,6 +7,7 @@ import { HouseFields } from "@/components/HouseFields";
 import { JOB_TYPES, STATUS, type Job } from "@/lib/jobs";
 import { REFER_ITEMS } from "@/lib/pricing";
 import { AVAIL_STYLE, availabilityFor, type JobSlot, type TimeOff } from "@/lib/availability";
+import type { Week } from "@/lib/regular";
 import { deleteJob, saveJob, type JobFormState } from "./actions";
 
 type CrewOption = { id: string; full_name: string; role: Role };
@@ -18,7 +19,7 @@ const section = "flex flex-col gap-3 rounded-2xl border border-line bg-card p-4"
 const heading = "font-display text-lg font-extrabold uppercase text-ink";
 
 
-export type CrewAvailabilityData = { timeOff: TimeOff[]; jobs: JobSlot[] };
+export type CrewAvailabilityData = { timeOff: TimeOff[]; jobs: JobSlot[]; regular?: Record<string, Week> };
 
 export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: CrewOption[]; defaultDate: string; avail?: CrewAvailabilityData }) {
   const [when, setWhen] = useState({
@@ -26,7 +27,7 @@ export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: Cr
     start: job?.start_time?.slice(0, 5) ?? "08:00",
     hours: job?.est_hours != null ? String(job.est_hours) : "",
   });
-  const availOf = (id: string) => (avail ? availabilityFor(id, when.date, when.start, Number(when.hours) || 2, avail.timeOff, avail.jobs, job?.id) : null);
+  const availOf = (id: string) => (avail ? availabilityFor(id, when.date, when.start, Number(when.hours) || 2, avail.timeOff, avail.jobs, job?.id, avail.regular) : null);
   const [state, action, pending] = useActionState<JobFormState, FormData>(saveJob, {});
   const [lead, setLead] = useState(job?.lead_id ?? "");
   const [picked, setPicked] = useState<string[]>(job?.crew_ids ?? []);

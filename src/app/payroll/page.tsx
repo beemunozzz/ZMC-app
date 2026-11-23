@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { setupForAll } from "@/lib/setup";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
@@ -55,6 +56,7 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
   const crew = (crewRows ?? []) as { id: string; full_name: string; role: keyof typeof ROLE_LABEL; active: boolean; employment: Employment; phone: string | null }[];
   const terminatedIds = new Set((payRows ?? []).filter((r) => r.terminated_at).map((r) => r.crew_id as string));
   const names = new Map(crew.map((c) => [c.id, c.full_name]));
+  const setup = await setupForAll(supabase, crew.filter((c) => c.role !== "owner"));
   const pay = new Map((payRows ?? []).map((r) => [r.crew_id as string, r.hourly_rate == null ? null : Number(r.hourly_rate)]));
   const entries = (entryRows ?? []) as TimeEntry[];
   const openNow = (openRows ?? []) as TimeEntry[];
@@ -130,6 +132,15 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
                         <span className="block truncate text-[15px] font-semibold text-ink">{c.full_name}</span>
                         <span className="block truncate text-xs text-muted">
                           {ROLE_LABEL[c.role]} · {r != null ? `${money(r)}/hr` : "No pay rate"}
+                          {(() => {
+                            const st = setup.get(c.id);
+                            return st && !gone ? (
+                              <span className={st.done === st.total ? "" : "text-warn"}>
+                                {" · "}
+                                {st.done === st.total ? "Set up ✓" : `Set up ${st.done}/${st.total}`}
+                              </span>
+                            ) : null;
+                          })()}
                         </span>
                       </span>
                       <span

@@ -28,6 +28,8 @@ import { jobsForecast, stocktonForecast } from "@/lib/weather";
 import { WX_EMOJI, WX_LABEL, worse, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
+import { CrewShortcuts, SetupChecklist } from "@/components/CrewSetup";
+import { setupFor, type SetupItem } from "@/lib/setup";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
 import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
 import { TIME_COLUMNS, entryHours, weekBounds, type TimeEntry } from "@/lib/time";
@@ -139,6 +141,10 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
     };
   }
 
+  // Crew home: the "Get set up" checklist and shortcuts (their own screen, on today).
+  const crewHome = !isOwner && !who && view === "today" && date === today;
+  const setup: SetupItem[] | null = crewHome ? await setupFor(supabase, me) : null;
+
   const dayJobs = (d: string) => jobs.filter((j) => j.job_date === d);
   const isDoubleBooked = (j: Job) => conflicts(j, allJobs.filter((o) => o.job_date === j.job_date)).length > 0;
   const whoName = who ? names.get(who) : "";
@@ -149,7 +155,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
-        title={isOwner ? "Schedule" : "My jobs"}
+        title={isOwner ? "Schedule" : crewHome ? "Home" : "My jobs"}
         isOwner={isOwner}
         name={me.full_name}
         roleLabel={ROLE_LABEL[me.role]}
@@ -250,7 +256,11 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
               </Link>
             </section>
           ) : (
-            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} />
+            <>
+              {setup && <SetupChecklist items={setup} />}
+              <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} />
+              {crewHome && <CrewShortcuts />}
+            </>
           ))}
       </main>
     </div>

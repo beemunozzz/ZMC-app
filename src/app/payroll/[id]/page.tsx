@@ -8,6 +8,11 @@ import { fmtDayLong, fmtShort, mondayOf, todayISO } from "@/lib/dates";
 import { telUrl } from "@/lib/jobs";
 import { money } from "@/lib/pricing";
 import { TIME_COLUMNS, entryHours, fmtDuration, weekBounds, type TimeEntry } from "@/lib/time";
+import { WeekView } from "@/components/WeekView";
+import { ScheduleHistory } from "@/components/ScheduleHistory";
+import { decideWeek } from "@/app/my-schedule/actions";
+import { WEEKDAY_LABEL, WEEKLY_COLUMNS, cleanWeek, currentOf, weekChanges, type WeeklySchedule } from "@/lib/regular";
+import { setupForAll, PROFILE_COLUMNS, type Profile } from "@/lib/setup";
 import { InfoForm, RaiseForm, RehireBox, TerminateBox, type PrivateInfo } from "./EmployeeForms";
 
 export default function EmployeePage({ params }: PageProps<"/payroll/[id]">) {
@@ -60,6 +65,19 @@ async function Employee({ params }: Pick<PageProps<"/payroll/[id]">, "params">) 
   const entries = (t ?? []) as TimeEntry[];
   const weekHours = entries.filter((e) => e.clock_in >= weekStart).reduce((s, e) => s + entryHours(e), 0);
   const monthHours = entries.reduce((s, e) => s + entryHours(e), 0);
+
+  // What they filled in themselves: info, regular schedule, and the setup checklist.
+  const [{ data: prof }, { data: wk }] = await Promise.all([
+    supabase.from("crew_profile").select(PROFILE_COLUMNS).eq("crew_id", id).maybeSingle(),
+    supabase.from("weekly_schedules").select(WEEKLY_COLUMNS).eq("crew_id", id).order("created_at"),
+  ]);
+  const profile = (prof ?? null) as Profile | null;
+  const weeks = (wk ?? []) as WeeklySchedule[];
+  const current = currentOf(weeks);
+  const week = current ? cleanWeek(current.days) : null;
+  const pendingWeek = weeks.find((w) => w.status === "pending") ?? null;
+  const pendingChanges = pendingWeek ? weekChanges(week, cleanWeek(pendingWeek.days)) : [];
+  const setup = (await setupForAll(supabase, [member])).get(member.id)!;
 
   const card = "flex flex-col gap-3 rounded-2xl border border-line bg-card p-4";
   const h2 = "font-display text-lg font-extrabold uppercase text-ink";
@@ -142,6 +160,80 @@ async function Employee({ params }: Pick<PageProps<"/payroll/[id]">, "params">) 
             </div>
           )}
         </section>
+
+        {member.role !== "owner" && (
+          <>
+            {/* Setup checklist progress */}
+            <section className={card}>
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className={h2}>Set up</h2>
+                <span className={`text-sm font-semibold tabular-nums ${setup.done === setup.total ? "text-ok" : "text-warn"}`}>
+                  {setup.done} of {setup.total} done
+                </span>
+              </div>
+              <ul className="grid gap-1 text-sm">
+                {setup.list.map((i) => (
+                  <li key={i.key} className={i.done ? "text-muted" : "text-ink"}>
+                    {i.done ? "✓" : "○"} {i.title}
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* What they filled in */}
+            <section className={card}>
+              <h2 className={h2}>Filled in by {member.full_name.split(" ")[0]}</h2>
+              {profile ? (
+                <dl className="grid gap-2 text-sm">
+                  {(
+                    [
+                      ["Address", profile.address],
+                      ["Emergency", [profile.emergency_name, profile.emergency_relation && `(${profile.emergency_relation})`, profile.emergency_phone].filter(Boolean).join(" ")],
+                      ["License", profile.has_license == null ? "" : profile.has_license ? "Has a driver's license" : "No driver's license"],
+                      ["Shirt", profile.shirt_size],
+                    ] as const
+                  ).map(([k, v]) => (
+                    <div key={k} className="flex gap-2">
+                      <dt className="w-24 shrink-0 text-muted">{k}</dt>
+                      <dd className="min-w-0 break-words text-ink">{v || <span className="text-muted">Not filled in</span>}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-sm text-muted">Nothing yet. It shows up here once they fill in &ldquo;My info&rdquo; in the app.</p>
+              )}
+            </section>
+
+            {/* Regular schedule */}
+            <section id="schedule" className={`${card} scroll-mt-20`}>
+              <h2 className={h2}>Regular schedule</h2>
+              {week ? <WeekView week={week} /> : <p className="text-sm text-muted">Not filled in yet.</p>}
+              {pendingWeek && (
+                <div className="flex flex-col gap-2 rounded-xl border border-warn/40 p-3">
+                  <p className="text-[15px] font-semibold text-ink">Wants to change:</p>
+                  <ul className="text-sm">
+                    {pendingChanges.map((c) => (
+                      <li key={c.day}>
+                        {WEEKDAY_LABEL[c.day]}: <span className="text-muted line-through">{c.before}</span> → <b>{c.after}</b>
+                      </li>
+                    ))}
+                  </ul>
+                  {pendingWeek.note && <p className="text-xs text-muted">&ldquo;{pendingWeek.note}&rdquo;</p>}
+                  <form action={decideWeek} className="grid grid-cols-2 gap-2">
+                    <input type="hidden" name="id" value={pendingWeek.id} />
+                    <button name="answer" value="approve" className="press h-11 rounded-xl bg-ok font-semibold text-white dark:text-navy">
+                      Approve
+                    </button>
+                    <button name="answer" value="deny" className="press h-11 rounded-xl border border-bad/50 font-semibold text-bad">
+                      Deny
+                    </button>
+                  </form>
+                </div>
+              )}
+            </section>
+            {weeks.length > 0 && <ScheduleHistory rows={weeks} />}
+          </>
+        )}
 
         <InfoForm member={member} info={info} isMe={member.id === me.id} />
 

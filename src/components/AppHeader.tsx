@@ -82,7 +82,7 @@ export function AppHeader({
               </>
             ) : (
               <Link href="/" className={item} onClick={() => setOpen(false)}>
-                My jobs
+                Home
               </Link>
             )}
 
@@ -130,9 +130,17 @@ export function AppHeader({
             )}
             <div className="my-2 border-t border-line" />
             {!isOwner && (
-              <Link href="/availability" className={item} onClick={() => setOpen(false)}>
-                My time off
-              </Link>
+              <>
+                <Link href="/my-schedule" className={item} onClick={() => setOpen(false)}>
+                  My regular schedule
+                </Link>
+                <Link href="/availability" className={item} onClick={() => setOpen(false)}>
+                  My time off
+                </Link>
+                <Link href="/my-info" className={item} onClick={() => setOpen(false)}>
+                  My info
+                </Link>
+              </>
             )}
             <Link href="/account" className={item} onClick={() => setOpen(false)}>
               My settings

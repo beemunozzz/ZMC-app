@@ -1,9 +1,11 @@
 import { AppHeader } from "@/components/AppHeader";
 import { ROLE_LABEL, type CrewMember } from "@/lib/crew-types";
 import { telUrl } from "@/lib/jobs";
+import type { SetupItem } from "@/lib/setup";
+import { CrewShortcuts, SetupChecklist } from "./CrewSetup";
 
 /** Home screen for crew on call (between jobs) or on a leave of absence: no schedule, no jobs. */
-export function LimitedHome({ me, kind, phone }: { me: CrewMember; kind: "on_call" | "leave"; phone: string }) {
+export function LimitedHome({ me, kind, phone, setup }: { me: CrewMember; kind: "on_call" | "leave"; phone: string; setup: SetupItem[] }) {
   const first = me.full_name.split(" ")[0];
   return (
     <div className="flex flex-1 flex-col">
@@ -29,9 +31,11 @@ export function LimitedHome({ me, kind, phone }: { me: CrewMember; kind: "on_cal
             </>
           )}
         </section>
+        <SetupChecklist items={setup} />
         <a href={telUrl(phone)} className="press flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-white dark:text-navy">
           Call Zach · {phone}
         </a>
+        <CrewShortcuts />
       </main>
     </div>
   );

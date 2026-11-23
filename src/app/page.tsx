@@ -17,6 +17,9 @@ import { TIME_COLUMNS, clockTime, type TimeEntry } from "@/lib/time";
 import { reminderText } from "@/lib/texts";
 import { ReminderLink } from "@/components/ReminderLink";
 import { LimitedHome } from "@/components/LimitedHome";
+import { setupFor } from "@/lib/setup";
+import { decideWeek } from "@/app/my-schedule/actions";
+import { WEEKDAY_LABEL, WEEKLY_COLUMNS, cleanWeek, currentOf, weekChanges, type WeeklySchedule } from "@/lib/regular";
 import { Avatars } from "@/components/Avatars";
 import { answerOnCall } from "@/app/payroll/employee-actions";
 import { decideTimeOff, resolveCover } from "@/app/availability/actions";
@@ -38,12 +41,12 @@ async function Home() {
   if (!me) return <NotActive />;
   if (me.role !== "owner") {
     // On leave: home screen only. On call: home screen unless a job is in their window (day before to day after).
-    if (me.employment === "leave") return <LimitedHome me={me} kind="leave" phone={(await getPrices(supabase)).business_phone} />;
+    if (me.employment === "leave") return <LimitedHome me={me} kind="leave" phone={(await getPrices(supabase)).business_phone} setup={await setupFor(supabase, me)} />;
     if (me.employment === "on_call") {
       const { data: visible } = await supabase.from("jobs").select("id").neq("status", "canceled").limit(1);
-      if (!visible?.length) return <LimitedHome me={me} kind="on_call" phone={(await getPrices(supabase)).business_phone} />;
+      if (!visible?.length) return <LimitedHome me={me} kind="on_call" phone={(await getPrices(supabase)).business_phone} setup={await setupFor(supabase, me)} />;
     }
-    redirect("/schedule"); // crew keep their "next job" screen
+    redirect("/schedule"); // crew home: checklist, next job, coming up, shortcuts
   }
 
   const today = todayISO();
@@ -80,6 +83,16 @@ async function Home() {
   const { data: coverJobRows } = coverJobIds.length ? await supabase.from("jobs").select(JOB_COLUMNS).in("id", coverJobIds) : { data: [] };
   const coverJobs = new Map(((coverJobRows ?? []) as Job[]).map((j) => [j.id, j]));
   const lateOff = (offRows ?? []) as TimeOff[];
+
+  // ---- Regular-schedule change requests (with each person's current schedule to compare) ----
+  const { data: weekRows } = await supabase.from("weekly_schedules").select(WEEKLY_COLUMNS).in("status", ["pending", "approved"]);
+  const allWeeks = (weekRows ?? []) as WeeklySchedule[];
+  const weekRequests = allWeeks
+    .filter((r) => r.status === "pending")
+    .map((r) => {
+      const cur = currentOf(allWeeks.filter((o) => o.crew_id === r.crew_id));
+      return { r, changes: weekChanges(cur ? cleanWeek(cur.days) : null, cleanWeek(r.days)) };
+    });
 
   // ---- On-call check: "Is this person still working tomorrow?" ----
   const onCallIds = new Set(crew.filter((c) => c.employment === "on_call").map((c) => c.id as string));
@@ -323,6 +336,44 @@ async function Home() {
                     </span>
                   </p>
                   <form action={decideTimeOff} className="flex shrink-0 gap-2">
+                    <input type="hidden" name="id" value={r.id} />
+                    <button name="answer" value="approve" className="press h-11 w-24 rounded-xl bg-ok font-semibold text-white dark:text-navy">
+                      Approve
+                    </button>
+                    <button name="answer" value="deny" className="press h-11 w-20 rounded-xl border border-bad/50 font-semibold text-bad">
+                      Deny
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Regular-schedule change requests */}
+        {weekRequests.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-2xl border-2 border-warn/40 bg-card p-4">
+            <h2 className={h2}>Schedule change requests</h2>
+            <ul className="divide-y divide-line">
+              {weekRequests.map(({ r, changes }) => (
+                <li key={r.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1 text-[15px] text-ink">
+                    <p>
+                      <b>{names.get(r.crew_id) ?? "Someone"}</b> wants to change their regular schedule
+                    </p>
+                    <ul className="mt-1 text-sm">
+                      {changes.map((c) => (
+                        <li key={c.day}>
+                          {WEEKDAY_LABEL[c.day]}: <span className="text-muted line-through">{c.before}</span> → <b>{c.after}</b>
+                        </li>
+                      ))}
+                    </ul>
+                    {r.note && <p className="text-xs text-muted">&ldquo;{r.note}&rdquo;</p>}
+                    <Link href={`/payroll/${r.crew_id}#schedule`} className="text-xs font-semibold text-primary">
+                      See their original and history
+                    </Link>
+                  </div>
+                  <form action={decideWeek} className="flex shrink-0 gap-2">
                     <input type="hidden" name="id" value={r.id} />
                     <button name="answer" value="approve" className="press h-11 w-24 rounded-xl bg-ok font-semibold text-white dark:text-navy">
                       Approve
