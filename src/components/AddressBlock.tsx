@@ -1,4 +1,5 @@
-import { houseLine, navigateUrl, seeHouseUrl, zillowUrl, type House } from "@/lib/jobs";
+import { houseLine, seeHouseUrl, zillowUrl, type House } from "@/lib/jobs";
+import { NavigateLink } from "./NavigateLink";
 
 const btn = "press flex h-11 items-center justify-center rounded-xl px-3 text-sm font-semibold";
 
@@ -22,14 +23,12 @@ export function AddressBlock({
       <p className="mt-0.5 break-words text-[15px] font-medium text-ink">{address}</p>
       <p className={`mt-1 break-words text-sm ${line ? "text-ink" : "text-muted"}`}>{line || "House details not filled in yet."}</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <a
-          href={navigateUrl(address)}
-          target="_blank"
-          rel="noopener"
+        <NavigateLink
+          address={address}
           className={`${btn} col-span-2 ${primary ? "bg-primary text-white dark:text-navy" : "border border-line text-ink"}`}
         >
           Navigate
-        </a>
+        </NavigateLink>
         <a href={zillowUrl(address)} target="_blank" rel="noopener" className={`${btn} border border-line text-ink`}>
           Zillow
         </a>

@@ -48,6 +48,7 @@
   - Next 7 days strip: weather emoji and job count per day (red = needs crew); tap a day to open it.
   - This week: jobs, estimated hours and crew-hours, quotes and how many booked, open quote value. Money totals come with invoices.
   - Crew still land on their "next job" screen (Brandon's choice).
+- Navigate buttons open Apple Maps on iPhones and iPads, and Google Maps on Android and computers (detected automatically). "See the house" stays on Google Maps for Street View.
 
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
