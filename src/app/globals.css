@@ -15,8 +15,9 @@
   --bad: #b3261e;
 }
 
+/* Dark mode: follows the phone's setting, unless someone picks Light or Dark in My settings. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #12171d;
     --ink: #ece8e1;
     --muted: #9aa3ad;
@@ -28,6 +29,31 @@
     --ok: #8fd3a6;
     --warn: #f0b27a;
     --bad: #f2b8b5;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171d;
+  --ink: #ece8e1;
+  --muted: #9aa3ad;
+  --primary: #8fb2e6;
+  --tape: #e0b072;
+  --line: #2a323c;
+  --card: #1a2028;
+  --navy: #0b131e;
+  --ok: #8fd3a6;
+  --warn: #f0b27a;
+  --bad: #f2b8b5;
+}
+
+/* Tailwind's dark: styles follow the same rule. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
   }
 }
 

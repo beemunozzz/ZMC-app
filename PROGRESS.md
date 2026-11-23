@@ -108,6 +108,9 @@
   - Zach is notified when someone can't make a job, or asks for time off with less than 7 days' notice. Crew are notified when they're put on a job, taken off one, their job's day or time changes, a job is canceled, or their time off is approved or denied.
   - Needs two Vercel settings: VAPID_PUBLIC_KEY (Config) and VAPID_PRIVATE_KEY (Secret). The owner makes them on the Notifications page (in the browser; nothing is sent anywhere) and pastes them into Vercel, then the app is republished.
 
+- Login and password screens show a big centered "ZMC" with the tape-gold bar (no "Hub").
+- ☰ → My settings: Appearance (Automatic / Light / Dark, saved per phone, applied before the page paints so it never flashes), plus links to Notifications, My time off and Change password.
+
 ## Planned: crew availability, short-notice job offers, swaps (agreed with Brandon, not built yet)
 1. ~~**Not available**~~ (built): crew mark days or times they can't work. 7+ days ahead = automatic; under 7 days = a request Zach approves or denies. Zach's crew picker shows each person as Free / On another job / Not available.
 2. **Job offers**: assigning someone to a job within 3 days (72 hours) sends them an offer: Accept / Can't make it, with the estimated finish time. Zach sees Waiting / Accepted / Can't make it. No answer after N minutes (Zach sets it on Payroll; starts at 30) → Zach gets a nudge.
