@@ -12,14 +12,22 @@ Saved versions of the app, so we can always go back.
 - **What it is:** everything built so far with the approved "depth" look, before any changes from the
   Impeccable, Emil Kowalski motion, or taste skills.
 
-## Version 2 (in progress): refined redesign
+## Version 2A: refined redesign (option)
+
+- **Code:** commit `2b6638d` on the working copy. To use it instead of the bold version, tell Claude *"use the refined version"*.
+
 
 - **Where:** Claude's working copy (`claude/new-session-thne14`), on its Vercel preview link.
 - **What changed (refinement, same colors and fonts):** one drawn icon set instead of emoji and symbols
   (weather keeps its emoji); headings say what the card is, with no small labels above them; tiles and
   buttons in Inter; cards no longer slide in on every page open; the ☰ menu grows from its button;
   branded text highlight and keyboard focus ring; hover highlights on computers.
-- **Status:** waiting on Brandon's yes or no. Not on the live app yet.
+- **Status:** an option. Not on the live app.
+
+## Version 2B (in progress): bold redesign
+
+- Built on top of 2A, in the working copy, with the same colors and fonts. A navy header band on the dashboard and job page, a navy job "ticket" with the route drawn as a line on the crew card, a calendar-style week view, and crew initials in circles.
+- **Status:** in progress.
 
 ## How the redesign works
 
