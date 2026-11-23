@@ -7,7 +7,7 @@ import { saveWeek, type WeekState } from "./actions";
 const input = "block h-11 w-full min-w-0 rounded-xl border border-line bg-bg px-3 text-left text-base text-ink outline-none focus:border-primary";
 const CHOICES: [DayRule["k"], string][] = [
   ["all", "All day"],
-  ["some", "Some hours"],
+  ["some", "Off by…"],
   ["off", "Off"],
 ];
 
@@ -48,16 +48,10 @@ export function WeekForm({ start, isFirst, onCancel }: { start: Week; isFirst: b
                 </div>
               </fieldset>
               {kinds[d] === "some" && (
-                <div className="grid grid-cols-2 gap-2 pl-0 sm:pl-[6rem]">
-                  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted">
-                    <span>Can start at</span>
-                    <input type="time" name={`${d}_from`} defaultValue={r.k === "some" ? r.from ?? "" : ""} className={input} />
-                  </label>
-                  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted">
-                    <span>Off by</span>
-                    <input type="time" name={`${d}_until`} defaultValue={r.k === "some" ? r.until ?? "18:00" : "18:00"} className={input} />
-                  </label>
-                </div>
+                <label className="grid grid-cols-[5.5rem_1fr] items-center gap-2 text-sm font-medium text-muted">
+                  <span>Off by</span>
+                  <input type="time" name={`${d}_until`} required defaultValue={r.k === "some" ? r.until ?? "18:00" : "18:00"} className={input} />
+                </label>
               )}
             </li>
           );
@@ -68,7 +62,7 @@ export function WeekForm({ start, isFirst, onCancel }: { start: Week; isFirst: b
         <span>
           Why? <span className="font-normal text-muted">(optional)</span>
         </span>
-        <input name="note" placeholder="e.g. school pickup at 6" className={`${input} h-12`} autoComplete="off" />
+        <input name="note" placeholder="e.g. kids pickup at 6:30" className={`${input} h-12`} autoComplete="off" />
       </label>
 
       <p className="rounded-xl bg-bg px-3 py-2 text-sm text-muted">

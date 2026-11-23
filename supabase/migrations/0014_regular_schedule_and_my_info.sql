@@ -37,7 +37,7 @@ revoke execute on function public.save_my_phone(text) from public, anon;
 grant execute on function public.save_my_phone(text) to authenticated;
 
 -- 2. Regular weekly schedule. Every version is kept, so Zach can always see the original.
---    days = {"mon": {"k": "all"}, "tue": {"k": "some", "from": "09:00", "until": "18:00"}, "wed": {"k": "off"}, ...}
+--    days = {"mon": {"k": "all"}, "tue": {"k": "some", "until": "18:00"}, "wed": {"k": "off"}, ...}  (some = off by a time)
 create table if not exists public.weekly_schedules (
   id uuid primary key default gen_random_uuid(),
   crew_id uuid not null references public.crew_members (id) on delete cascade,

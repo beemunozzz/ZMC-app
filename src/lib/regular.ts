@@ -14,8 +14,8 @@ export const WEEKDAY_LABEL: Record<Weekday, string> = {
   sun: "Sunday",
 };
 
-/** all = available all day · off = not available · some = only some hours (from and/or until). */
-export type DayRule = { k: "all" } | { k: "off" } | { k: "some"; from?: string; until?: string };
+/** all = available all day · off = not available · some = needs to be off by a time (crew can start any time in the morning). */
+export type DayRule = { k: "all" } | { k: "off" } | { k: "some"; until: string };
 export type Week = Record<Weekday, DayRule>;
 
 export type WeeklySchedule = {
@@ -42,9 +42,8 @@ export function cleanWeek(raw: unknown): Week {
     const r = (src[d] ?? {}) as Record<string, unknown>;
     if (r.k === "off") out[d] = { k: "off" };
     else if (r.k === "some") {
-      const from = typeof r.from === "string" && HHMM.test(r.from) ? r.from.slice(0, 5) : undefined;
       const until = typeof r.until === "string" && HHMM.test(r.until) ? r.until.slice(0, 5) : undefined;
-      out[d] = from || until ? { k: "some", ...(from ? { from } : {}), ...(until ? { until } : {}) } : { k: "all" };
+      out[d] = until ? { k: "some", until } : { k: "all" };
     }
   }
   return out;
@@ -55,13 +54,11 @@ export function weekdayOf(iso: string): Weekday {
   return WEEKDAYS[(new Date(iso + "T00:00:00Z").getUTCDay() + 6) % 7];
 }
 
-/** "Available all day" / "Not available" / "9 AM – 6 PM" / "Off by 6 PM" / "Can start at 9 AM". */
+/** "Available all day" / "Not available" / "Off by 6 PM". */
 export function ruleText(r: DayRule) {
   if (r.k === "all") return "Available all day";
   if (r.k === "off") return "Not available";
-  if (r.from && r.until) return `${fmtTime(r.from)} – ${fmtTime(r.until)}`;
-  if (r.until) return `Off by ${fmtTime(r.until)}`;
-  return `Can start at ${fmtTime(r.from!)}`;
+  return r.until ? `Off by ${fmtTime(r.until)}` : "Available all day";
 }
 
 /** The days that aren't "available all day", for a one-line summary. */
@@ -93,17 +90,15 @@ export function currentOf(rows: WeeklySchedule[]) {
  * Does the regular schedule get in the way of a job on `date`, from `start` minutes to `end` minutes?
  * Returns null when it's fine.
  */
-export function regularConflict(w: Week | undefined, date: string, start: number, end: number): { off: boolean; text: string } | null {
+export function regularConflict(w: Week | undefined, date: string, _start: number, end: number): { off: boolean; text: string } | null {
   if (!w) return null;
   const d = weekdayOf(date);
   const r = w[d];
   const day = WEEKDAY_LABEL[d];
   if (r.k === "off") return { off: true, text: `Off ${day}s (regular)` };
   if (r.k === "some") {
-    const from = minutes(r.from);
     const until = minutes(r.until);
     if (until != null && until < end) return { off: false, text: `Off by ${fmtTime(r.until!)} ${day}s` };
-    if (from != null && from > start) return { off: false, text: `Starts ${fmtTime(r.from!)} ${day}s` };
   }
   return null;
 }

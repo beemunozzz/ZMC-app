@@ -42,7 +42,7 @@ export function SetupChecklist({ items }: { items: SetupItem[] }) {
 }
 
 const TILES = [
-  { href: "/my-schedule", title: "My schedule", sub: "Days I can work" },
+  { href: "/my-schedule", title: "My schedule", sub: "Days off, off-by times" },
   { href: "/availability", title: "Time off", sub: "Days I need off" },
   { href: "/my-info", title: "My info", sub: "Contact, emergency" },
 ];

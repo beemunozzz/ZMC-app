@@ -21,11 +21,9 @@ function readWeek(form: FormData): { week?: Week; error?: string } {
   for (const d of WEEKDAYS) {
     const k = t(form, `${d}_k`, 5);
     if (k === "some") {
-      const from = t(form, `${d}_from`, 5);
       const until = t(form, `${d}_until`, 5);
-      if (!from && !until) return { error: `${WEEKDAY_LABEL[d]}: add a start time, an "off by" time, or both.` };
-      if (from && until && from >= until) return { error: `${WEEKDAY_LABEL[d]}: the start time has to be before the "off by" time.` };
-      raw[d] = { k, from, until };
+      if (!until) return { error: `${WEEKDAY_LABEL[d]}: pick the time you need to be off by.` };
+      raw[d] = { k, until };
     } else raw[d] = { k: k === "off" ? "off" : "all" };
   }
   return { week: cleanWeek(raw) };

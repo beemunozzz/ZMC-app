@@ -23,7 +23,7 @@ function items(phone: string | null, p: Profile | undefined, hasSchedule: boolea
     {
       key: "schedule",
       title: "Your regular schedule",
-      sub: "Which days and times you can work",
+      sub: "Days you can't work, or when you need to be off by",
       href: "/my-schedule",
       done: hasSchedule,
     },

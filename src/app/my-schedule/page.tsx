@@ -35,8 +35,8 @@ async function MySchedule() {
         {!week ? (
           <>
             <p className="text-[15px] text-muted">
-              Tell Zach which days and times you can usually work, like &ldquo;off by 6 PM on Tuesdays&rdquo; for school pickup. He&apos;ll see it when he puts
-              people on jobs.
+              You&apos;re expected to be ready any morning. Just mark the days you can&apos;t work, or the time you need to be off by (like
+              &ldquo;off by 6 PM on Tuesdays&rdquo; for kids pickup). Zach sees it when he puts people on jobs.
             </p>
             <WeekForm start={ALL_WEEK} isFirst />
           </>
