@@ -127,11 +127,14 @@
 
 - Built (setup step 0014): **crew Home** with a "Get set up" checklist (regular schedule, contact + emergency contact, driver's license + shirt size, notifications), next job, next 3 weeks and shortcuts. **My regular schedule**: each day All day / Off by a time / Off (mornings are assumed available). The first one is saved as the **Original**; later changes are requests Zach approves or denies (dashboard + employee page), with the full history kept. The job form's crew picker warns about regular days off and off-by times. **My info**: phone, address, emergency contact, license, shirt size (only them and Zach). Payroll shows "Set up 2/4" per person.
 
+- Built (setup step 0015): Notifications is one on/off switch. Crew also get a **Night-before reminder** switch (around 6 PM, tomorrow's start time and address; Vercel's free daily timer, `vercel.json`), **My jobs in my calendar** on My settings (a private link their iPhone or Google calendar keeps up to date; "Reset link" makes a new one), and **My hours** (this week and last week, hours only) on the crew home.
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
 - Payroll export file for an accountant / QuickBooks? Brandon's question: only for jobs paid by Zelle or card?
 - Employee documents (driver's license, W-4, I-9) in the employee file? Goes with the overtime question.
+- Should crew see their own estimated pay (hours × their rate) on their home screen? Right now they see hours only.
 - **Getting paid at the job site:** OK to set up **Square** in Zach's name so crew leads can take cards by tapping on their phone (Tap to Pay, no card reader)? Square charges roughly 2.6% + 15¢ per tap (check current rates). Claude builds and tests it in Square's practice mode first; no real charges until Zach and Brandon say go.
 - **Zelle and Venmo** stay as options: the Get paid screen shows Zach's Zelle phone or email and his Zelle QR code, and his Venmo link and QR code. Need from Zach: his Zelle phone or email, his Venmo username, and a screenshot of his Zelle QR code (from his bank app).
 
@@ -147,8 +150,9 @@
   1. Logged in as the owner, open the app → ☰ → My settings → Notifications.
   2. Scroll to "One-time setup (owner)" → tap "Make the two keys". They're made on your device and sent nowhere.
   3. vercel.com → zmc-app → Settings → Environment Variables: add `VAPID_PUBLIC_KEY` (type Config) and `VAPID_PRIVATE_KEY` (type Secret), copying each value from the app. Keep the app page open until both are saved.
-  4. Tell Claude "keys added" so it can republish the app.
-  5. Turn notifications on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → Turn on → Allow. Android or computer: ☰ → My settings → Notifications → Turn on → Allow. Then tap "Send me a test".
+  4. The same box also makes a third key, `CRON_SECRET` (type Secret), for the night-before reminders. Add it too.
+  5. Tell Claude "keys added" so it can republish the app.
+  6. Turn notifications on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → Turn on → Allow. Android or computer: ☰ → My settings → Notifications → Turn on → Allow. Then tap "Send me a test".
 - [ ] Add Zach's payment details (☰ → Prices → Getting paid: Zelle, Cash App, Venmo, Apple Cash) so those show as choices on invoices.
 - [ ] Send Claude the ZMC logo files (black and white) for the app icon.
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.

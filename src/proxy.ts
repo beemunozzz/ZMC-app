@@ -5,6 +5,8 @@ import { SUPABASE_KEY, SUPABASE_URL, supabaseConfigured } from "@/lib/supabase/e
 // Runs before every page: keeps the login fresh and sends signed-out people to /login.
 export async function proxy(request: NextRequest) {
   if (!supabaseConfigured) return NextResponse.next();
+  // The calendar link and the nightly reminder timer have their own keys and no login.
+  if (request.nextUrl.pathname.startsWith("/api/cal/") || request.nextUrl.pathname.startsWith("/api/cron/")) return NextResponse.next();
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {

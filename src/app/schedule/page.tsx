@@ -32,7 +32,7 @@ import { CrewShortcuts, SetupChecklist } from "@/components/CrewSetup";
 import { setupFor, type SetupItem } from "@/lib/setup";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
 import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
-import { TIME_COLUMNS, entryHours, weekBounds, type TimeEntry } from "@/lib/time";
+import { TIME_COLUMNS, entryHours, fmtDuration, weekBounds, type TimeEntry } from "@/lib/time";
 
 type View = "today" | "week" | "month";
 type Search = { view?: string; date?: string; who?: string };
@@ -144,6 +144,13 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   // Crew home: the "Get set up" checklist and shortcuts (their own screen, on today).
   const crewHome = !isOwner && !who && view === "today" && date === today;
   const setup: SetupItem[] | null = crewHome ? await setupFor(supabase, me) : null;
+  // "My hours": this week and last week (hours only), when clock-in is on.
+  let hours: { thisWeek: number; lastWeek: number } | null = null;
+  if (crewHome && clock) {
+    const [lastStart, lastEnd] = weekBounds(addDays(mondayOf(today), -7));
+    const { data: prev } = await supabase.from("time_entries").select(TIME_COLUMNS).eq("crew_id", me.id).gte("clock_in", lastStart).lt("clock_in", lastEnd);
+    hours = { thisWeek: clock.weekHours, lastWeek: ((prev ?? []) as TimeEntry[]).filter((e) => e.clock_out).reduce((n, e) => n + entryHours(e), 0) };
+  }
 
   const dayJobs = (d: string) => jobs.filter((j) => j.job_date === d);
   const isDoubleBooked = (j: Job) => conflicts(j, allJobs.filter((o) => o.job_date === j.job_date)).length > 0;
@@ -259,6 +266,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
             <>
               {setup && <SetupChecklist items={setup} />}
               <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} />
+              {hours && <MyHours {...hours} />}
               {crewHome && <CrewShortcuts />}
             </>
           ))}
@@ -541,3 +549,26 @@ function CrewToday({
   );
 }
 
+
+/** Crew home: hours worked this week and last week (from clock-in). Hours only, no pay. */
+function MyHours({ thisWeek, lastWeek }: { thisWeek: number; lastWeek: number }) {
+  return (
+    <section className="flex flex-col gap-2 rounded-2xl border border-line bg-card p-4">
+      <h2 className="font-display text-lg font-extrabold uppercase text-ink">My hours</h2>
+      <dl className="grid grid-cols-2 gap-2">
+        {(
+          [
+            ["This week", thisWeek],
+            ["Last week", lastWeek],
+          ] as const
+        ).map(([k, v]) => (
+          <div key={k} className="rounded-xl bg-bg p-3">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-muted">{k}</dt>
+            <dd className="font-display text-2xl font-extrabold tabular-nums text-ink">{fmtDuration(v)}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-xs text-muted">From your clock-in times. Ask Zach if something looks off.</p>
+    </section>
+  );
+}

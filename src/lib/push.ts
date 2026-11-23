@@ -33,3 +33,25 @@ export async function notify(supabase: Db, to: { crew?: string[]; owners?: boole
     /* notifications are best-effort */
   }
 }
+
+/** Send to phones directly (the nightly reminder, which runs without anyone logged in). Returns how many went out. */
+export async function sendPush(targets: { endpoint: string; p256dh: string; auth: string; msg: PushMessage }[]) {
+  if (!pushReady() || !targets.length) return 0;
+  webpush.setVapidDetails("https://zmc-app.vercel.app", process.env.VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+  let sent = 0;
+  await Promise.all(
+    targets.map(async (t) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: t.endpoint, keys: { p256dh: t.p256dh, auth: t.auth } },
+          JSON.stringify({ title: t.msg.title, body: t.msg.body, url: t.msg.url ?? "/", tag: t.msg.tag }),
+          { TTL: 6 * 3600, urgency: "normal" },
+        );
+        sent++;
+      } catch {
+        /* an old phone that's gone; it's cleaned up next time someone logged in sends to it */
+      }
+    }),
+  );
+  return sent;
+}

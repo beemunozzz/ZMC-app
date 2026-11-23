@@ -34,3 +34,20 @@ export async function sendTest(): Promise<PushState> {
   await notify(supabase, { crew: [me.id] }, { title: "ZMC Hub", body: `It works, ${me.full_name.split(" ")[0]}! You'll get job updates here.`, url: "/notifications", tag: "test" });
   return { ok: "Sent. It should pop up in a few seconds." };
 }
+
+/** Crew: "Remind me the night before a job" on or off. */
+export async function setNightBefore(on: boolean) {
+  const { supabase, me } = await requireMember();
+  if (!me) return { error: "Your account isn't active." };
+  const { error } = await supabase.from("crew_prefs").upsert({ crew_id: me.id, remind_night_before: on, updated_at: new Date().toISOString() });
+  return error ? { error: `Couldn't save: ${error.message}` } : {};
+}
+
+/** Owner: save the fingerprint of the nightly-reminder key (the key itself goes into Vercel, never here). */
+export async function saveTimerKeyHash(hash: string) {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner") return { error: "Only the owner can do this." };
+  if (!/^[0-9a-f]{64}$/.test(hash)) return { error: "That key fingerprint doesn't look right." };
+  const { error } = await supabase.from("cron_key").upsert({ id: 1, key_hash: hash, updated_at: new Date().toISOString() });
+  return error ? { error: `Couldn't save: ${error.message}` } : {};
+}
