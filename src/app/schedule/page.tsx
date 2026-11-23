@@ -25,7 +25,7 @@ import {
 } from "@/lib/dates";
 import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, type Job } from "@/lib/jobs";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
-import { WX_EMOJI, WX_LABEL, worse, type DayWx, type JobWx } from "@/lib/weather-kinds";
+import { WX_EMOJI, WX_LABEL, worse, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
