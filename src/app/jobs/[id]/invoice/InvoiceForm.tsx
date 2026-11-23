@@ -17,6 +17,8 @@ export type InvoiceStart = {
   jobId: string;
   customerName: string;
   hours: string;
+  /** Where the hours came from. */
+  hoursFrom: "clock" | "estimate";
   movers: string;
   truck: "ours" | "theirs";
   miles_out: string;
@@ -79,7 +81,9 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
           </label>
         </div>
         <p className="text-xs text-muted">
-          Filled in from the estimate and the assigned crew. Change them to match the real job. Clock-in times will fill the hours in once crew clock-in is built.
+          {start.hoursFrom === "clock"
+            ? "Hours come from the crew's clock-in and clock-out times (rounded up to the next 15 minutes). Movers come from the assigned crew. Change either if needed."
+            : "Filled in from the estimate and the assigned crew. Change them to match the real job."}
         </p>
         <label className={label}>
           Truck

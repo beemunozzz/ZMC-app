@@ -27,3 +27,9 @@ export async function getPrices(supabase: SupabaseClient): Promise<Prices> {
   }
   return out;
 }
+
+/** Is crew clock-in turned on? (Zach's switch on the Payroll page.) False if not set up yet. */
+export async function getClockInEnabled(supabase: SupabaseClient) {
+  const { data } = await supabase.from("settings").select("clock_in_enabled").eq("id", 1).maybeSingle();
+  return !!(data as { clock_in_enabled?: boolean } | null)?.clock_in_enabled;
+}

@@ -25,6 +25,9 @@ import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, type Job } from "@/
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
 import { WX_EMOJI, WX_LABEL, worse, type DayWx, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
+import { ClockCard } from "@/components/ClockCard";
+import { getClockInEnabled } from "@/lib/settings";
+import { TIME_COLUMNS, entryHours, weekBounds, type TimeEntry } from "@/lib/time";
 
 type View = "today" | "week" | "month";
 type Search = { view?: string; date?: string; who?: string };
@@ -100,6 +103,23 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
     for (const j of jobs) if (j.job_date === d && j.status !== "canceled") w = worse(w, jobWx.get(j.id));
     return w;
   };
+
+  // Crew clock-in (only when Zach has it turned on, and only on the crew member's own screen).
+  let clock: { open: TimeEntry | null; weekHours: number } | null = null;
+  if (!isOwner && !who && (await getClockInEnabled(supabase))) {
+    const [start, end] = weekBounds(mondayOf(today));
+    const { data: mine } = await supabase
+      .from("time_entries")
+      .select(TIME_COLUMNS)
+      .eq("crew_id", me.id)
+      .or(`clock_out.is.null,clock_in.gte.${start}`)
+      .lt("clock_in", end);
+    const entries = (mine ?? []) as TimeEntry[];
+    clock = {
+      open: entries.find((e) => !e.clock_out) ?? null,
+      weekHours: entries.filter((e) => e.clock_out).reduce((s, e) => s + entryHours(e), 0),
+    };
+  }
 
   const dayJobs = (d: string) => jobs.filter((j) => j.job_date === d);
   const isDoubleBooked = (j: Job) => conflicts(j, allJobs.filter((o) => o.job_date === j.job_date)).length > 0;
@@ -194,7 +214,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
               </Link>
             </section>
           ) : (
-            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} />
+            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} />
           ))}
       </main>
     </div>
@@ -414,6 +434,7 @@ function CrewToday({
   isDoubleBooked,
   jobWx,
   senderName,
+  clock,
 }: {
   jobs: Job[];
   names: Map<string, string>;
@@ -422,11 +443,21 @@ function CrewToday({
   isDoubleBooked: (j: Job) => boolean;
   jobWx: Map<string, JobWx>;
   senderName?: string;
+  clock?: { open: TimeEntry | null; weekHours: number } | null;
 }) {
   const upcoming = jobs.filter((j) => j.job_date >= today && isLive(j));
   const [next, ...rest] = upcoming;
+  const clockJob = clock?.open?.job_id ? jobs.find((j) => j.id === clock.open!.job_id) ?? next : next;
   return (
     <div className="flex flex-col gap-4">
+      {clock && (
+        <ClockCard
+          open={clock.open}
+          jobId={clockJob && clockJob.job_date === today ? clockJob.id : null}
+          jobLabel={clockJob ? clockJob.customer_name : ""}
+          weekHours={clock.weekHours}
+        />
+      )}
       {next ? (
         <NextJob job={next} names={names} meId={meId} today={today} wx={jobWx.get(next.id)} senderName={senderName} />
       ) : (

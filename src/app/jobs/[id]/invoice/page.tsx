@@ -7,7 +7,8 @@ import { ROLE_LABEL, requireMember } from "@/lib/crew";
 import { fmtDayLong } from "@/lib/dates";
 import type { PayMethod } from "@/lib/invoices";
 import { JOB_COLUMNS, jobCrew, type Job } from "@/lib/jobs";
-import { getPrices } from "@/lib/settings";
+import { getClockInEnabled, getPrices } from "@/lib/settings";
+import { TIME_COLUMNS, entryHours, roundUpQuarter, type TimeEntry } from "@/lib/time";
 import { InvoiceForm } from "./InvoiceForm";
 
 export default function NewInvoicePage({ params }: PageProps<"/jobs/[id]/invoice">) {
@@ -39,6 +40,21 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
   const prices = await getPrices(supabase);
   const str = (x: number | null | undefined) => (x == null ? "" : String(x));
 
+  // With clock-in on, use the real time on the job: the crew lead's entries, or everyone's span if the lead didn't clock in.
+  let clockedHours: number | null = null;
+  if (await getClockInEnabled(supabase)) {
+    const { data: t } = await supabase.from("time_entries").select(TIME_COLUMNS).eq("job_id", id);
+    const entries = (t ?? []) as TimeEntry[];
+    const lead = entries.filter((e) => e.crew_id === job.lead_id);
+    if (lead.length) clockedHours = lead.reduce((s, e) => s + entryHours(e), 0);
+    else if (entries.length) {
+      const first = Math.min(...entries.map((e) => Date.parse(e.clock_in)));
+      const last = Math.max(...entries.map((e) => Date.parse(e.clock_in) + entryHours(e) * 3_600_000));
+      clockedHours = (last - first) / 3_600_000;
+    }
+    if (clockedHours != null) clockedHours = roundUpQuarter(clockedHours);
+  }
+
   // Show Cash App / Venmo / Zelle / Apple Pay only when Zach has filled them in on the Prices page.
   const enabled: PayMethod[] = ["cash", "check", "card"];
   if (prices.zelle) enabled.push("zelle");
@@ -62,7 +78,8 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
           start={{
             jobId: job.id,
             customerName: job.customer_name,
-            hours: str(job.est_hours),
+            hours: clockedHours != null ? String(clockedHours) : str(job.est_hours),
+            hoursFrom: clockedHours != null ? "clock" : "estimate",
             movers: String(Math.max(prices.min_movers, jobCrew(job).length || job.movers_needed)),
             truck: job.truck,
             miles_out: str(m.miles_out),

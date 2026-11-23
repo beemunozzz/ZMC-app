@@ -11,7 +11,8 @@ import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job 
 import { money } from "@/lib/pricing";
 import type { QuoteStatus } from "@/lib/quotes";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
-import { getPrices } from "@/lib/settings";
+import { getClockInEnabled, getPrices } from "@/lib/settings";
+import { TIME_COLUMNS, clockTime, type TimeEntry } from "@/lib/time";
 import { reminderText } from "@/lib/texts";
 import { ReminderLink } from "@/components/ReminderLink";
 import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, type JobWx } from "@/lib/weather-kinds";
@@ -61,6 +62,11 @@ async function Home() {
     for (const r of (data ?? []) as { id: string; reminder_sent_at: string | null }[]) if (r.reminder_sent_at) sent.add(r.id);
   }
   const remindersLeft = tomorrows.filter((j) => !sent.has(j.id)).length;
+
+  // ---- Who's on the clock (only when clock-in is on) ----
+  const clockOn = await getClockInEnabled(supabase);
+  const { data: openRows } = clockOn ? await supabase.from("time_entries").select(TIME_COLUMNS).is("clock_out", null) : { data: [] };
+  const onClock = (openRows ?? []) as TimeEntry[];
 
   // ---- Today ----
   const todays = jobs.filter((j) => j.job_date === today && j.status !== "canceled");
@@ -185,6 +191,14 @@ async function Home() {
               <span className="text-ink">{working.size ? [...working].map((id) => names.get(id) ?? "Removed").join(", ") : "nobody assigned yet"}</span>
             </p>
           )}
+          {clockOn && (
+            <p className="mt-1 text-sm text-muted">
+              On the clock:{" "}
+              <span className="text-ink">
+                {onClock.length ? onClock.map((e) => `${names.get(e.crew_id) ?? "Removed"} (since ${clockTime(e.clock_in)})`).join(", ") : "nobody right now"}
+              </span>
+            </p>
+          )}
           {todayWx && WX_WATCH.includes(todayWx.kind) && (
             <div className="mt-3">
               <WeatherNote wx={{ ...todayWx, atSite: false }} />
@@ -254,6 +268,8 @@ async function Home() {
           <Tile href="/quotes/new" icon="plus" label="New quote" />
           <Tile href="/team" icon="people" label="Crew" />
           <Tile href="/settings" icon="tag" label="Prices" />
+          <Tile href="/invoices" icon="receipt" label="Invoices" />
+          <Tile href="/payroll" icon="clock" label="Payroll" badge={clockOn ? undefined : "Clock-in off"} quiet={!clockOn} />
         </nav>
 
         {/* Next 7 days */}
@@ -325,6 +341,18 @@ const ICONS: Record<string, React.ReactNode> = {
       <path d="M15.5 14.6c2.3-.3 4.3.9 5 3.9" />
     </>
   ),
+  receipt: (
+    <>
+      <path d="M6 3.5h12v17l-2.5-1.6L13 20.5l-2.5-1.6L8 20.5l-2-1.3z" />
+      <path d="M9 8h6M9 11.5h6M9 15h3.5" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
   tag: (
     <>
       <path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1 1 0 0 1 0 1.4l-7.3 7.3a1 1 0 0 1-1.4 0z" />
@@ -333,7 +361,7 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-function Tile({ href, icon, label, badge, primary }: { href: string; icon: keyof typeof ICONS; label: string; badge?: string; primary?: boolean }) {
+function Tile({ href, icon, label, badge, primary, quiet }: { href: string; icon: keyof typeof ICONS; label: string; badge?: string; primary?: boolean; quiet?: boolean }) {
   return (
     <Link
       href={href}
@@ -346,7 +374,7 @@ function Tile({ href, icon, label, badge, primary }: { href: string; icon: keyof
       </svg>
       <span className="font-display text-lg font-extrabold uppercase leading-none">{label}</span>
       {badge && (
-        <span className="absolute right-3 top-3 rounded-full bg-warn/15 px-2 py-0.5 text-xs font-semibold text-warn">{badge}</span>
+        <span className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-xs font-semibold ${quiet ? "bg-line/70 text-muted" : "bg-warn/15 text-warn"}`}>{badge}</span>
       )}
     </Link>
   );

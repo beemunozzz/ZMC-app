@@ -121,6 +121,9 @@ export function AppHeader({
                 <Link href="/team" className={item} onClick={() => setOpen(false)}>
                   Crew members
                 </Link>
+                <Link href="/payroll" className={item} onClick={() => setOpen(false)}>
+                  Payroll
+                </Link>
               </>
             )}
             <div className="my-2 border-t border-line" />

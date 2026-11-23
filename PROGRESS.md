@@ -77,6 +77,13 @@
 - Crew page: tap a person to see a details card (name, email, phone, role, status, hourly pay) with an Edit details button. Hourly pay is stored in an owner-only table (`crew_pay`, setup step 0007) so crew can't see each other's pay.
 - On computers, everything clickable shows the pointing-hand cursor; crew rows highlight on hover.
 
+- Crew clock-in with an on/off switch (☰ → Team → Payroll, or the Payroll tile). Starts OFF. Setup step 0008.
+  - Off: crew see no clock-in anywhere; invoices use estimated hours.
+  - On: crew's Today screen shows a big Clock in / Clock out button (for today's job) and their hours this week. Times come from the server clock; a database rule stops crew from editing times. One open clock-in per person.
+  - Payroll page: on/off switch, who's on the clock now (with "Clock out" for forgotten clock-outs), week picker, hours × hourly rate = estimated pay per person and total, and every time entry (Zach can fix or delete one).
+  - Invoices: with clock-in on, hours fill in from the crew lead's clock time (rounded up to 15 minutes).
+  - Dashboard: "On the clock" line in Today; new Invoices and Payroll tiles.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
