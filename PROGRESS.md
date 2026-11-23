@@ -123,6 +123,8 @@
 
 - **Version 1 saved** (commit `4906bbe`, Vercel deployment `dpl_4R8f4Akt81hMoUwhzSCZDp2Z44ao`). See `VERSIONS.md` for how to go back. From here, redesign work goes to the working copy (`claude/new-session-thne14`) and its Vercel preview link only; `main` stays on Version 1 until Brandon approves.
 
+- **Version 2 is live** (Nov 23): the bold redesign with Archivo fonts. Navy band with "Next up" on the dashboard, a navy job ticket with the route line for crew, a navy header on the job page, a calendar-style week, crew initials in circles, one drawn icon set, compact shortcuts. Version 1 is saved (see `VERSIONS.md`).
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
@@ -150,7 +152,6 @@
 - [ ] Decide on a shared ZMC business email (for example a new Gmail) to use for new service sign-ups, so fewer accounts need transferring. See `TRANSFER.md`.
 - [ ] Zach: review `WHAT-TO-EXPECT.md` (fix the [bracketed] guesses), publish it on zmcmove.com, then paste the link into ☰ → Prices.
 - [ ] Ask Zach the questions in "Questions for Zach" above.
-- [ ] Say yes or no to the redesign preview (see `VERSIONS.md`).
 
 ## Known limits
 - Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. It's only needed for "Forgot password" now. Before crew rely on it, set up a free email sender (Resend) in Supabase > Authentication > SMTP.

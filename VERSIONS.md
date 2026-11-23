@@ -24,16 +24,15 @@ Saved versions of the app, so we can always go back.
   branded text highlight and keyboard focus ring; hover highlights on computers.
 - **Status:** an option. Not on the live app.
 
-## Version 2B (in progress): bold redesign
+## Version 2: bold redesign with Archivo (LIVE since Nov 23, 2026)
 
 - Built on top of 2A, in the working copy. Same colors; fonts switched to **Archivo** (narrow for headlines), Brandon's pick. A navy header band on the dashboard and job page, a navy job "ticket" with the route drawn as a line on the crew card, a calendar-style week view, and crew initials in circles.
 - **Code:** the latest commit on the working copy.
-- **Status:** ready to compare. Not on the live app.
+- **Status:** **live** for everyone at https://zmc-app.vercel.app. To go back, use the Version 1 steps below.
 
 ## How the redesign works
 
-- **Main version (`main`) = what everyone uses** at https://zmc-app.vercel.app. It stays on Version 1
-  while the redesign is being tried.
+- **Main version (`main`) = what everyone uses** at https://zmc-app.vercel.app. It's now on Version 2.
 - **Redesign = Claude's working copy (`claude/new-session-thne14`).** Vercel gives it its own preview
   link. Same data, new look, so the two can be compared side by side.
 - If Brandon likes the redesign, it gets copied onto `main` and becomes Version 2.
