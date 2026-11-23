@@ -27,7 +27,8 @@ Saved versions of the app, so we can always go back.
 ## Version 2B (in progress): bold redesign
 
 - Built on top of 2A, in the working copy, with the same colors and fonts. A navy header band on the dashboard and job page, a navy job "ticket" with the route drawn as a line on the crew card, a calendar-style week view, and crew initials in circles.
-- **Status:** in progress.
+- **Code:** the latest commit on the working copy.
+- **Status:** ready to compare. Not on the live app.
 
 ## How the redesign works
 
