@@ -38,19 +38,19 @@ export function RouteLine({
               <p className="text-xs font-semibold uppercase tracking-wider text-muted">{s.label}</p>
               <p className="break-words text-[15px] font-semibold text-ink">{s.address}</p>
               {line && <p className="mt-0.5 break-words text-sm text-muted">{line}</p>}
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 <NavigateLink
                   address={s.address}
-                  className={`press flex h-10 items-center rounded-xl px-4 text-sm font-semibold ${
+                  className={`press col-span-2 flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold ${
                     s.primary ? "bg-primary text-white dark:text-navy" : "border border-line text-ink"
                   }`}
                 >
                   Navigate
                 </NavigateLink>
-                <a href={zillowUrl(s.address)} target="_blank" rel="noopener" className="press flex h-10 items-center rounded-xl border border-line px-3 text-sm font-medium text-ink">
+                <a href={zillowUrl(s.address)} target="_blank" rel="noopener" className="press flex h-10 items-center justify-center rounded-xl border border-line px-3 text-sm font-medium text-ink">
                   Zillow
                 </a>
-                <a href={seeHouseUrl(s.address)} target="_blank" rel="noopener" className="press flex h-10 items-center rounded-xl border border-line px-3 text-sm font-medium text-ink">
+                <a href={seeHouseUrl(s.address)} target="_blank" rel="noopener" className="press flex h-10 items-center justify-center rounded-xl border border-line px-3 text-sm font-medium text-ink">
                   See the house
                 </a>
               </div>
