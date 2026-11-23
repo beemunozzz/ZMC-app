@@ -50,7 +50,7 @@ async function TeamPageContent() {
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-line bg-card p-5">
+        <section id="add" className="scroll-mt-20 rounded-2xl border border-line bg-card p-5">
           <h2 className="mb-4 font-display text-xl font-extrabold uppercase text-ink">Add someone</h2>
           <MemberForm />
         </section>

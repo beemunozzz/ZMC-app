@@ -105,7 +105,12 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
 
         {/* Employees */}
         <section className="flex flex-col gap-2">
-          <h2 className="font-display text-lg font-extrabold uppercase text-ink">Employees</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-extrabold uppercase text-ink">Employees</h2>
+            <Link href="/team#add" className="press flex h-10 items-center rounded-xl bg-primary px-3.5 text-sm font-semibold text-white dark:text-navy">
+              + Add employee
+            </Link>
+          </div>
           <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
             {[...crew]
               .sort((a, b) => Number(terminatedIds.has(a.id)) - Number(terminatedIds.has(b.id)) || a.full_name.localeCompare(b.full_name))
