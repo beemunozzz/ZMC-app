@@ -4,8 +4,11 @@ import { useActionState, useState } from "react";
 import { addDays } from "@/lib/dates";
 import { addTimeOff, type AvailState } from "./actions";
 
-const input = "h-12 w-full min-w-0 rounded-xl border border-line bg-bg px-3 text-base text-ink outline-none focus:border-primary";
-const label = "flex min-w-0 flex-col gap-1 text-sm font-medium text-ink";
+// appearance-none + text-left keep iPhone date and time boxes the same size and shape as the others.
+const input =
+  "block h-12 w-full min-w-0 appearance-none rounded-xl border border-line bg-bg px-3 text-left text-base text-ink outline-none focus:border-primary";
+const label = "flex min-w-0 flex-col gap-1.5 text-sm font-medium text-ink";
+const optional = <span className="font-normal text-muted"> (optional)</span>;
 
 export function TimeOffForm({ today }: { today: string }) {
   const [state, action, pending] = useActionState<AvailState, FormData>(addTimeOff, {});
@@ -18,21 +21,22 @@ export function TimeOffForm({ today }: { today: string }) {
       <h2 className="font-display text-lg font-extrabold uppercase text-ink">I&apos;m not available</h2>
       <div className="grid grid-cols-2 gap-3">
         <label className={label}>
-          From
+          <span>From</span>
           <input type="date" name="start_date" required min={today} value={start} onChange={(e) => setStart(e.target.value)} className={input} />
         </label>
         <label className={label}>
-          To <span className="font-normal text-muted">(same day if blank)</span>
+          <span>To{optional}</span>
           <input type="date" name="end_date" min={start} className={input} />
         </label>
       </div>
+      <p className="-mt-1 text-xs text-muted">Just one day? Leave &ldquo;To&rdquo; empty.</p>
 
       <fieldset className="grid grid-cols-2 gap-2">
         <legend className="sr-only">How much of the day</legend>
         {(
           [
             ["day", "All day"],
-            ["until", "Only part of the day"],
+            ["until", "Part of the day"],
           ] as const
         ).map(([k, l]) => (
           <label
@@ -48,13 +52,13 @@ export function TimeOffForm({ today }: { today: string }) {
       </fieldset>
       {kind === "until" && (
         <label className={label}>
-          I can work until
-          <input type="time" name="until_time" defaultValue="15:00" className={`${input} max-w-40`} />
+          <span>I can work until</span>
+          <input type="time" name="until_time" defaultValue="15:00" className={input} />
         </label>
       )}
 
       <label className={label}>
-        Note for Zach <span className="font-normal text-muted">(optional)</span>
+        <span>Note for Zach{optional}</span>
         <input name="note" placeholder="e.g. family trip, doctor" className={input} autoComplete="off" />
       </label>
 

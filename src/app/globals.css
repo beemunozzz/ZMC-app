@@ -204,3 +204,10 @@ p {
   font-variation-settings: "wdth" 62;
   word-spacing: 0.06em;
 }
+
+/* iPhone date/time boxes: left-aligned like the other boxes, and the same height when empty. */
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
