@@ -130,6 +130,8 @@
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
 - Payroll export file for an accountant / QuickBooks? Brandon's question: only for jobs paid by Zelle or card?
 - Employee documents (driver's license, W-4, I-9) in the employee file? Goes with the overtime question.
+- **Getting paid at the job site:** OK to set up **Square** in Zach's name so crew leads can take cards by tapping on their phone (Tap to Pay, no card reader)? Square charges roughly 2.6% + 15¢ per tap (check current rates). Claude builds and tests it in Square's practice mode first; no real charges until Zach and Brandon say go.
+- **Zelle and Venmo** stay as options: the Get paid screen shows Zach's Zelle phone or email and his Zelle QR code, and his Venmo link and QR code. Need from Zach: his Zelle phone or email, his Venmo username, and a screenshot of his Zelle QR code (from his bank app).
 
 ## Next to build (Brandon said yes)
 - Job photos (before / damage / after), customer photos on quotes.
