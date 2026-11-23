@@ -202,4 +202,5 @@ p {
 .font-display {
   font-stretch: 62%;
   font-variation-settings: "wdth" 62;
+  word-spacing: 0.06em;
 }
