@@ -125,6 +125,8 @@
 
 - **Version 2 is live** (Nov 23): the bold redesign with Archivo fonts. Navy band with "Next up" on the dashboard, a navy job ticket with the route line for crew, a navy header on the job page, a calendar-style week, crew initials in circles, one drawn icon set, compact shortcuts. Version 1 is saved (see `VERSIONS.md`).
 
+- Built (setup step 0014): **crew Home** with a "Get set up" checklist (regular schedule, contact + emergency contact, driver's license + shirt size, notifications), next job, next 3 weeks and shortcuts. **My regular schedule**: each day All day / Off by a time / Off (mornings are assumed available). The first one is saved as the **Original**; later changes are requests Zach approves or denies (dashboard + employee page), with the full history kept. The job form's crew picker warns about regular days off and off-by times. **My info**: phone, address, emergency contact, license, shirt size (only them and Zach). Payroll shows "Set up 2/4" per person.
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
