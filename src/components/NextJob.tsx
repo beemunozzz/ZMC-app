@@ -4,6 +4,8 @@ import { jobCrew, telUrl, timeSpan, type Job } from "@/lib/jobs";
 import { AddressBlock } from "./AddressBlock";
 import { WeatherNote } from "./WeatherNote";
 import { OnMyWay } from "./TextButtons";
+import { CantMakeIt } from "./CantMakeIt";
+import { fmtDay } from "@/lib/dates";
 import type { JobWx } from "@/lib/weather-kinds";
 
 export function NextJob({
@@ -13,6 +15,7 @@ export function NextJob({
   today,
   wx,
   senderName,
+  cover,
 }: {
   job: Job;
   names: Map<string, string>;
@@ -21,6 +24,8 @@ export function NextJob({
   wx?: JobWx | null;
   /** Set when the viewer leads this job: shows the "On my way" text button. */
   senderName?: string;
+  /** "Can't make this job?" (own screen only). */
+  cover?: { zachPhone: string; open: { id: string; reason: string } | null };
 }) {
   const others = jobCrew(job)
     .filter((id) => id !== meId)
@@ -87,6 +92,10 @@ export function NextJob({
       <Link href={`/jobs/${job.id}`} className="text-sm font-semibold text-primary">
         See all job details ›
       </Link>
+
+      {cover && (
+        <CantMakeIt jobId={job.id} jobLabel={`${fmtDay(job.job_date)} · ${job.customer_name}`} zachPhone={cover.zachPhone} open={cover.open} />
+      )}
     </section>
   );
 }

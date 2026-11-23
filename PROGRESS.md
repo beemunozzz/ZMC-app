@@ -101,8 +101,10 @@
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
 - Before crew log in: add their emails on the Crew page, and set up a free email sender (Resend) so "Forgot password" emails reach them.
 
+- Built (setup step 0012): crew "My time off" (☰ menu): whole days or "can work until" a time. 7+ days ahead is automatic; less is a request Zach approves or denies (the database decides). "Can't make this job?" on the crew's job card and job page goes to Zach as "Needs cover", with a one-tap "Text Zach". Dashboard: "Needs cover" (Find cover / Sorted) and "Time-off requests" (Approve / Deny). The job form's crew picker shows each person as Free / Not available / Only until X / On another job / Asked for time off. Payroll: "Time off coming up". Saving a job without the person who couldn't make it closes their request.
+
 ## Planned: crew availability, short-notice job offers, swaps (agreed with Brandon, not built yet)
-1. **Not available**: crew mark days or times they can't work. 7+ days ahead = automatic; under 7 days = a request Zach approves or denies. Zach's crew picker shows each person as Free / On another job / Not available.
+1. ~~**Not available**~~ (built): crew mark days or times they can't work. 7+ days ahead = automatic; under 7 days = a request Zach approves or denies. Zach's crew picker shows each person as Free / On another job / Not available.
 2. **Job offers**: assigning someone to a job within 3 days (72 hours) sends them an offer: Accept / Can't make it, with the estimated finish time. Zach sees Waiting / Accepted / Can't make it. No answer after N minutes (Zach sets it on Payroll; starts at 30) → Zach gets a nudge.
 3. **Job changes**: if Zach moves an accepted job (new day or time, more hours), the crew on it are asked to confirm again ("Job moved from Thu 8 AM to Fri 2 PM. Confirm?").
 4. **Swaps and cover** (Zach can switch it on or off): crew can request a swap with a coworker (coworker accepts, then Zach approves), or "I need someone to cover" (goes to Zach, who finds someone; available crew can offer to take it).

@@ -5,6 +5,7 @@ import { PageLoading } from "@/components/PageLoading";
 import { ROLE_LABEL, requireMember, type Role } from "@/lib/crew";
 import { isISODate, todayISO } from "@/lib/dates";
 import { JobForm } from "../JobForm";
+import { loadAvailability } from "@/lib/availability";
 
 export default function NewJobPage({ searchParams }: PageProps<"/jobs/new">) {
   return (
@@ -21,12 +22,13 @@ async function NewJob({ searchParams }: Pick<PageProps<"/jobs/new">, "searchPara
 
   const { data } = await supabase.from("crew_members").select("id, full_name, role").eq("active", true).order("full_name");
   const date = typeof sp.date === "string" && isISODate(sp.date) ? sp.date : todayISO();
+  const avail = await loadAvailability(supabase, todayISO());
 
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader title="New job" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
       <main className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <JobForm crew={(data ?? []) as { id: string; full_name: string; role: Role }[]} defaultDate={date} />
+        <JobForm crew={(data ?? []) as { id: string; full_name: string; role: Role }[]} defaultDate={date} avail={avail} />
       </main>
     </div>
   );

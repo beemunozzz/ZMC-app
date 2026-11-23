@@ -17,6 +17,8 @@ import { reminderText } from "@/lib/texts";
 import { ReminderLink } from "@/components/ReminderLink";
 import { LimitedHome } from "@/components/LimitedHome";
 import { answerOnCall } from "@/app/payroll/employee-actions";
+import { decideTimeOff, resolveCover } from "@/app/availability/actions";
+import { COVER_COLUMNS, TIME_OFF_COLUMNS, timeOffText, type CoverRequest, type TimeOff } from "@/lib/availability";
 import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, type JobWx } from "@/lib/weather-kinds";
 
 export default function HomePage() {
@@ -65,6 +67,17 @@ async function Home() {
   // ---- Tomorrow's reminders ----
   const tomorrow = addDays(today, 1);
   const tomorrows = jobs.filter((j) => j.job_date === tomorrow && isLive(j));
+
+  // ---- Crew who can't make a job, and late time-off requests ----
+  const [{ data: coverRows }, { data: offRows }] = await Promise.all([
+    supabase.from("cover_requests").select(COVER_COLUMNS).eq("status", "open").order("created_at"),
+    supabase.from("time_off").select(TIME_OFF_COLUMNS).eq("status", "pending").gte("end_date", today).order("start_date"),
+  ]);
+  const covers = (coverRows ?? []) as CoverRequest[];
+  const coverJobIds = [...new Set(covers.map((c) => c.job_id))];
+  const { data: coverJobRows } = coverJobIds.length ? await supabase.from("jobs").select(JOB_COLUMNS).in("id", coverJobIds) : { data: [] };
+  const coverJobs = new Map(((coverJobRows ?? []) as Job[]).map((j) => [j.id, j]));
+  const lateOff = (offRows ?? []) as TimeOff[];
 
   // ---- On-call check: "Is this person still working tomorrow?" ----
   const onCallIds = new Set(crew.filter((c) => c.employment === "on_call").map((c) => c.id as string));
@@ -176,6 +189,73 @@ async function Home() {
             </p>
           )}
         </section>
+
+        {/* Can't make a job */}
+        {covers.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-2xl border-2 border-bad/40 bg-card p-4">
+            <h2 className={h2}>Needs cover</h2>
+            <ul className="divide-y divide-line">
+              {covers.map((c) => {
+                const j = coverJobs.get(c.job_id);
+                return (
+                  <li key={c.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
+                    <p className="min-w-0 flex-1 text-[15px] text-ink">
+                      <b>{names.get(c.crew_id) ?? "Someone"}</b> can&apos;t make {j ? <b>{j.customer_name}</b> : "a job"}
+                      {c.reason ? <span className="text-muted"> · “{c.reason}”</span> : null}
+                      {j && (
+                        <span className="block text-xs tabular-nums text-muted">
+                          {j.job_date === today ? "Today" : fmtDay(j.job_date)} · {timeSpan(j)}
+                        </span>
+                      )}
+                    </p>
+                    <div className="flex shrink-0 gap-2">
+                      {j && (
+                        <Link href={`/jobs/${j.id}/edit`} className="press flex h-11 items-center rounded-xl bg-bad px-4 font-semibold text-white dark:text-navy">
+                          Find cover
+                        </Link>
+                      )}
+                      <form action={resolveCover}>
+                        <input type="hidden" name="id" value={c.id} />
+                        <button className="press h-11 rounded-xl border border-line px-3 text-sm font-semibold text-ink">Sorted</button>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="text-xs text-muted">Find cover opens the job: swap them out and save. &ldquo;Sorted&rdquo; clears it if they worked it out.</p>
+          </section>
+        )}
+
+        {/* Late time-off requests */}
+        {lateOff.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-2xl border-2 border-warn/40 bg-card p-4">
+            <h2 className={h2}>Time-off requests</h2>
+            <ul className="divide-y divide-line">
+              {lateOff.map((r) => (
+                <li key={r.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
+                  <p className="min-w-0 flex-1 text-[15px] text-ink">
+                    <b>{names.get(r.crew_id) ?? "Someone"}</b> · {fmtDay(r.start_date)}
+                    {r.end_date !== r.start_date ? ` – ${fmtDay(r.end_date)}` : ""}
+                    <span className="block text-xs text-muted">
+                      {timeOffText(r)}
+                      {r.note ? ` · “${r.note}”` : ""} · less than 7 days&apos; notice
+                    </span>
+                  </p>
+                  <form action={decideTimeOff} className="flex shrink-0 gap-2">
+                    <input type="hidden" name="id" value={r.id} />
+                    <button name="answer" value="approve" className="press h-11 w-24 rounded-xl bg-ok font-semibold text-white dark:text-navy">
+                      Approve
+                    </button>
+                    <button name="answer" value="deny" className="press h-11 w-20 rounded-xl border border-bad/50 font-semibold text-bad">
+                      Deny
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* On-call check */}
         {onCallQuestions.length > 0 && (

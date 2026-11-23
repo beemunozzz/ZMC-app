@@ -5,6 +5,8 @@ import { PageLoading } from "@/components/PageLoading";
 import { ROLE_LABEL, requireMember, type Role } from "@/lib/crew";
 import { JOB_COLUMNS, type Job } from "@/lib/jobs";
 import { JobForm } from "../../JobForm";
+import { loadAvailability } from "@/lib/availability";
+import { todayISO } from "@/lib/dates";
 
 export default function EditJobPage({ params }: PageProps<"/jobs/[id]/edit">) {
   return (
@@ -24,12 +26,13 @@ async function EditJob({ params }: Pick<PageProps<"/jobs/[id]/edit">, "params">)
     supabase.from("crew_members").select("id, full_name, role").eq("active", true).order("full_name"),
   ]);
   if (!job) notFound();
+  const avail = await loadAvailability(supabase, (job as Job).job_date < todayISO() ? (job as Job).job_date : todayISO());
 
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader title="Edit job" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
       <main className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <JobForm job={job as Job} crew={(crew ?? []) as { id: string; full_name: string; role: Role }[]} defaultDate={(job as Job).job_date} />
+        <JobForm job={job as Job} crew={(crew ?? []) as { id: string; full_name: string; role: Role }[]} defaultDate={(job as Job).job_date} avail={avail} />
       </main>
     </div>
   );

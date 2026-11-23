@@ -27,7 +27,8 @@ import { jobsForecast, stocktonForecast } from "@/lib/weather";
 import { WX_EMOJI, WX_LABEL, worse, type DayWx, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
-import { getClockInEnabled } from "@/lib/settings";
+import { getClockInEnabled, getPrices } from "@/lib/settings";
+import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
 import { TIME_COLUMNS, entryHours, weekBounds, type TimeEntry } from "@/lib/time";
 
 type View = "today" | "week" | "month";
@@ -124,6 +125,19 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
     };
   }
 
+  // "Can't make this job?" on the crew member's own screen.
+  let cover: { zachPhone: string; openByJob: Map<string, { id: string; reason: string }> } | null = null;
+  if (!isOwner && !who) {
+    const [{ data: cr }, prices] = await Promise.all([
+      supabase.from("cover_requests").select(COVER_COLUMNS).eq("crew_id", me.id).eq("status", "open"),
+      getPrices(supabase),
+    ]);
+    cover = {
+      zachPhone: prices.business_phone,
+      openByJob: new Map(((cr ?? []) as CoverRequest[]).map((c) => [c.job_id, { id: c.id, reason: c.reason }])),
+    };
+  }
+
   const dayJobs = (d: string) => jobs.filter((j) => j.job_date === d);
   const isDoubleBooked = (j: Job) => conflicts(j, allJobs.filter((o) => o.job_date === j.job_date)).length > 0;
   const whoName = who ? names.get(who) : "";
@@ -217,7 +231,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
               </Link>
             </section>
           ) : (
-            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} />
+            <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} />
           ))}
       </main>
     </div>
@@ -438,6 +452,7 @@ function CrewToday({
   jobWx,
   senderName,
   clock,
+  cover,
 }: {
   jobs: Job[];
   names: Map<string, string>;
@@ -447,6 +462,7 @@ function CrewToday({
   jobWx: Map<string, JobWx>;
   senderName?: string;
   clock?: { open: TimeEntry | null; weekHours: number } | null;
+  cover?: { zachPhone: string; openByJob: Map<string, { id: string; reason: string }> } | null;
 }) {
   const upcoming = jobs.filter((j) => j.job_date >= today && isLive(j));
   const [next, ...rest] = upcoming;
@@ -462,7 +478,15 @@ function CrewToday({
         />
       )}
       {next ? (
-        <NextJob job={next} names={names} meId={meId} today={today} wx={jobWx.get(next.id)} senderName={senderName} />
+        <NextJob
+          job={next}
+          names={names}
+          meId={meId}
+          today={today}
+          wx={jobWx.get(next.id)}
+          senderName={senderName}
+          cover={cover ? { zachPhone: cover.zachPhone, open: cover.openByJob.get(next.id) ?? null } : undefined}
+        />
       ) : (
         <section className="rounded-2xl border border-line bg-card p-5">
           <h2 className="font-display text-xl font-extrabold uppercase text-ink">No jobs coming up</h2>

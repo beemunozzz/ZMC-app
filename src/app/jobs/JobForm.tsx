@@ -6,6 +6,7 @@ import { ROLE_LABEL, type Role } from "@/lib/crew-types";
 import { HouseFields } from "@/components/HouseFields";
 import { JOB_TYPES, STATUS, type Job } from "@/lib/jobs";
 import { REFER_ITEMS } from "@/lib/pricing";
+import { AVAIL_STYLE, availabilityFor, type JobSlot, type TimeOff } from "@/lib/availability";
 import { deleteJob, saveJob, type JobFormState } from "./actions";
 
 type CrewOption = { id: string; full_name: string; role: Role };
@@ -17,7 +18,15 @@ const section = "flex flex-col gap-3 rounded-2xl border border-line bg-card p-4"
 const heading = "font-display text-lg font-extrabold uppercase text-ink";
 
 
-export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOption[]; defaultDate: string }) {
+export type CrewAvailabilityData = { timeOff: TimeOff[]; jobs: JobSlot[] };
+
+export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: CrewOption[]; defaultDate: string; avail?: CrewAvailabilityData }) {
+  const [when, setWhen] = useState({
+    date: job?.job_date ?? defaultDate,
+    start: job?.start_time?.slice(0, 5) ?? "08:00",
+    hours: job?.est_hours != null ? String(job.est_hours) : "",
+  });
+  const availOf = (id: string) => (avail ? availabilityFor(id, when.date, when.start, Number(when.hours) || 2, avail.timeOff, avail.jobs, job?.id) : null);
   const [state, action, pending] = useActionState<JobFormState, FormData>(saveJob, {});
   const [lead, setLead] = useState(job?.lead_id ?? "");
   const [picked, setPicked] = useState<string[]>(job?.crew_ids ?? []);
@@ -41,11 +50,11 @@ export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOptio
           <div className="grid grid-cols-2 gap-3">
             <label className={label}>
               Date
-              <input type="date" name="job_date" required defaultValue={job?.job_date ?? defaultDate} className={input} />
+              <input type="date" name="job_date" required value={when.date} onChange={(e) => setWhen((w) => ({ ...w, date: e.target.value }))} className={input} />
             </label>
             <label className={label}>
               Start time
-              <input type="time" name="start_time" defaultValue={job?.start_time?.slice(0, 5) ?? "08:00"} className={input} />
+              <input type="time" name="start_time" value={when.start} onChange={(e) => setWhen((w) => ({ ...w, start: e.target.value }))} className={input} />
             </label>
           </div>
         </section>
@@ -132,7 +141,8 @@ export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOptio
                 min={0}
                 max={24}
                 step={0.5}
-                defaultValue={job?.est_hours ?? ""}
+                value={when.hours}
+                onChange={(e) => setWhen((w) => ({ ...w, hours: e.target.value }))}
                 placeholder="e.g. 4"
                 className={input}
               />
@@ -172,20 +182,34 @@ export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOptio
               {crew.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.full_name} ({ROLE_LABEL[c.role]})
+                  {(() => {
+                    const a = availOf(c.id);
+                    return a && a.kind !== "free" ? ` · ${AVAIL_STYLE[a.kind].icon} ${a.text}` : "";
+                  })()}
                 </option>
               ))}
             </select>
           </label>
+          {lead && (() => {
+            const a = availOf(lead);
+            return a && a.kind !== "free" ? (
+              <p className={`rounded-xl px-3 py-2 text-sm ${a.kind === "off" ? "bg-bad/10 text-bad" : "bg-warn/12 text-warn"}`}>
+                {AVAIL_STYLE[a.kind].icon} Crew lead: {a.text}
+              </p>
+            ) : null;
+          })()}
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium text-ink">Movers on this job</legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {crew
                 .filter((c) => c.id !== lead)
-                .map((c) => (
+                .map((c) => {
+                  const a = availOf(c.id);
+                  return (
                   <label
                     key={c.id}
-                    className={`press flex h-12 min-w-0 cursor-pointer items-center gap-2 rounded-xl border px-3 text-[15px] ${
+                    className={`press flex min-h-14 min-w-0 cursor-pointer items-center gap-2 rounded-xl border px-3 py-1.5 text-[15px] ${
                       picked.includes(c.id) ? "border-primary bg-primary/10 font-semibold text-ink" : "border-line text-ink"
                     }`}
                   >
@@ -197,9 +221,17 @@ export function JobForm({ job, crew, defaultDate }: { job?: Job; crew: CrewOptio
                       onChange={() => toggle(c.id)}
                       className="h-4 w-4 shrink-0 accent-[var(--primary)]"
                     />
-                    <span className="truncate">{c.full_name}</span>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate">{c.full_name}</span>
+                      {a && (
+                        <span className={`truncate text-xs font-medium ${AVAIL_STYLE[a.kind].cls}`}>
+                          {AVAIL_STYLE[a.kind].icon} {a.text}
+                        </span>
+                      )}
+                    </span>
                   </label>
-                ))}
+                  );
+                })}
             </div>
             <p className={`text-sm tabular-nums ${assigned < movers ? "text-warn" : "text-ok"}`}>
               {assigned < movers ? `⚠ ${assigned} of ${movers} assigned. ${movers - assigned} more needed.` : `✓ ${assigned} of ${movers} assigned`}

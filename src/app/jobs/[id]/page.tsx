@@ -14,6 +14,9 @@ import { getPrices } from "@/lib/settings";
 import { bookingText, reminderText } from "@/lib/texts";
 import { OnMyWay, TextLink } from "@/components/TextButtons";
 import { ReminderLink } from "@/components/ReminderLink";
+import { CantMakeIt } from "@/components/CantMakeIt";
+import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
+import { fmtDay } from "@/lib/dates";
 import { JOB_COLUMNS, STATUS, conflicts, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
 
 export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]">) {
@@ -55,6 +58,13 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
     ? await supabase.from("jobs").select("reminder_sent_at").eq("id", job.id).maybeSingle()
     : { data: null };
   const reminderSent = !!(sentRow as { reminder_sent_at?: string | null } | null)?.reminder_sent_at;
+
+  // Crew on this job can say "Can't make this job?". The owner sees everyone's requests.
+  const onJob = !isOwner && people.includes(me.id) && job.status !== "canceled" && job.status !== "done";
+  const { data: coverRows } = await supabase.from("cover_requests").select(COVER_COLUMNS).eq("job_id", job.id).eq("status", "open");
+  const covers = (coverRows ?? []) as CoverRequest[];
+  const myCover = covers.find((c) => c.crew_id === me.id) ?? null;
+  const zachPhone = onJob ? (await getPrices(supabase)).business_phone : "";
 
   // Invoice: the owner or this job's crew lead can finish the job and invoice it.
   const canInvoice = (isOwner || isLead) && job.status !== "canceled";
@@ -121,6 +131,14 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
         )}
 
         <WeatherNote wx={wx} />
+
+        {isOwner &&
+          covers.map((c) => (
+            <p key={c.id} className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
+              <b>⚠ {crewById.get(c.crew_id)?.full_name ?? "Someone"} can&apos;t make this job.</b>
+              {c.reason ? ` “${c.reason}”` : ""} Tap Edit job to pick someone else.
+            </p>
+          ))}
 
         <AddressBlock label="Pickup" address={job.pickup_address} house={job.pickup_house} primary />
         <AddressBlock label="Drop-off" address={job.dropoff_address} house={job.dropoff_house} />
@@ -193,6 +211,8 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
             )}
           </section>
         )}
+
+        {onJob && <CantMakeIt jobId={job.id} jobLabel={`${fmtDay(job.job_date)} · ${job.customer_name}`} zachPhone={zachPhone} open={myCover ? { id: myCover.id, reason: myCover.reason } : null} />}
 
         {job.notes && (
           <section className="rounded-2xl border border-line bg-card p-4">

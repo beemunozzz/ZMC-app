@@ -82,6 +82,11 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
   if (id) {
     const { error } = await supabase.from("jobs").update(row).eq("id", id);
     if (error) return { error: `Couldn't save: ${error.message}` };
+    // Anyone who said "can't make it" and is no longer on the job: their request is handled.
+    const onJob = [lead_id, ...crew_ids].filter(Boolean) as string[];
+    let q = supabase.from("cover_requests").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("job_id", id).eq("status", "open");
+    if (onJob.length) q = q.not("crew_id", "in", `(${onJob.join(",")})`);
+    await q;
   } else {
     const { data, error } = await supabase.from("jobs").insert(row).select("id").single();
     if (error) return { error: `Couldn't save: ${error.message}` };

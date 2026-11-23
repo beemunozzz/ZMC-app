@@ -9,6 +9,9 @@ import { money } from "@/lib/pricing";
 import { getClockInEnabled } from "@/lib/settings";
 import { TIME_COLUMNS, clockDay, clockTime, entryHours, fmtDuration, weekBounds, type TimeEntry } from "@/lib/time";
 import { fixEntry, ownerClockOut, setClockIn } from "./actions";
+import { cancelTimeOff, decideTimeOff } from "@/app/availability/actions";
+import { TIME_OFF_COLUMNS, timeOffText, type TimeOff } from "@/lib/availability";
+import { fmtDay } from "@/lib/dates";
 
 export default function PayrollPage({ searchParams }: PageProps<"/payroll">) {
   return (
@@ -55,6 +58,9 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
   const pay = new Map((payRows ?? []).map((r) => [r.crew_id as string, r.hourly_rate == null ? null : Number(r.hourly_rate)]));
   const entries = (entryRows ?? []) as TimeEntry[];
   const openNow = (openRows ?? []) as TimeEntry[];
+
+  const { data: offRows } = await supabase.from("time_off").select(TIME_OFF_COLUMNS).neq("status", "denied").gte("end_date", today).order("start_date").limit(60);
+  const timeOff = (offRows ?? []) as TimeOff[];
 
   const jobIds = [...new Set(entries.map((e) => e.job_id).filter((x): x is string => !!x))];
   const { data: jobRows } = jobIds.length ? await supabase.from("jobs").select("id, customer_name").in("id", jobIds) : { data: [] };
@@ -142,6 +148,51 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
               })}
           </ul>
           <p className="text-xs text-muted">Tap someone to see their file: contact info, pay and raises, employment type, or terminate.</p>
+        </section>
+
+        {/* Time off */}
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-lg font-extrabold uppercase text-ink">Time off coming up</h2>
+          {timeOff.length ? (
+            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
+              {timeOff.map((r) => (
+                <li key={r.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-semibold text-ink">
+                      {names.get(r.crew_id) ?? "Removed"}
+                      <span className="font-normal tabular-nums text-muted">
+                        {" · "}
+                        {fmtDay(r.start_date)}
+                        {r.end_date !== r.start_date ? ` – ${fmtDay(r.end_date)}` : ""}
+                      </span>
+                    </span>
+                    <span className="block text-xs text-muted">
+                      {timeOffText(r)}
+                      {r.note ? ` · “${r.note}”` : ""}
+                    </span>
+                  </span>
+                  {r.status === "pending" ? (
+                    <form action={decideTimeOff} className="flex shrink-0 gap-2">
+                      <input type="hidden" name="id" value={r.id} />
+                      <button name="answer" value="approve" className="press h-10 rounded-xl bg-ok px-3 text-sm font-semibold text-white dark:text-navy">
+                        Approve
+                      </button>
+                      <button name="answer" value="deny" className="press h-10 rounded-xl border border-bad/50 px-3 text-sm font-semibold text-bad">
+                        Deny
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={cancelTimeOff} className="shrink-0">
+                      <input type="hidden" name="id" value={r.id} />
+                      <button className="text-xs font-semibold text-muted">Remove</button>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Nobody has marked time off. Crew add it under ☰ → My time off.</p>
+          )}
         </section>
 
         {/* On the clock now */}

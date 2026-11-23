@@ -127,6 +127,11 @@ export function AppHeader({
               </>
             )}
             <div className="my-2 border-t border-line" />
+            {!isOwner && (
+              <Link href="/availability" className={item} onClick={() => setOpen(false)}>
+                My time off
+              </Link>
+            )}
             <Link href="/account/password" className={item} onClick={() => setOpen(false)}>
               Change password
             </Link>
