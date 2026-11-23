@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Icon } from "@/components/Icon";
 import { onMyWayText, smsHref } from "@/lib/texts";
 
 const btn = "press flex h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold";
@@ -54,7 +55,7 @@ export function OnMyWay({ phone, customerName, senderName, primary }: { phone: s
         onClick={() => setNow(new Date())}
         className={`${btn} w-full ${primary ? "bg-primary text-white dark:text-navy" : "border border-line text-ink"}`}
       >
-        🚚 Text &ldquo;On my way&rdquo;
+        <Icon name="truck" className="h-5 w-5" /> Text &ldquo;On my way&rdquo;
       </button>
     );
   }

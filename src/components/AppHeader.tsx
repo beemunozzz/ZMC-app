@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "./Icon";
 
 export type PreviewOption = { id: string; name: string };
 
@@ -33,7 +34,7 @@ export function AppHeader({
     router.refresh();
   }
 
-  const item = "press flex h-12 items-center rounded-xl px-4 text-[15px] font-medium text-ink";
+  const item = "press flex h-12 items-center rounded-xl px-4 text-[15px] font-medium text-ink transition-colors hover:bg-bg";
   const section = "px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-muted";
 
   return (
@@ -47,25 +48,26 @@ export function AppHeader({
           {isOwner && newJobHref && (
             <Link
               href={newJobHref}
-              className="press flex h-10 items-center rounded-xl bg-primary px-3.5 text-sm font-semibold text-white dark:text-navy"
+              className="press flex h-10 items-center gap-1.5 rounded-xl bg-primary pl-2.5 pr-3.5 text-sm font-semibold text-white dark:text-navy"
             >
-              + New job
+              <Icon name="plus" className="h-4 w-4" />
+              New job
             </Link>
           )}
           <button
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen(!open)}
-            className="press flex h-11 w-11 items-center justify-center rounded-xl text-2xl text-ink"
+            className="press flex h-11 w-11 items-center justify-center rounded-xl text-ink transition-colors hover:bg-line/50"
           >
-            {open ? "✕" : "☰"}
+            <Icon name={open ? "close" : "menu"} className="h-6 w-6" />
           </button>
         </div>
       </div>
 
       {open && (
-        <nav className="rise mx-auto max-w-6xl px-4 pb-4">
-          <div className="ml-auto max-w-sm rounded-2xl border border-line bg-card p-2">
+        <nav className="mx-auto max-w-6xl px-4 pb-4">
+          <div className="menu-pop ml-auto max-w-sm rounded-2xl border border-line bg-card p-2">
             <p className="px-4 pb-1 pt-2 text-xs text-muted">
               Signed in as <span className="font-semibold text-ink">{name}</span> · {roleLabel}
             </p>

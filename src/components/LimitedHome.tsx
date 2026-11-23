@@ -9,8 +9,7 @@ export function LimitedHome({ me, kind, phone }: { me: CrewMember; kind: "on_cal
     <div className="flex flex-1 flex-col">
       <AppHeader title="Home" isOwner={false} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 py-6">
-        <section className="rise rounded-2xl border border-line bg-card p-5">
-          <div className="mb-3 h-1.5 w-10 rounded-full bg-tape" aria-hidden />
+        <section className="rounded-2xl border border-line bg-card p-5">
           <h1 className="font-display text-3xl font-extrabold uppercase leading-tight text-ink">Hi {first}</h1>
           {kind === "on_call" ? (
             <>

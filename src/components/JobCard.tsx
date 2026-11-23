@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { fmtHours } from "@/lib/dates";
 import { STATUS, cityOf, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
 import { WX_EMOJI, WX_LABEL, WX_WATCH, type JobWx } from "@/lib/weather-kinds";
@@ -28,7 +29,7 @@ export function JobCard({
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className={`press block rounded-2xl border bg-card p-4 ${
+      className={`press block rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40 ${
         !crew.length && !canceled ? "border-bad/50" : "border-line"
       } ${canceled ? "opacity-60" : ""}`}
     >
@@ -51,7 +52,7 @@ export function JobCard({
       {crew.length ? (
         <div className="mt-2 space-y-0.5 text-sm text-ink">
           <p className="break-words">
-            <span className="text-muted">★ Lead:</span>{" "}
+            <Icon name="star" className="mr-1 inline h-3.5 w-3.5 -translate-y-px text-tape" label="Crew lead" />
             {job.lead_id ? <b>{name(job.lead_id)}</b> : <span className="text-warn">not picked</span>}
           </p>
           {job.crew_ids.length > 0 && (
@@ -63,7 +64,8 @@ export function JobCard({
       ) : (
         !canceled && (
           <p className="mt-2 text-sm font-semibold text-bad">
-            ⚠ No crew assigned{isOwner ? " · tap to assign" : ""}
+            <Icon name="alert" className="mr-1 inline h-4 w-4 -translate-y-px" />
+            No crew assigned{isOwner ? " · tap to assign" : ""}
           </p>
         )
       )}
@@ -75,7 +77,9 @@ export function JobCard({
             <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">Need {short} more</span>
           )}
           {doubleBooked && (
-            <span className="rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">⚠ Double-booked</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">
+              <Icon name="alert" className="h-3.5 w-3.5" /> Double-booked
+            </span>
           )}
           {wxWatch && (
             <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">

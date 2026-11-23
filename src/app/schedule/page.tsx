@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
@@ -286,13 +287,13 @@ function Toolbar({
       </div>
       <div className="flex items-center gap-2 sm:ml-auto">
         <Link href={href({ date: step(-1) })} className={arrow} aria-label="Back">
-          ‹
+          <Icon name="back" className="h-4 w-4" />
         </Link>
         <span className="min-w-0 flex-1 text-center font-display text-lg font-bold uppercase tabular-nums text-ink sm:w-44 sm:flex-none">
           {label}
         </span>
         <Link href={href({ date: step(1) })} className={arrow} aria-label="Forward">
-          ›
+          <Icon name="chevron" className="h-4 w-4" />
         </Link>
         {/* Fixed-width slot so the arrows never move */}
         <span className="w-16">
@@ -312,7 +313,7 @@ function Summary({ jobs }: { jobs: Job[] }) {
   const hrs = live.reduce((s, j) => s + (Number(j.est_hours) || 0), 0);
   const noCrew = live.filter((j) => isLive(j) && !jobCrew(j).length).length;
   const open = live.filter(isLive).reduce((s, j) => s + openSpots(j), 0);
-  const chip = "rounded-full border px-3 py-1 text-xs font-medium tabular-nums";
+  const chip = "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium tabular-nums";
   return (
     <div className="flex flex-wrap gap-1.5">
       <span className={`${chip} border-line text-ink`}>
@@ -321,7 +322,7 @@ function Summary({ jobs }: { jobs: Job[] }) {
       </span>
       {noCrew > 0 && (
         <span className={`${chip} border-bad/40 text-bad`}>
-          ⚠ No crew: <b>{noCrew}</b>
+          <Icon name="alert" className="h-3.5 w-3.5" /> No crew: <b>{noCrew}</b>
         </span>
       )}
       {live.length > 0 &&
@@ -330,7 +331,9 @@ function Summary({ jobs }: { jobs: Job[] }) {
             <b>{open}</b> open spot{open === 1 ? "" : "s"}
           </span>
         ) : (
-          <span className={`${chip} border-ok/40 text-ok`}>✓ Every job fully staffed</span>
+          <span className={`${chip} border-ok/40 text-ok`}>
+            <Icon name="check" className="h-3.5 w-3.5" /> Every job fully staffed
+          </span>
         ))}
     </div>
   );

@@ -32,14 +32,14 @@ export function NextJob({
     .map((id) => (names.get(id) ?? "Removed") + (id === job.lead_id ? " (lead)" : ""));
 
   return (
-    <section className="rise flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
+    <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-tape">
-          {job.job_date === today ? "Your job today" : `Your next job · ${fmtDayLong(job.job_date)}`}
-        </p>
-        <p className="mt-1 font-display text-3xl font-extrabold uppercase tabular-nums leading-none text-ink">{timeSpan(job)}</p>
-        <p className="mt-2 break-words text-base font-semibold text-ink">
-          {job.customer_name} <span className="font-normal text-muted">· {job.job_type}</span>
+        <h2 className="font-display text-2xl font-extrabold uppercase leading-tight text-ink">
+          {job.job_date === today ? "Your job today" : `Next job · ${fmtDayLong(job.job_date)}`}
+        </h2>
+        <p className="mt-1 text-2xl font-semibold tabular-nums leading-tight text-ink">{timeSpan(job)}</p>
+        <p className="mt-1.5 break-words text-[15px] text-ink">
+          {job.customer_name} <span className="text-muted">· {job.job_type}</span>
         </p>
       </div>
 
@@ -90,7 +90,7 @@ export function NextJob({
       )}
 
       <Link href={`/jobs/${job.id}`} className="text-sm font-semibold text-primary">
-        See all job details ›
+        See all job details
       </Link>
 
       {cover && (

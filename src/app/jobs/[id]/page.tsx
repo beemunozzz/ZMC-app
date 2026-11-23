@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AddressBlock } from "@/components/AddressBlock";
@@ -107,9 +108,9 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
         )}
 
         <section className="flex flex-col gap-1">
-          <span className={`self-start rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
           <h1 className="break-words font-display text-3xl font-extrabold uppercase leading-tight text-ink">{job.customer_name}</h1>
-          <p className="text-[15px] tabular-nums text-ink">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] tabular-nums text-ink">
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
             {fmtDayLong(job.job_date)} · {timeSpan(job)}
           </p>
           <p className="text-sm tabular-nums text-muted">
@@ -166,7 +167,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
                 <span className="text-warn">Not set. Add one with Edit job.</span>
               ),
             )}
-          {isOwner && job.quote_id && row("Quote", <Link href={`/quotes/${job.quote_id}`} className="font-semibold text-primary">View the quote ›</Link>)}
+          {isOwner && job.quote_id && row("Quote", <Link href={`/quotes/${job.quote_id}`} className="font-semibold text-primary">View the quote</Link>)}
         </dl>
 
         <section className="rounded-2xl border border-line bg-card p-4">
@@ -180,7 +181,13 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
                 return (
                   <li key={pid} className="flex items-center justify-between gap-3 text-[15px]">
                     <span className="min-w-0 break-words text-ink">
-                      {pid === job.lead_id ? <b>★ {c?.full_name ?? "Removed"}</b> : (c?.full_name ?? "Removed")}
+                      {pid === job.lead_id ? (
+                        <b className="inline-flex items-center gap-1">
+                          <Icon name="star" className="h-4 w-4 text-tape" /> {c?.full_name ?? "Removed"}
+                        </b>
+                      ) : (
+                        (c?.full_name ?? "Removed")
+                      )}
                       {pid === job.lead_id && <span className="text-muted"> · crew lead</span>}
                     </span>
                     {c?.phone && (

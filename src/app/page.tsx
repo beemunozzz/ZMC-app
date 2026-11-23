@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
@@ -177,17 +178,20 @@ async function Home() {
 
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         {/* Greeting */}
-        <section className="rise">
-          <p className="text-sm text-muted">{fmtDayLong(today)}</p>
+        <section>
           <h1 className="font-display text-3xl font-extrabold uppercase leading-tight text-ink">
             {hello}, {me.full_name.split(" ")[0]}
           </h1>
-          {todayWx && (
-            <p className="mt-0.5 text-sm tabular-nums text-muted">
-              {WX_EMOJI[todayWx.kind]} {todayWx.text || WX_LABEL[todayWx.kind]} in Stockton
-              {todayWx.hi != null ? ` · high ${todayWx.hi}°` : ""}
-            </p>
-          )}
+          <p className="mt-1 text-sm tabular-nums text-muted">
+            {fmtDayLong(today)}
+            {todayWx && (
+              <>
+                {" · "}
+                <span aria-hidden>{WX_EMOJI[todayWx.kind]}</span> {todayWx.text || WX_LABEL[todayWx.kind]}
+                {todayWx.hi != null ? `, high ${todayWx.hi}°` : ""}
+              </>
+            )}
+          </p>
         </section>
 
         {/* Can't make a job */}
@@ -292,7 +296,7 @@ async function Home() {
           <div className="flex items-baseline justify-between gap-2">
             <h2 className={h2}>Today</h2>
             <Link href="/schedule?view=today" className="text-sm font-semibold text-primary">
-              Open ›
+              Open
             </Link>
           </div>
           {todays.length ? (
@@ -349,21 +353,21 @@ async function Home() {
             <ul className="mt-2 divide-y divide-line">
               {attention.slice(0, 12).map((a) => (
                 <li key={a.key}>
-                  <Link href={a.href} className="flex items-center gap-3 py-2.5">
+                  <Link href={a.href} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-bg">
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${a.tone === "bad" ? "bg-bad" : "bg-warn"}`} aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-medium text-ink">{a.text}</span>
                       <span className="block truncate text-xs tabular-nums text-muted">{a.sub}</span>
                     </span>
-                    <span className="text-lg text-muted" aria-hidden>
-                      ›
-                    </span>
+                    <Icon name="chevron" className="h-4 w-4 text-muted" />
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-[15px] font-medium text-ok">✓ All clear for the next two weeks.</p>
+            <p className="mt-1 flex items-center gap-1.5 text-[15px] font-medium text-ok">
+              <Icon name="check" className="h-4 w-4" /> All clear for the next two weeks.
+            </p>
           )}
           {attention.length > 12 && <p className="mt-1 text-sm text-muted">+{attention.length - 12} more on the schedule.</p>}
         </section>
@@ -506,7 +510,7 @@ function Tile({ href, icon, label, badge, primary, quiet }: { href: string; icon
       <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         {ICONS[icon]}
       </svg>
-      <span className="font-display text-lg font-extrabold uppercase leading-none">{label}</span>
+      <span className="text-base font-semibold leading-none">{label}</span>
       {badge && (
         <span className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-xs font-semibold ${quiet ? "bg-line/70 text-muted" : "bg-warn/15 text-warn"}`}>{badge}</span>
       )}
