@@ -141,6 +141,8 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
     .select("id")
     .single();
   if (jobError) return { error: `The quote saved, but the job couldn't be made: ${jobError.message}` };
+  // Copy the miles so the invoice can fill them in (ignored if the invoices setup hasn't run yet).
+  await supabase.from("jobs").update({ miles_out, miles_between, miles_back }).eq("id", job.id);
 
   await supabase.from("quotes").update({ status: "booked", job_id: job.id }).eq("id", quoteId);
   redirect(`/jobs/${job.id}?booked=1`);

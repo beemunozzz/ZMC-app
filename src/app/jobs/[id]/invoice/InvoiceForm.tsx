@@ -1,0 +1,220 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import Link from "next/link";
+import { SignaturePad } from "@/components/SignaturePad";
+import { PAY_METHODS, type PayMethod } from "@/lib/invoices";
+import { money, priceInvoice, type Prices } from "@/lib/pricing";
+import { createInvoice, type InvoiceFormState } from "@/app/invoices/actions";
+
+const input =
+  "h-12 w-full min-w-0 rounded-xl border border-line bg-bg px-3 text-base tabular-nums text-ink outline-none focus:border-primary";
+const label = "flex min-w-0 flex-col gap-1 text-sm font-medium text-ink";
+const section = "flex flex-col gap-3 rounded-2xl border border-line bg-card p-4";
+const heading = "font-display text-lg font-extrabold uppercase text-ink";
+
+export type InvoiceStart = {
+  jobId: string;
+  customerName: string;
+  hours: string;
+  movers: string;
+  truck: "ours" | "theirs";
+  miles_out: string;
+  miles_between: string;
+  miles_back: string;
+  /** null = the job has no not-to-exceed price yet, so ask for it */
+  nte: number | null;
+};
+
+export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceStart; prices: Prices; enabledMethods: PayMethod[] }) {
+  const [state, action, pending] = useActionState<InvoiceFormState, FormData>(createInvoice, {});
+  const [v, setV] = useState({
+    hours: start.hours,
+    movers: start.movers,
+    truck: start.truck,
+    miles_out: start.miles_out,
+    miles_between: start.miles_between,
+    miles_back: start.miles_back,
+    nte: start.nte != null ? String(start.nte) : "",
+    signed_name: start.customerName.replace(/^example:\s*/i, ""),
+  });
+  const [signed, setSigned] = useState(false);
+  const [agree, setAgree] = useState(false);
+  const [method, setMethod] = useState<PayMethod | "">("");
+  const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setV((o) => ({ ...o, [k]: e.target.value }));
+
+  const p = priceInvoice({ ...v, est_hours: v.hours }, prices);
+  const nte = Number(v.nte) || 0;
+  const over = nte > 0 && p.total > nte;
+  const ready = !over && nte > 0 && Number(v.hours) > 0 && signed && agree && !!method && !!v.signed_name.trim();
+
+  const line = (text: React.ReactNode, amount: number) => (
+    <div className="flex items-start justify-between gap-3 py-2 text-sm">
+      <span className="min-w-0 text-ink">{text}</span>
+      <span className="shrink-0 font-semibold tabular-nums text-ink">{money(amount)}</span>
+    </div>
+  );
+
+  return (
+    <form action={action} className="flex flex-col gap-4 pb-6">
+      <input type="hidden" name="job_id" value={start.jobId} />
+
+      {/* 1. Hours and crew (crew lead fills this in) */}
+      <section className={section}>
+        <h2 className={heading}>Time and crew</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <label className={label}>
+            Hours on the job
+            <input name="hours" type="number" inputMode="decimal" min={0} step={0.25} required value={v.hours} onChange={set("hours")} className={input} />
+          </label>
+          <label className={label}>
+            Movers
+            <select name="movers" value={v.movers} onChange={set("movers")} className={input}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>
+                  {n} movers
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <p className="text-xs text-muted">
+          Filled in from the estimate and the assigned crew. Change them to match the real job. Clock-in times will fill the hours in once crew clock-in is built.
+        </p>
+        <label className={label}>
+          Truck
+          <select name="truck" value={v.truck} onChange={set("truck")} className={input}>
+            <option value="ours">We provide the truck</option>
+            <option value="theirs">Customer provides the truck</option>
+          </select>
+        </label>
+        <div className="grid grid-cols-3 items-end gap-3">
+          <label className={label}>
+            Shop → pickup
+            <input name="miles_out" type="number" inputMode="decimal" min={0} value={v.miles_out} onChange={set("miles_out")} placeholder="mi" className={input} />
+          </label>
+          <label className={label}>
+            Between
+            <input name="miles_between" type="number" inputMode="decimal" min={0} value={v.miles_between} onChange={set("miles_between")} placeholder="mi" className={input} />
+          </label>
+          <label className={label}>
+            Drop-off → shop
+            <input name="miles_back" type="number" inputMode="decimal" min={0} value={v.miles_back} onChange={set("miles_back")} placeholder="mi" className={input} />
+          </label>
+        </div>
+      </section>
+
+      {/* 2. The bill */}
+      <section className={section}>
+        <h2 className={heading}>Invoice</h2>
+        <div className="divide-y divide-line">
+          {line(
+            <>
+              Labor · {p.movers} movers × {p.hours} hrs × {money(prices.rate)}
+              {Number(v.hours) < prices.min_hours && <span className="block text-xs text-muted">{prices.min_hours}-hour minimum</span>}
+            </>,
+            p.labor,
+          )}
+          {line(
+            <>
+              Trip charge · {p.tripMiles} mi out and back
+              <span className="block text-xs text-muted">
+                {p.tripSteps ? `+${p.tripHoursPerMover} hr per mover (first ${prices.trip_free_miles} mi free)` : `Under ${prices.trip_free_miles} free miles`}
+              </span>
+            </>,
+            p.trip,
+          )}
+          {v.truck === "ours" && line(<>Truck · {p.truckMiles} mi × {money(prices.truck_per_mile)}</>, p.truck)}
+        </div>
+        <div className="flex items-baseline justify-between border-t-2 border-ink pt-2">
+          <span className="font-display text-xl font-extrabold uppercase text-ink">Total</span>
+          <span className="font-display text-4xl font-extrabold tabular-nums text-ink">{money(p.total)}</span>
+        </div>
+
+        {start.nte != null ? (
+          <p className={`rounded-xl px-3 py-2 text-sm ${over ? "bg-bad/10 font-semibold text-bad" : "bg-ok/12 text-ok"}`}>
+            {over
+              ? `⚠ Over the not-to-exceed price of ${money(nte)}. The bill can't go over it. Lower the hours or charges before saving.`
+              : `✓ Under the not-to-exceed price of ${money(nte)}.`}
+          </p>
+        ) : (
+          <>
+            <label className={label}>
+              Written not-to-exceed price given to the customer ($)
+              <input name="nte" type="number" inputMode="decimal" min={0} step={10} required value={v.nte} onChange={set("nte")} className={input} />
+            </label>
+            {over && <p className="rounded-xl bg-bad/10 px-3 py-2 text-sm font-semibold text-bad">⚠ The total is over this not-to-exceed price. It can&apos;t be saved.</p>}
+          </>
+        )}
+      </section>
+
+      {/* 3. Customer signs */}
+      <section className={section}>
+        <h2 className={heading}>Customer signature</h2>
+        <p className="text-sm text-muted">Hand the phone to the customer.</p>
+        <label className={label}>
+          Printed name
+          <input name="signed_name" required value={v.signed_name} onChange={set("signed_name")} className={input} autoComplete="off" />
+        </label>
+        <SignaturePad name="signature" onChange={setSigned} />
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-bg p-3 text-[15px] text-ink">
+          <input type="checkbox" name="agree" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[var(--primary)]" />
+          <span>
+            I agree the move is complete and I&apos;ll pay the total of <b className="tabular-nums">{money(p.total)}</b> to Zachery&apos;s Moving Co.
+          </span>
+        </label>
+      </section>
+
+      {/* 4. How they'll pay */}
+      <section className={section}>
+        <h2 className={heading}>How are you paying?</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {PAY_METHODS.filter((m) => enabledMethods.includes(m.key)).map((m) => (
+            <label
+              key={m.key}
+              className={`press flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border text-[15px] font-semibold ${
+                method === m.key ? "border-primary bg-primary/10 text-ink" : "border-line text-ink"
+              }`}
+            >
+              <input type="radio" name="payment_method" value={m.key} checked={method === m.key} onChange={() => setMethod(m.key)} className="sr-only" />
+              {m.label}
+            </label>
+          ))}
+        </div>
+      </section>
+
+      {state.error && (
+        <p role="alert" className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">
+          {state.error}
+        </p>
+      )}
+
+      <div className="sticky bottom-0 -mx-4 flex flex-col gap-1 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur">
+        {!ready && (
+          <p className="text-center text-xs text-muted">
+            {over
+              ? "Total is over the not-to-exceed price"
+              : !signed
+                ? "Waiting for the customer to sign"
+                : !agree
+                  ? "Waiting for “I agree”"
+                  : !method
+                    ? "Pick how they're paying"
+                    : "Fill in the hours and the not-to-exceed price"}
+          </p>
+        )}
+        <div className="flex gap-2">
+          <Link href={`/jobs/${start.jobId}`} className="press flex h-12 items-center justify-center rounded-xl border border-line px-5 font-semibold text-ink">
+            Back
+          </Link>
+          <button
+            disabled={pending || !ready}
+            className="press flex h-12 flex-1 items-center justify-center rounded-xl bg-primary font-semibold text-white disabled:opacity-50 dark:text-navy"
+          >
+            {pending ? "Saving…" : `Save invoice · ${money(p.total)}`}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}

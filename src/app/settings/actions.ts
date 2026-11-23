@@ -17,6 +17,10 @@ export async function savePrices(_: SettingsState, form: FormData): Promise<Sett
       row.business_phone = raw.slice(0, 40) || DEFAULT_PRICES.business_phone;
       continue;
     }
+    if (k === "zelle" || k === "cashapp" || k === "venmo" || k === "apple_cash") {
+      row[k] = raw.slice(0, 80);
+      continue;
+    }
     if (k === "expect_url") {
       if (raw && !/^https:\/\/\S+$/.test(raw)) return { error: "The What to expect link should start with https://" };
       row.expect_url = raw.slice(0, 300);

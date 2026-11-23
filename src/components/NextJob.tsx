@@ -75,6 +75,15 @@ export function NextJob({
       </dl>
       {job.notes && <p className="whitespace-pre-wrap break-words rounded-xl bg-bg p-3 text-sm text-ink">{job.notes}</p>}
 
+      {senderName && job.lead_id === meId && (
+        <Link
+          href={`/jobs/${job.id}/invoice`}
+          className="press flex h-14 items-center justify-center rounded-xl border-2 border-primary text-lg font-semibold text-primary"
+        >
+          Finish job &amp; invoice
+        </Link>
+      )}
+
       <Link href={`/jobs/${job.id}`} className="text-sm font-semibold text-primary">
         See all job details ›
       </Link>

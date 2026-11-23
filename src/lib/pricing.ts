@@ -14,6 +14,10 @@ export type Prices = {
   nte_cushion_hours: number; // suggested not-to-exceed = estimate + this many hours
   business_phone: string;
   expect_url: string; // "What to expect" page, linked in texts
+  zelle: string; // phone or email
+  cashapp: string; // $cashtag
+  venmo: string; // @username
+  apple_cash: string; // phone number
 };
 
 export const DEFAULT_PRICES: Prices = {
@@ -29,10 +33,14 @@ export const DEFAULT_PRICES: Prices = {
   nte_cushion_hours: 1,
   business_phone: "(209) 326-5601",
   expect_url: "",
+  zelle: "",
+  cashapp: "",
+  venmo: "",
+  apple_cash: "",
 };
 
 export const PRICE_COLUMNS =
-  "rate, min_hours, min_movers, trip_free_miles, trip_step_miles, trip_step_hours, truck_per_mile, materials, water, nte_cushion_hours, business_phone, expect_url";
+  "rate, min_hours, min_movers, trip_free_miles, trip_step_miles, trip_step_hours, truck_per_mile, materials, water, nte_cushion_hours, business_phone, expect_url, zelle, cashapp, venmo, apple_cash";
 
 export type QuoteInputs = {
   movers: number | string | null;
@@ -80,3 +88,12 @@ export const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 
 export const REFER_ITEMS = /piano|hot ?tub|jacuzzi|spa tub/i;
+
+/**
+ * Invoice math. Same labor, trip and truck rules as quotes, but no materials, water or extra lines.
+ * (How the trip charge and truck miles should show on invoices is still to be confirmed with Zach.)
+ */
+export function priceInvoice(q: QuoteInputs, s: Prices) {
+  const p = priceQuote(q, s);
+  return { ...p, supplies: 0, total: p.labor + p.trip + p.truck };
+}

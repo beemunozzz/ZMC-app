@@ -58,6 +58,18 @@
   - Database setup: `supabase/migrations/0004_texts.sql`.
   - Later: automatic texts from a ZMC number (Twilio), in Zach's business name, with "OK to text" consent and STOP handling. Exact drive-time ETA needs Google Maps (Phase 3).
 
+- Phase 7: invoices and getting paid.
+  - Job page (owner, or that job's crew lead) and the crew lead's next-job card: "Finish job & invoice". After that the button becomes "Get paid · $X", then "✓ Paid".
+  - Invoice screen: hours (from the estimate; clock-in later) and movers (from the assigned crew), both editable; truck (ours / theirs) and the three mileage legs. Lines: labor, trip charge, truck miles. No materials, water or extra lines.
+  - Not-to-exceed check: can't save if the total is over the NTE (checked on the phone, on the server and in the database). If the job has no NTE, the crew lead types the one the customer was given.
+  - Customer types their printed name, signs with a finger, and ticks "I agree… total of $X".
+  - Customer picks how they're paying: cash, check, card, plus Zelle, Apple Pay, Cash App and Venmo once Zach's details are on ☰ → Prices → Getting paid.
+  - Get paid screen: Cash App / Venmo QR code and button with the amount filled in; Zelle / Apple Cash details with a Copy button; cash, check and card instructions. "Customer wants to pay a different way", "✓ Mark as paid", and "Text the customer a receipt".
+  - Invoicing marks the job Done. ☰ → Invoices lists waiting and paid, with totals.
+  - Trip charge and truck miles on invoices use the quote rules for now. Still to confirm with Zach (see the open questions in `CLAUDE.md`).
+  - Database setup: `supabase/migrations/0005_invoices.sql`.
+  - Not built yet: PDF invoice, card payments in the app (Square or Stripe, in Zach's name), Zelle QR picture.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.

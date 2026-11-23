@@ -56,6 +56,13 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
     : { data: null };
   const reminderSent = !!(sentRow as { reminder_sent_at?: string | null } | null)?.reminder_sent_at;
 
+  // Invoice: the owner or this job's crew lead can finish the job and invoice it.
+  const canInvoice = (isOwner || isLead) && job.status !== "canceled";
+  const { data: invRow } = canInvoice
+    ? await supabase.from("invoices").select("id, total, paid_at").eq("job_id", job.id).maybeSingle()
+    : { data: null };
+  const invoice = invRow as { id: string; total: number; paid_at: string | null } | null;
+
   const row = (label: string, value: React.ReactNode) => (
     <div className="flex gap-3 py-2">
       <dt className="w-24 shrink-0 text-sm text-muted">{label}</dt>
@@ -184,13 +191,35 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
           </section>
         )}
 
-        {isOwner && (
-          <Link
-            href={`/jobs/${job.id}/edit`}
-            className="press flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-white dark:text-navy"
-          >
-            Edit job
-          </Link>
+        {(isOwner || canInvoice) && (
+          <div className="flex flex-col gap-2 pb-4">
+            {canInvoice &&
+              (invoice ? (
+                <Link
+                  href={`/invoices/${invoice.id}`}
+                  className={`press flex h-14 items-center justify-center gap-2 rounded-xl text-lg font-semibold ${
+                    invoice.paid_at ? "border border-ok/40 text-ok" : "bg-warn text-white dark:text-navy"
+                  }`}
+                >
+                  {invoice.paid_at ? `✓ Paid ${money(Number(invoice.total))} · View invoice` : `Get paid · ${money(Number(invoice.total))}`}
+                </Link>
+              ) : (
+                <Link
+                  href={`/jobs/${job.id}/invoice`}
+                  className="press flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-white dark:text-navy"
+                >
+                  Finish job &amp; invoice
+                </Link>
+              ))}
+            {isOwner && (
+              <Link
+                href={`/jobs/${job.id}/edit`}
+                className="press flex h-12 items-center justify-center rounded-xl border border-line font-semibold text-ink"
+              >
+                Edit job
+              </Link>
+            )}
+          </div>
         )}
       </main>
     </div>

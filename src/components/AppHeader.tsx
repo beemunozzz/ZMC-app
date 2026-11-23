@@ -111,6 +111,9 @@ export function AppHeader({
                 <Link href="/quotes" className={item} onClick={() => setOpen(false)}>
                   Quotes
                 </Link>
+                <Link href="/invoices" className={item} onClick={() => setOpen(false)}>
+                  Invoices
+                </Link>
                 <Link href="/settings" className={item} onClick={() => setOpen(false)}>
                   Prices
                 </Link>

@@ -188,7 +188,7 @@ export function QuoteForm({ quote, prices }: { quote?: Quote; prices: Prices }) 
             <p className="rounded-xl bg-warn/12 px-3 py-2 text-sm text-warn">Two-story home: think about a 3rd mover.</p>
           )}
           <p className="text-xs text-muted">Hours include the drive between the two addresses. That drive is on the clock.</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 items-end gap-3">
             <label className={label}>
               Shop → pickup
               <input name="miles_out" type="number" inputMode="decimal" min={0} value={v.miles_out} onChange={set("miles_out")} placeholder="mi" className={input} />

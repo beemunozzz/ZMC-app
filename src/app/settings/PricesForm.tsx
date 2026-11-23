@@ -108,6 +108,24 @@ export function PricesForm({ prices }: { prices: Prices }) {
         </label>
       </section>
 
+      <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4">
+        <h2 className="font-display text-lg font-extrabold uppercase text-ink">Getting paid</h2>
+        <p className="text-xs text-muted">Shown to the customer on the &ldquo;Get paid&rdquo; screen after they sign the invoice. Leave blank to hide a method.</p>
+        {(
+          [
+            ["zelle", "Zelle (phone or email)", "(209) 326-5601"],
+            ["cashapp", "Cash App $cashtag", "$ZMCmoving"],
+            ["venmo", "Venmo username", "@ZMC-Moving"],
+            ["apple_cash", "Apple Cash (phone number)", "(209) 326-5601"],
+          ] as const
+        ).map(([k, l, ph]) => (
+          <label key={k} className="flex flex-col gap-1 text-sm font-medium text-ink">
+            {l}
+            <input name={k} value={v[k]} onChange={(e) => setV((o) => ({ ...o, [k]: e.target.value }))} placeholder={ph} className={input} autoComplete="off" />
+          </label>
+        ))}
+      </section>
+
       <section className="rounded-2xl bg-tape/15 p-4 text-sm text-ink">
         <p className="font-semibold">Example with these prices</p>
         <p className="mt-1 text-muted">2 movers, 4 hours, our truck, 15 mi to pickup, 12 mi between, 20 mi back:</p>
