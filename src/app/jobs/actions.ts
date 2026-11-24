@@ -84,6 +84,7 @@ export async function saveJob(_: JobFormState, form: FormData): Promise<JobFormS
     nte,
     meet_at,
     drive_min,
+    load_extra: String(form.get("load_extra") ?? "").split(/\r?\n/).map((l) => l.trim().slice(0, 80)).filter(Boolean).slice(0, 20).join("\n"),
   };
 
   // Who to tell: compare the crew and the time before and after saving.

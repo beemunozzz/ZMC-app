@@ -6,6 +6,8 @@ import { ROLE_LABEL, requireMember } from "@/lib/crew";
 import { getPrices } from "@/lib/settings";
 import { PricesForm } from "./PricesForm";
 import { MeetForm } from "./MeetForm";
+import { LoadListForm } from "./LoadListForm";
+import { getLoadList } from "@/lib/checklist-server";
 import { getMeetSettings } from "@/lib/meet";
 
 export default function SettingsPage() {
@@ -19,7 +21,7 @@ export default function SettingsPage() {
 async function Settings() {
   const { supabase, me } = await requireMember();
   if (!me || me.role !== "owner") redirect("/");
-  const [prices, meet] = await Promise.all([getPrices(supabase), getMeetSettings(supabase)]);
+  const [prices, meet, loadList] = await Promise.all([getPrices(supabase), getMeetSettings(supabase), getLoadList(supabase)]);
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader title="Prices" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
@@ -31,6 +33,7 @@ async function Settings() {
         </p>
         <PricesForm prices={prices} />
         <MeetForm shop={meet.shop_address} buffer={meet.meet_buffer_min} />
+        <LoadListForm list={loadList} />
       </main>
     </div>
   );

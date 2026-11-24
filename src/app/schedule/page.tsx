@@ -31,6 +31,8 @@ import { ClockCard } from "@/components/ClockCard";
 import { CrewShortcuts, SetupChecklist } from "@/components/CrewSetup";
 import { setupFor, type SetupItem } from "@/lib/setup";
 import { loadMeet } from "@/lib/meet";
+import { loadChecklist } from "@/lib/checklist-server";
+import type { ChecklistItem } from "@/lib/checklist";
 import type { MeetInfo } from "@/components/MeetUp";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
 import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
@@ -146,6 +148,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   // "Meet up" on the crew's next job.
   const nextLive = !isOwner ? jobs.find((j) => j.job_date >= today && isLive(j)) : undefined;
   const meet = nextLive && view === "today" ? (await loadMeet(supabase, [nextLive], who ? { id: who, role: "mover" } : me, names)).get(nextLive.id) : undefined;
+  const checklist = nextLive && view === "today" ? await loadChecklist(supabase, nextLive, jobWx.get(nextLive.id), names, who || me.id) : undefined;
 
   // Crew home: the "Get set up" checklist and shortcuts (their own screen, on today).
   const crewHome = !isOwner && !who && view === "today" && date === today;
@@ -271,7 +274,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
           ) : (
             <>
               {setup && <SetupChecklist items={setup} />}
-              <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} meet={meet} />
+              <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} meet={meet} checklist={checklist} />
               {hours && <MyHours {...hours} />}
               {crewHome && <CrewShortcuts />}
             </>
@@ -499,6 +502,7 @@ function CrewToday({
   clock,
   cover,
   meet,
+  checklist,
 }: {
   jobs: Job[];
   names: Map<string, string>;
@@ -510,6 +514,7 @@ function CrewToday({
   clock?: { open: TimeEntry | null; weekHours: number } | null;
   cover?: { zachPhone: string; openByJob: Map<string, { id: string; reason: string }> } | null;
   meet?: MeetInfo;
+  checklist?: ChecklistItem[];
 }) {
   const upcoming = jobs.filter((j) => j.job_date >= today && isLive(j));
   const [next, ...rest] = upcoming;
@@ -534,6 +539,7 @@ function CrewToday({
           senderName={senderName}
           cover={cover ? { zachPhone: cover.zachPhone, open: cover.openByJob.get(next.id) ?? null } : undefined}
           meet={meet}
+          checklist={checklist}
         />
       ) : (
         <section className="rounded-2xl border border-line bg-card p-5">

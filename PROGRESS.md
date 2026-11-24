@@ -131,6 +131,8 @@
 
 - Built (setup step 0016): **Meet up**. Every job says where the crew meets: the shop (Zach's house) by default, at a meet time = start − drive from the shop − buffer (Prices page → "Meeting at the shop": shop address + extra minutes, default 10). Drive time: what Zach types on the job, else the job's miles out, else an estimate from the addresses (free map lookup; Google Maps can make it exact later). Crew can tap "I'll meet at the site (own car)" until 8 PM the night before; Zach and the crew lead are notified. Zach (any time) or the crew lead (until the cutoff) can switch everyone to "meet at the job site".
 
+- Built (setup step 0018): **Truck checklist** ("Before you leave") on the crew's job card and the job page. Everyone on the job ticks items as they go on the truck and sees who ticked what; it turns green ("✓ Truck loaded") when done. Zach edits the everyday list on ☰ → Prices → Truck checklist (items ending in "(rain)" only show on rain days) and can add extra items for one job on the job form.
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 
@@ -182,11 +184,22 @@ Not needed, but they'd make the app feel special. Items marked $ cost money, so 
 - Spanish language option for crew or customers.
 - Weekly automatic data backup emailed to Zach (needs the free Resend setup).
 
+## Plan: Best practices (how-to guides for tricky moves). Ask Zach before building.
+Brandon's idea: when the crew runs into something hard (and figures it out), it becomes a short guide with photos and steps, so the next crew already knows.
+- **Where:** ☰ → Best practices, for everyone. Search box on top; guides sorted by topic (stairs, tight doorways, heavy items, appliances, wrapping and padding, truck loading, safety).
+- **A guide:** title, 3–8 numbered steps, a photo for each step (optional), "what to bring", and "don't do this" warnings.
+- **Who writes them:** Zach, or crew send a "Here's how we did it" from a job (photos plus a few lines), and Zach approves it before everyone sees it.
+- **On jobs:** a job can link the guides that apply (e.g. "Gun safe up stairs"), so they show on the crew's job card.
+- **Starter guides** to write with Zach: wrapping a couch, dressers (drawers in or out), TVs, glass and mirrors, appliances (fridge, washer), stairs with a heavy item, tight doorways, truck loading order, lifting safety.
+- **Needs:** photo storage (setup step 0017 must be done first). Free.
+- **Questions for Zach:** Does he want this? Should crew be able to send in guides, or only him? Any topics to start with?
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
 - Payroll export file for an accountant / QuickBooks? Brandon's question: only for jobs paid by Zelle or card?
 - Employee documents (driver's license, W-4, I-9) in the employee file? Goes with the overtime question.
+- **Best practices guides** (plan above): does Zach want it, who can add guides, and which topics first?
 - Which items on the **Someday list** above does Zach like? (Brandon thinks they're all good.)
 - Should crew see their own estimated pay (hours × their rate) on their home screen? Right now they see hours only.
 - **Getting paid at the job site:** OK to set up **Square** in Zach's name so crew leads can take cards by tapping on their phone (Tap to Pay, no card reader)? Square charges roughly 2.6% + 15¢ per tap (check current rates). Claude builds and tests it in Square's practice mode first; no real charges until Zach and Brandon say go.

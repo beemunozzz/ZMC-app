@@ -41,10 +41,12 @@ export type Job = {
   /** Drive time shop -> pickup that Zach typed in (minutes). Null = worked out automatically. */
   drive_min: number | null;
   miles_out: number | null;
+  /** Extra load-up checklist items for this job only (one per line). */
+  load_extra: string;
 };
 
 export const JOB_COLUMNS =
-  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out";
+  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out, load_extra";
 
 export const JOB_TYPES = [
   "Full move",

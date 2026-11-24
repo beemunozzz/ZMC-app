@@ -289,6 +289,19 @@ export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: Cr
               className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-base text-ink outline-none focus:border-primary"
             />
           </label>
+          <label className={label}>
+            <span>
+              Extra things to bring <span className="font-normal text-muted">(this job only, one per line)</span>
+            </span>
+            <textarea
+              name="load_extra"
+              defaultValue={job?.load_extra ?? ""}
+              rows={2}
+              placeholder={"e.g. TV boxes\nExtra ratchet straps"}
+              className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-base text-ink outline-none focus:border-primary"
+            />
+          </label>
+          <p className="-mt-1 text-xs text-muted">They&apos;re added to the crew&apos;s &ldquo;Before you leave&rdquo; checklist. The everyday list is on ☰ → Prices.</p>
         </section>
 
         {state.error && (

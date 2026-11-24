@@ -52,3 +52,19 @@ export async function saveMeetSettings(_: { error?: string; ok?: string }, form:
   revalidatePath("/schedule");
   return { ok: "Saved." };
 }
+
+/** Owner: the everyday load-up checklist (one item per line; "(rain)" = rain days only). */
+export async function saveLoadList(_: { error?: string; ok?: string }, form: FormData): Promise<{ error?: string; ok?: string }> {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner") return { error: "Only the owner can change this." };
+  const lines = String(form.get("load_list") ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.trim().slice(0, 80))
+    .filter(Boolean)
+    .slice(0, 40);
+  const { error } = await supabase.from("settings").update({ load_list: lines.join("\n") }).eq("id", 1);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath("/settings");
+  revalidatePath("/schedule");
+  return { ok: "Saved. Every job uses this list now." };
+}

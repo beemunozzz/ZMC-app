@@ -12,6 +12,8 @@ import { fmtDayLong, fmtHours } from "@/lib/dates";
 import { WeatherNote } from "@/components/WeatherNote";
 import { MeetUp } from "@/components/MeetUp";
 import { loadMeet } from "@/lib/meet";
+import { loadChecklist } from "@/lib/checklist-server";
+import { LoadChecklist } from "@/components/LoadChecklist";
 import { money } from "@/lib/pricing";
 import { jobForecast, stocktonForecast } from "@/lib/weather";
 import { getPrices } from "@/lib/settings";
@@ -73,6 +75,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   // Where and when the crew meets (live jobs only).
   const names = new Map([...crewById.values()].map((c) => [c.id, c.full_name]));
   const meet = isLive(job) ? (await loadMeet(supabase, [job], me, names)).get(job.id) : undefined;
+  const checklist = isLive(job) ? await loadChecklist(supabase, job, wx, names, me.id) : null;
 
   // Invoice: the owner or this job's crew lead can finish the job and invoice it.
   const canInvoice = (isOwner || isLead) && job.status !== "canceled";
@@ -154,6 +157,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
         )}
 
         {meet && <MeetUp {...meet} />}
+        {checklist && <LoadChecklist jobId={job.id} items={checklist} canTick={isOwner || people.includes(me.id)} />}
         <WeatherNote wx={wx} />
 
         {isOwner &&

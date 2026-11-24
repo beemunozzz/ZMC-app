@@ -9,6 +9,8 @@ import { RouteLine } from "./RouteLine";
 import { OnMyWay } from "./TextButtons";
 import { WeatherNote } from "./WeatherNote";
 import { MeetUp, type MeetInfo } from "./MeetUp";
+import { LoadChecklist } from "./LoadChecklist";
+import type { ChecklistItem } from "@/lib/checklist";
 
 /**
  * The crew's job "ticket": a navy band with the time big, the route drawn as a line with
@@ -23,6 +25,7 @@ export function NextJob({
   senderName,
   cover,
   meet,
+  checklist,
 }: {
   job: Job;
   names: Map<string, string>;
@@ -35,6 +38,8 @@ export function NextJob({
   cover?: { zachPhone: string; open: { id: string; reason: string } | null };
   /** Where and when the crew meets. */
   meet?: MeetInfo;
+  /** "Before you leave" load-up checklist. */
+  checklist?: ChecklistItem[];
 }) {
   const crew = jobCrew(job).map((id) => ({ id, name: names.get(id) ?? "Removed" }));
   const others = crew.filter((c) => c.id !== meId);
@@ -82,6 +87,7 @@ export function NextJob({
       {/* Below the ticket: what to bring and what to do */}
       <div className="flex flex-col gap-3 p-5">
         {meet && <MeetUp {...meet} />}
+        {checklist && <LoadChecklist jobId={job.id} items={checklist} canTick={crew.some((c) => c.id === meId)} />}
         <WeatherNote wx={wx} />
 
         {leading && <OnMyWay phone={job.customer_phone} customerName={job.customer_name} senderName={senderName} primary />}
