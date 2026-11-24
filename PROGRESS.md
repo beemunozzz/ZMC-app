@@ -233,6 +233,7 @@ Brandon's idea: when the crew runs into something hard (and figures it out), it 
 - Supabase's built-in email only sends to people on the Supabase team, and only a few emails an hour. It's only needed for "Forgot password" now. Before crew rely on it, set up a free email sender (Resend) in Supabase > Authentication > SMTP.
 
 ## Decisions
+- Database steps: Supabase's approval question for steps that include "drop ... if exists" doesn't reach Brandon's screen (times out). Steps that only add things go through. For brand-new tables, leave out the drop lines; otherwise Brandon runs the step in Supabase → SQL Editor.
 - Stack: Next.js + Vercel + Supabase (confirmed).
 - Testing phase: Brandon builds and tests in his own accounts (Vercel and Supabase free plans). Everything moves to Zach's accounts once it's tested. Both services support transferring a project.
 - Invoices leave out materials, water and extra-item lines (Brandon's decision, from the handoff).
