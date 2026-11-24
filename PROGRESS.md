@@ -131,6 +131,30 @@
 
 - Built (setup step 0016): **Meet up**. Every job says where the crew meets: the shop (Zach's house) by default, at a meet time = start − drive from the shop − buffer (Prices page → "Meeting at the shop": shop address + extra minutes, default 10). Drive time: what Zach types on the job, else the job's miles out, else an estimate from the addresses (free map lookup; Google Maps can make it exact later). Crew can tap "I'll meet at the site (own car)" until 8 PM the night before; Zach and the crew lead are notified. Zach (any time) or the crew lead (until the cutoff) can switch everyone to "meet at the job site".
 
+## Waiting on Zach: photos, reviews, website booking (setup step 0017)
+The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
+
+**1. Job photos and damage records**
+- What it does: crew and Zach take Before, Damage and After photos on the job page. A damage photo needs a short note, notifies Zach, and crew can't delete it. Only Zach and the crew on that job can see the photos.
+- What's involved: a private photo folder in Supabase Storage. Photos are shrunk on the phone before saving.
+- Cost: free. The free plan has 1 GB of storage (about 3,000 photos). After that, Supabase's paid plan is about $25/month (check the current price).
+- Photos are kept until Zach deletes them.
+
+**2. Google review requests**
+- What it does: after a job is marked paid, a one-tap "Ask for a Google review" text opens Messages with a thank-you and Zach's review link. The dashboard lists paid customers who haven't been asked yet.
+- Needs from Zach: his Google review link (Google Business Profile → "Ask for reviews" → copy link), saved on ☰ → Prices.
+- Cost: free (texts go from the phone's own Messages app).
+
+**3. Website booking form ("Get a free quote")**
+- What it does: a public page (zmc-app.vercel.app/book) that customers fill in without logging in: name, phone, email, move date and time of day, addresses, home size, heavy items, notes, how they heard about ZMC. It lands as a **New** quote in the app and notifies Zach. Pianos and hot tubs are flagged.
+- Moves within 72 hours: the form says they need Zach's confirmation and asks for up to 3 date/time options.
+- What's involved: a "Get a free quote" button on zmcmove.com (Squarespace) linking to the page. Spam guard: hidden bot trap and a limit of 30 requests an hour.
+- Cost: free.
+- Questions for Zach:
+  - OK to put the button on zmcmove.com? Which page(s)?
+  - How fast does he want to promise a reply (for example "within 2 hours" or "same day")?
+  - Should the form ask for photos of the items? (Possible later; uses the same photo storage.)
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
