@@ -155,11 +155,39 @@ The database step is written (`supabase/migrations/0017_photos_reviews_booking.s
   - How fast does he want to promise a reply (for example "within 2 hours" or "same day")?
   - Should the form ask for photos of the items? (Possible later; uses the same photo storage.)
 
+## Someday list (fun extras; ask Zach which ones he likes)
+Not needed, but they'd make the app feel special. Items marked $ cost money, so ask before turning them on.
+
+**For customers**
+- Live "crew on the way" link with a little truck on a map ($, Google Maps).
+- Move-day page: date, crew names and photos, the not-to-exceed price, what to expect.
+- Photo receipt after the move: before and after photos plus the paid invoice.
+- Referral code ("Give $25, get $25"), tracked in the app.
+
+**For Zach**
+- Smart hour suggestions learned from past jobs (e.g. "3-bed, 2-story usually takes 5.5 hrs with 3 movers").
+- Heat-day warning: suggest an earlier start and extra water on 100°F+ days.
+- Busy-day pricing tip ("end of month is full; consider a higher rate or a 3-hour minimum").
+- Monthly recap: moves, income, reviews, "best month ever".
+- Voice notes on quotes: talk, and the quote fills itself in ($, a few cents each, AI).
+
+**For the crew**
+- Badges: "100 moves", "5-star review mention", "zero damage this month".
+- Shout-outs on their Home when a review names them.
+- Moving-day playlist link on the job card.
+- Lift-safety tip of the day on rainy or hot days.
+
+**Behind the scenes**
+- Real app icon and splash screen with the ZMC logo (needs the logo files).
+- Spanish language option for crew or customers.
+- Weekly automatic data backup emailed to Zach (needs the free Resend setup).
+
 ## Questions for Zach (from Brandon's feature review)
 - California overtime (over 8 hrs/day, double over 12) and meal/rest breaks on clock-in and payroll?
 - Customer e-signs the not-to-exceed estimate when they book (before the move)?
 - Payroll export file for an accountant / QuickBooks? Brandon's question: only for jobs paid by Zelle or card?
 - Employee documents (driver's license, W-4, I-9) in the employee file? Goes with the overtime question.
+- Which items on the **Someday list** above does Zach like? (Brandon thinks they're all good.)
 - Should crew see their own estimated pay (hours × their rate) on their home screen? Right now they see hours only.
 - **Getting paid at the job site:** OK to set up **Square** in Zach's name so crew leads can take cards by tapping on their phone (Tap to Pay, no card reader)? Square charges roughly 2.6% + 15¢ per tap (check current rates). Claude builds and tests it in Square's practice mode first; no real charges until Zach and Brandon say go.
 - **Zelle and Venmo** stay as options: the Get paid screen shows Zach's Zelle phone or email and his Zelle QR code, and his Venmo link and QR code. Need from Zach: his Zelle phone or email, his Venmo username, and a screenshot of his Zelle QR code (from his bank app).
