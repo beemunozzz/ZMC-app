@@ -17,7 +17,47 @@ Brandon asked for realistic example jobs to present the app to Zach, and to be a
 - **Dylan's role: mover → crew lead.**
 - **Regular schedules** (saved as each person's "Original"): Dimitri off Sundays; Dylan off Mondays and Wednesdays, off by 6 PM Tuesday, Thursday and Friday.
 
-Anything done on these jobs during the demo (checklist ticks, meet-up choices, cover requests, invoices, clock-ins) is removed by the undo too.
+Run **both** undo blocks to get back to the snapshot (1 job, 0 quotes, 0 invoices). Anything done on these jobs during the demo (checklist ticks, meet-up choices, cover requests, invoices, clock-ins) is removed by the undo too.
+
+## Added second (Nov 25): quotes and invoices
+- **8 past jobs with invoices** (Nov 4 to Nov 24, marked Done): Hughes, Torres, Ramos, Fields, Wu, Ortega (all **paid**: Zelle, cash, card, Venmo, Zelle, check) and Collins (Cash App), Reed (Zelle) **waiting for payment**. Total invoiced $6,630. Six were signed with a sample signature; two weren't signed. All totals are under the not-to-exceed price and use Zach's real price settings.
+- **8 quotes**: 3 new (Bennett; Castillo; Sanchez, who has a piano to refer out), 2 quoted (Walsh, Price), 2 booked and linked to the demo Patterson and Wright jobs (their not-to-exceed prices were matched to the quotes), 1 declined (Alvarez, hot tub, referred out).
+
+### Undo for this part (run with the undo above)
+```sql
+-- past demo jobs (their invoices go with them)
+delete from public.invoices where job_id in (
+  'e5241fd7-63e7-405e-a4ca-0f0af62e052c',
+  'dfe037da-a44f-498e-a37d-6578ed109bf9',
+  'd38a4f70-83b4-4e33-85f8-59227c80bda4',
+  '3c70a12f-6202-4562-bc01-a8a7b37fde5e',
+  '0a427d98-8ebc-4f51-af94-f506c6eb38a1',
+  'df01c512-351b-4591-a9f8-dd8273753ed9',
+  '0385c4c4-489f-4354-9452-eb62feb051e1',
+  '78d51951-58e0-45d7-bab6-35fe9ade819f'
+);
+delete from public.jobs where id in (
+  'e5241fd7-63e7-405e-a4ca-0f0af62e052c',
+  'dfe037da-a44f-498e-a37d-6578ed109bf9',
+  'd38a4f70-83b4-4e33-85f8-59227c80bda4',
+  '3c70a12f-6202-4562-bc01-a8a7b37fde5e',
+  '0a427d98-8ebc-4f51-af94-f506c6eb38a1',
+  'df01c512-351b-4591-a9f8-dd8273753ed9',
+  '0385c4c4-489f-4354-9452-eb62feb051e1',
+  '78d51951-58e0-45d7-bab6-35fe9ade819f'
+);
+-- demo quotes
+delete from public.quotes where id in (
+  'd36a0af5-4291-4de7-ae99-921395bff50b',
+  '207982c8-40a9-430e-b31e-099d3244aa12',
+  'eb46acaf-bdaf-4dfc-8a58-6769d14622ab',
+  'fbe75760-21e8-4e2e-8504-b616977be30d',
+  '295ffc28-c0c3-49c8-bb8e-0ebf4f938792',
+  '69956199-8f88-4378-ac8f-b93a51e0c16c',
+  '165e541a-d9a6-4856-be1f-492fd2003c49',
+  '02223cfb-86b3-43dd-8604-fd07c634f3c2'
+);
+```
 
 ## Undo (puts it back to the snapshot)
 ```sql
