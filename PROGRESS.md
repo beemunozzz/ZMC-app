@@ -133,6 +133,8 @@
 
 - Built (setup step 0018): **Truck checklist** ("Before you leave") on the crew's job card and the job page. Everyone on the job ticks items as they go on the truck and sees who ticked what; it turns green ("✓ Truck loaded") when done. Zach edits the everyday list on ☰ → Prices → Truck checklist (items ending in "(rain)" only show on rain days) and can add extra items for one job on the job form.
 
+- **Demo data is loaded (Nov 25)** for showing Zach: 20 example jobs, Dylan made a crew lead, and regular schedules for Dimitri and Dylan. Everything is listed in `DEMO-DATA.md` with the undo. Say "remove the demo data" to put it back.
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 
