@@ -4,7 +4,7 @@ export function PageLoading() {
     <div className="flex flex-1 flex-col" aria-busy="true">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/95">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <span className="font-logo text-xl text-ink">ZMC</span>
+          <span className="font-logo text-xl text-ink">ZMC.</span>
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">

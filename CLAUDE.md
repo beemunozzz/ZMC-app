@@ -178,7 +178,7 @@ These come from Brandon's feedback and the `zmc-app-design` skill.
   - tape accent `#D9A25B` / `#E0B072`
   - lines `#E2DBD0`
 - Fonts: **Archivo** for everything (Brandon's pick, Nov 2026): its narrow width (`.font-display`, wdth 62) for bold uppercase headings, regular width for body. Before that: Barlow Condensed + Inter (Version 1).
-- **Logo (Nov 2026, Brandon's pick):** the letters "ZMC" in **Georgia**, bold (`.font-logo` in `globals.css`; Gelasio, a free Georgia look-alike, stands in on Android). Used in the header, the login screen and the loading screen. ZMC logo files (black and white) may still come from Zach.
+- **Logo (Nov 2026, Brandon's pick):** the letters "ZMC." (with the period) in **Georgia**, bold (`.font-logo` in `globals.css`; Gelasio, a free Georgia look-alike, stands in on Android). Used in the header, the login screen and the loading screen. ZMC logo files (black and white) may still come from Zach.
 - Motion: subtle and quick, ease-out, animate only transform and opacity, press scale 0.97, and respect "reduce motion".
 - Things should sit in **consistent fixed spots**. Brandon notices when layouts shift from one card to the next.
 - Use smaller text on phones, an app-style header, and a ☰ menu for secondary screens.

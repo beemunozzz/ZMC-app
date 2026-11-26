@@ -41,7 +41,7 @@ export function AppHeader({
     <header className="sticky top-0 z-20 border-b border-line bg-bg/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
         <Link href="/" className="font-logo text-xl text-ink">
-          ZMC
+          ZMC.
         </Link>
         <span className="min-w-0 truncate font-display text-xl font-bold uppercase tracking-wide text-muted">{title}</span>
         <div className="ml-auto flex items-center gap-1">
