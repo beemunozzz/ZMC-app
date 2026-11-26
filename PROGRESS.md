@@ -147,6 +147,8 @@
 
 - Pricing decision (Nov 26, Brandon): **no profit on the rental truck.** The truck panel's rate is now "with our truck at cost" (labor + truck cost ÷ hours, nearest $5); flat-rate margin is on labor only. Idea for later: flat truck prices by distance band (under 25 mi, under 100 mi) once there's enough history.
 
+- Quotes (Nov 26): **Adjust rate** on the price line; materials and water ($25) are now **our expense** (not charged), shown in the owner-only **Our side** box with what's left for crew pay and profit. Truck at cost now follows the number of movers.
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 
