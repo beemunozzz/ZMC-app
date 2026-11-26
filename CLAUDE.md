@@ -25,8 +25,8 @@ This folder is the start of **ZMC Hub version 2**, a real web app for **Zachery'
 | Phone | (209) 326-5601 |
 | Website | https://www.zmcmove.com (Squarespace) |
 | Owner | Zach (also works jobs, sometimes as crew lead) |
-| Crew leads | Dimitri, Matt (to be confirmed with Zach) |
-| Movers | Dylan, Bobby, Mark |
+| Crew leads | Demetri, Dylan (plus Zach and Brandon as owners) |
+| Movers | Full-time: Jesus, Juan, Jaime. On call: Nate, Emanuel, Anthony |
 
 How Zach works today: customers call or text him, he gives a price and a day and time, and he tells the crew their schedule, often at the last minute. The crew is frustrated by that. **They want to see their jobs 2 to 3 weeks ahead, the moment Zach books them.** Zach assigns movers to jobs; movers don't pick their own.
 

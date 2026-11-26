@@ -91,8 +91,7 @@ delete from public.jobs where id in (select id from demo);
 -- regular schedules added for the demo (Dimitri and Dylan had none before)
 delete from public.weekly_schedules where crew_id in ('7434e403-fbb5-43f4-acdc-bd5d615c3cd3', '22041240-bc0c-425f-995a-e30a562f8139');
 
--- Dylan back to mover
-update public.crew_members set role = 'mover' where id = '22041240-bc0c-425f-995a-e30a562f8139';
+-- (Dylan stays a crew lead: Brandon made the real crew list on Nov 25, see below.)
 ```
 Deleting a job also removes its meet-at-site choices, checklist ticks, cover requests, photos and on-call checks.
 
@@ -101,3 +100,8 @@ Deleting a job also removes its meet-at-site choices, checklist ticks, cover req
 - 6:36 PM: **Matt filled in his regular schedule** (available every day, saved as his Original). **Not demo data: the undo keeps it** unless Brandon says to remove it too:
   `delete from public.weekly_schedules where crew_id = '54e8234d-0535-4379-99db-bdde3c868b3c';`
 - 7:31 PM: Marcus Reed's invoice (demo) marked paid by Zelle. Removed by the undo.
+
+## Real crew list set by Brandon (Nov 25, evening): NOT part of the demo, the undo keeps it
+- Owners: Zach, Brandon. Crew leads (full-time): **Demetri** (renamed from "Dimitri"), Dylan. Movers (full-time): Jesus, Juan, Jaime. On call: Nate, Emanuel, Anthony.
+- **Matt, Bobby and Mark were deleted permanently** (Brandon's choice), including Matt's login and his regular schedule. Their spots on demo jobs went to Jesus, Juan and Jaime; Nate (on call) filled the open spot on the Sarah Johnson job.
+- The undo no longer turns Dylan back into a mover.
