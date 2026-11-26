@@ -139,6 +139,8 @@
 
 - Built (setup step 0019): **Developer role** for Brandon (owner access, labelled "Developer") and the **View as** bar at the top of every page (only he sees it): Me · Owner · Lead · Mover · On call, or any person from the list. Previews are read-only (nothing can be saved as someone else). The developer can't be put on jobs: left out of the crew picker, and the database refuses it.
 
+- **Logo:** "ZMC" is now set in Georgia (header, login and loading screens).
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 
