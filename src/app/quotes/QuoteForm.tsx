@@ -391,10 +391,11 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
                   + long-day bonus {flat.movers} × {money(prices.long_day_bonus)} = {money(flat.bonus)}
                 </p>
               )}
-              {flat.truck > 0 && <p>+ our truck cost (estimate) {money(flat.truck)}</p>}
               <p>
-                + {Math.round(flat.margin * 100)}% margin {money(flat.marginAmount)} → rounded up to {money(flat.total)}
+                + {Math.round(flat.margin * 100)}% margin on the labor {money(flat.marginAmount)}
               </p>
+              {flat.truck > 0 && <p>+ our truck at cost (estimate, no margin) {money(flat.truck)}</p>}
+              <p>→ rounded up to {money(flat.total)}</p>
               <p className="text-xs text-muted">Only you see this breakdown. The customer just sees the flat price.</p>
             </div>
           </details>

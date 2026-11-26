@@ -171,7 +171,7 @@ export function suggestedNte(q: QuoteInputs, s: Prices) {
 
 /**
  * Flat rate for long days: all day hours (clock + travel) x movers x the floor rate,
- * + the long-day bonus per mover, + our truck cost, then the profit margin. Rounded up to $10.
+ * + the long-day bonus per mover, + the margin on that labor, + our truck cost at cost (no margin). Rounded up to $10.
  */
 export function flatRate(q: QuoteInputs, s: Prices, truckCost: number, margin: number) {
   const p = priceQuote(q, s);
@@ -179,7 +179,8 @@ export function flatRate(q: QuoteInputs, s: Prices, truckCost: number, margin: n
   const bonus = p.longDay ? p.movers * s.long_day_bonus : 0;
   const truck = p.allIn ? truckCost : 0;
   const subtotal = round2(labor + bonus + truck);
-  const marginAmount = round2(subtotal * margin);
+  // The margin is on labor only: the truck is passed through at cost.
+  const marginAmount = round2((labor + bonus) * margin);
   const total = Math.ceil((subtotal + marginAmount) / 10) * 10;
   return { dayHours: p.dayHours, movers: p.movers, labor, bonus, truck, subtotal, margin, marginAmount, total };
 }

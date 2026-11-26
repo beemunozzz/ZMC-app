@@ -60,10 +60,9 @@ export function TruckCostPanel({
   const diff = Math.round((customerPays - c.total) * 100) / 100;
   const profit = diff >= 0;
   const laborPerHour = movers * prices.rate;
-  const breakEven = roundTo5(laborPerHour + c.total / hours);
-  // The adjusted rate: covers our truck plus $75 (one labor hour) on the truck, rounded to the nearest $5.
-  const suggested = roundTo5(laborPerHour + (c.total + prices.rate) / hours);
-  const needsMore = suggested > standardRate;
+  // No profit on the truck: the rate covers labor plus our truck cost (rental + gas + the $75 pickup/return time),
+  // spread over the hours, rounded to the nearest $5.
+  const atCost = roundTo5(laborPerHour + c.total / hours);
 
   // Long trips: compare a round trip with a one-way rental.
   const long = choices.miles >= LONG_TRIP_MILES;
@@ -177,24 +176,18 @@ export function TruckCostPanel({
         </div>
         {/* Adjusted hourly rate that covers our truck */}
         <div className="mt-1 flex flex-col gap-2 rounded-xl border border-line p-3">
-          {needsMore ? (
-            <>
-              <p className="text-sm text-ink">
-                To cover our truck plus {money(prices.rate)}, charge <b className="tabular-nums">{money(suggested)}/hr</b> instead of{" "}
-                {money(standardRate)}/hr ({movers} movers, {hours} hrs, rounded to the nearest $5). Break-even is about {money(breakEven)}/hr.
-              </p>
-              {hourlyRate === suggested ? (
-                <p className="text-sm font-semibold text-ok">✓ This quote uses {money(suggested)}/hr.</p>
-              ) : (
-                <button type="button" onClick={() => onUseRate(suggested)} className="press h-11 rounded-xl bg-primary px-4 font-semibold text-white dark:text-navy">
-                  Use {money(suggested)}/hr on this quote
-                </button>
-              )}
-            </>
+          <p className="text-sm text-ink">
+            Rate with our truck at cost: <b className="tabular-nums">{money(atCost)}/hr</b>
+            <span className="block text-xs text-muted tabular-nums">
+              {movers} × {money(prices.rate)} labor + {money(c.total)} truck ÷ {hours} hrs, rounded to the nearest $5. Standard rate: {money(standardRate)}/hr.
+            </span>
+          </p>
+          {hourlyRate === atCost ? (
+            <p className="text-sm font-semibold text-ok">✓ This quote uses {money(atCost)}/hr.</p>
           ) : (
-            <p className="text-sm text-ink">
-              ✓ The standard {money(standardRate)}/hr already covers our truck plus {money(prices.rate)}.
-            </p>
+            <button type="button" onClick={() => onUseRate(atCost)} className="press h-11 rounded-xl bg-primary px-4 font-semibold text-white dark:text-navy">
+              Use {money(atCost)}/hr on this quote
+            </button>
           )}
           {hourlyRate !== standardRate && (
             <button type="button" onClick={() => onUseRate(null)} className="self-start text-sm font-semibold text-muted">

@@ -145,6 +145,8 @@
 
 - Quotes (Nov 26): **Fill in miles and drive times from Zach's address** button (free map lookup, estimate), and the truck panel's **adjusted hourly rate** (covers our truck + $75, nearest $5) with "Use $X/hr on this quote"; the rate goes to the job and invoice.
 
+- Pricing decision (Nov 26, Brandon): **no profit on the rental truck.** The truck panel's rate is now "with our truck at cost" (labor + truck cost ÷ hours, nearest $5); flat-rate margin is on labor only. Idea for later: flat truck prices by distance band (under 25 mi, under 100 mi) once there's enough history.
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 
