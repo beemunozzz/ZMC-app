@@ -23,7 +23,7 @@ async function EditJob({ params }: Pick<PageProps<"/jobs/[id]/edit">, "params">)
 
   const [{ data: job }, { data: crew }] = await Promise.all([
     supabase.from("jobs").select(JOB_COLUMNS).eq("id", id).maybeSingle(),
-    supabase.from("crew_members").select("id, full_name, role").eq("active", true).order("full_name"),
+    supabase.from("crew_members").select("id, full_name, role").eq("active", true).eq("is_dev", false).order("full_name"),
   ]);
   if (!job) notFound();
   const avail = await loadAvailability(supabase, (job as Job).job_date < todayISO() ? (job as Job).job_date : todayISO());

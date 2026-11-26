@@ -105,3 +105,7 @@ Deleting a job also removes its meet-at-site choices, checklist ticks, cover req
 - Owners: Zach, Brandon. Crew leads (full-time): **Demetri** (renamed from "Dimitri"), Dylan. Movers (full-time): Jesus, Juan, Jaime. On call: Nate, Emanuel, Anthony.
 - **Matt, Bobby and Mark were deleted permanently** (Brandon's choice), including Matt's login and his regular schedule. Their spots on demo jobs went to Jesus, Juan and Jaime; Nate (on call) filled the open spot on the Sarah Johnson job.
 - The undo no longer turns Dylan back into a mover.
+
+## Brandon taken off jobs (Nov 25): the Developer can't be on jobs
+- Demo jobs: Derek Fields lead → Dylan; Linda Nguyen, Patricia Hall, Brian Wilson lead → Demetri; Valley Dental crew Brandon → Jesus.
+- The original Nov 22 job ("Sienna munoz", not demo): Brandon removed from its crew; Zach is still on it. The undo doesn't touch this job.

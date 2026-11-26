@@ -20,7 +20,7 @@ async function NewJob({ searchParams }: Pick<PageProps<"/jobs/new">, "searchPara
   const { supabase, me } = await requireMember();
   if (!me || me.role !== "owner") redirect("/");
 
-  const { data } = await supabase.from("crew_members").select("id, full_name, role").eq("active", true).order("full_name");
+  const { data } = await supabase.from("crew_members").select("id, full_name, role").eq("active", true).eq("is_dev", false).order("full_name");
   const date = typeof sp.date === "string" && isISODate(sp.date) ? sp.date : todayISO();
   const avail = await loadAvailability(supabase, todayISO());
 

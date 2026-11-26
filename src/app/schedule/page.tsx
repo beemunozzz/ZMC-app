@@ -64,10 +64,11 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   // Everyone on the active crew (names for the cards).
   const { data: crewRows } = await supabase
     .from("crew_members")
-    .select("id, full_name")
+    .select("id, full_name, is_dev")
     .eq("active", true)
     .order("full_name");
   const crew = crewRows ?? [];
+  const workers = crew.filter((c) => !c.is_dev); // the developer is never on jobs
   const names = new Map(crew.map((c) => [c.id as string, c.full_name as string]));
   const who = isOwner && sp.who && names.has(sp.who) ? sp.who : "";
 
@@ -177,7 +178,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
         name={me.full_name}
         roleLabel={roleLabel(me)}
         newJobHref={`/jobs/new?date=${view === "month" ? (date.slice(0, 7) === today.slice(0, 7) ? today : firstOfMonth(date)) : date}`}
-        preview={isOwner ? { options: crew.map((c) => ({ id: c.id, name: c.full_name })), current: who, hrefFor: previewHrefs } : undefined}
+        preview={isOwner ? { options: workers.map((c) => ({ id: c.id, name: c.full_name })), current: who, hrefFor: previewHrefs } : undefined}
       />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
@@ -261,7 +262,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
             <section className="flex flex-col gap-3">
               <h1 className="font-display text-2xl font-extrabold uppercase text-ink">{fmtDayLong(date)}</h1>
               {stockton[date] && <WeatherNote wx={{ ...stockton[date], atSite: false }} />}
-              <WorkingToday jobs={jobs} crew={crew} />
+              <WorkingToday jobs={jobs} crew={workers} />
               <div className="grid gap-3 md:grid-cols-2">
                 {jobs.map((j) => (
                   <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner wx={jobWx.get(j.id)} />
