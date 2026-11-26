@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { EMPLOYMENT, ROLE_LABEL, requireMember, type CrewMember } from "@/lib/crew";
+import { EMPLOYMENT, roleLabel, requireMember, type CrewMember } from "@/lib/crew";
 import { fmtDayLong, fmtShort, mondayOf, todayISO } from "@/lib/dates";
 import { telUrl } from "@/lib/jobs";
 import { money } from "@/lib/pricing";
@@ -37,7 +37,7 @@ async function Employee({ params }: Pick<PageProps<"/payroll/[id]">, "params">) 
 
   const today = todayISO();
   const [{ data: m }, { data: p }, { data: history }, { data: jobs }] = await Promise.all([
-    supabase.from("crew_members").select("id, user_id, email, full_name, phone, role, active, employment").eq("id", id).maybeSingle(),
+    supabase.from("crew_members").select("id, user_id, email, full_name, phone, role, active, employment, is_dev").eq("id", id).maybeSingle(),
     supabase.from("crew_pay").select("hourly_rate, address, emergency_name, emergency_phone, hire_date, notes, terminated_at, termination_date, termination_reason").eq("crew_id", id).maybeSingle(),
     supabase.from("pay_changes").select("id, old_rate, new_rate, effective_date, note").eq("crew_id", id).order("effective_date", { ascending: false }),
     supabase.from("jobs").select("id, lead_id, crew_ids, job_date, status").gte("job_date", today).in("status", ["booked", "confirmed"]),
@@ -84,7 +84,7 @@ async function Employee({ params }: Pick<PageProps<"/payroll/[id]">, "params">) 
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Employee" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Employee" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         <Link href="/payroll" className="text-sm font-semibold text-primary">
           ‹ Payroll
@@ -102,7 +102,7 @@ async function Employee({ params }: Pick<PageProps<"/payroll/[id]">, "params">) 
             )}
           </div>
           <p className="text-sm text-muted">
-            {ROLE_LABEL[member.role]}
+            {roleLabel(member)}
             {info.hire_date ? ` · since ${fmtShort(info.hire_date)}, ${info.hire_date.slice(0, 4)}` : ""}
             {member.phone && (
               <>

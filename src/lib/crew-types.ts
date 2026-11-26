@@ -11,6 +11,8 @@ export type CrewMember = {
   active: boolean;
   /** Optional: older rows may not have it loaded. */
   employment?: Employment;
+  /** The app's developer (Brandon): owner access, labelled "Developer", gets the "View as" bar. */
+  is_dev?: boolean;
 };
 
 /** Employment type. Controls what someone can see when they log in (enforced in the database too). */
@@ -34,3 +36,6 @@ export const ROLE_LABEL: Record<Role, string> = {
   lead: "Crew lead",
   mover: "Mover",
 };
+
+/** "Developer" for the developer, otherwise the role ("Owner", "Crew lead", "Mover"). */
+export const roleLabel = (m: Pick<CrewMember, "role" | "is_dev">) => (m.is_dev ? "Developer" : ROLE_LABEL[m.role]);

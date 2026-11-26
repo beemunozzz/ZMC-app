@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { fmtDayLong } from "@/lib/dates";
 import type { PayMethod } from "@/lib/invoices";
 import { JOB_COLUMNS, jobCrew, type Job } from "@/lib/jobs";
@@ -64,7 +64,7 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Invoice" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Invoice" isOwner={isOwner} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 pt-4">
         <div>
           <h1 className="break-words font-display text-3xl font-extrabold uppercase leading-tight text-ink">{job.customer_name}</h1>

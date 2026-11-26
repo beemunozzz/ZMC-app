@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { getPrices } from "@/lib/settings";
 import { PricesForm } from "./PricesForm";
 import { MeetForm } from "./MeetForm";
@@ -24,7 +24,7 @@ async function Settings() {
   const [prices, meet, loadList] = await Promise.all([getPrices(supabase), getMeetSettings(supabase), getLoadList(supabase)]);
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Prices" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Prices" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-4">
         <h1 className="font-display text-2xl font-extrabold uppercase text-ink">Prices</h1>
         <p className="text-sm text-muted">

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { headers } from "next/headers";
 import { ThemePicker } from "./ThemePicker";
 import { CalendarLink } from "./CalendarLink";
@@ -25,7 +25,7 @@ async function Account() {
   const row = "press flex h-14 items-center justify-between px-4 text-[15px] font-medium text-ink transition-colors hover:bg-bg";
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="My settings" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="My settings" isOwner={isOwner} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-4">
         <CalendarLink host={host} initial={(feed?.token as string) ?? null} />
         <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4">

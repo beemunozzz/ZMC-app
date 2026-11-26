@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ROLE_LABEL, type CrewMember } from "@/lib/crew-types";
+import { ROLE_LABEL, roleLabel, type CrewMember } from "@/lib/crew-types";
 import { telUrl } from "@/lib/jobs";
 import { MemberForm } from "./MemberForm";
 
@@ -42,7 +42,7 @@ export function CrewRow({ member, isMe, hourlyRate }: { member: CrewMember; isMe
           <p className="truncate text-sm text-muted">{member.email ?? member.phone ?? "No contact info"}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="rounded-full bg-bg px-2.5 py-0.5 text-xs font-semibold text-ink">{ROLE_LABEL[member.role]}</span>
+          <span className="rounded-full bg-bg px-2.5 py-0.5 text-xs font-semibold text-ink">{roleLabel(member)}</span>
           <span className={`text-xs font-medium ${status.cls}`}>{status.text}</span>
         </div>
         <span className={`shrink-0 text-lg text-muted transition-transform ${open ? "rotate-90" : ""}`} aria-hidden>

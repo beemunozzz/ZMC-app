@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { fmtShort } from "@/lib/dates";
 import { money } from "@/lib/pricing";
 import { QUOTE_COLUMNS, QUOTE_STATUS, type Quote } from "@/lib/quotes";
@@ -49,7 +49,7 @@ async function Quotes() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Quotes" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Quotes" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         <Link href="/quotes/new" className="press flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-white dark:text-navy">
           + New quote request

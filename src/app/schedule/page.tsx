@@ -7,7 +7,7 @@ import { JobCard } from "@/components/JobCard";
 import { NextJob } from "@/components/NextJob";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import {
   DAY_SHORT,
   addDays,
@@ -23,7 +23,7 @@ import {
   mondayOf,
   todayISO,
 } from "@/lib/dates";
-import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, type Job } from "@/lib/jobs";
+import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
 import { WX_EMOJI, WX_LABEL, worse, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
@@ -91,7 +91,8 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
     .lte("job_date", to)
     .order("job_date")
     .order("start_time", { nullsFirst: false });
-  const allJobs = (jobRows ?? []) as Job[];
+  // Crew only ever see their own jobs (the database does this for real crew logins; this covers "View as").
+  const allJobs = isOwner ? ((jobRows ?? []) as Job[]) : visibleToCrew((jobRows ?? []) as Job[], me, today);
   const jobs = who ? allJobs.filter((j) => jobCrew(j).includes(who)) : allJobs;
 
   const href = (p: Partial<{ view: View; date: string; who: string }>) => {
@@ -174,7 +175,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
         title={isOwner ? "Schedule" : crewHome ? "Home" : "My jobs"}
         isOwner={isOwner}
         name={me.full_name}
-        roleLabel={ROLE_LABEL[me.role]}
+        roleLabel={roleLabel(me)}
         newJobHref={`/jobs/new?date=${view === "month" ? (date.slice(0, 7) === today.slice(0, 7) ? today : firstOfMonth(date)) : date}`}
         preview={isOwner ? { options: crew.map((c) => ({ id: c.id, name: c.full_name })), current: who, hrefFor: previewHrefs } : undefined}
       />

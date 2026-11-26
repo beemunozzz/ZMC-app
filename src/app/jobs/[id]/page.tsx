@@ -7,7 +7,7 @@ import { Avatars } from "@/components/Avatars";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { fmtDayLong, fmtHours } from "@/lib/dates";
 import { WeatherNote } from "@/components/WeatherNote";
 import { MeetUp } from "@/components/MeetUp";
@@ -103,7 +103,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Job" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Job" isOwner={isOwner} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         <Link href={`/schedule?view=week&date=${job.job_date}`} className="flex items-center gap-1 self-start text-sm font-semibold text-primary">
           <Icon name="back" className="h-4 w-4" /> Back to the schedule

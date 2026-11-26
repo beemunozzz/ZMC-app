@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { WeekView } from "@/components/WeekView";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { ALL_WEEK, WEEKDAY_LABEL, WEEKLY_COLUMNS, cleanWeek, currentOf, weekChanges, type WeeklySchedule } from "@/lib/regular";
 import { cancelWeekRequest } from "./actions";
 import { ChangeWeek, WeekForm } from "./WeekForm";
@@ -30,7 +30,7 @@ async function MySchedule() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="My schedule" isOwner={me.role === "owner"} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="My schedule" isOwner={me.role === "owner"} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-4">
         {!week ? (
           <>

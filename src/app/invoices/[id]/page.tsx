@@ -6,7 +6,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { TextLink } from "@/components/TextButtons";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { fmtDayLong } from "@/lib/dates";
 import { INVOICE_COLUMNS, PAY_LABEL, PAY_METHODS, payLink, receiptText, type Invoice, type PayMethod } from "@/lib/invoices";
 import { money, type Prices } from "@/lib/pricing";
@@ -133,7 +133,7 @@ async function InvoiceView({ params, searchParams }: Pick<PageProps<"/invoices/[
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Invoice" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Invoice" isOwner={isOwner} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         <Link href={`/jobs/${inv.job_id}`} className="text-sm font-semibold text-primary">
           ‹ Back to the job

@@ -146,3 +146,23 @@ export function conflicts(j: Job, sameDay: Job[]) {
   }
   return out;
 }
+
+/**
+ * Jobs a crew member can see: ones they're on, and for on-call crew only the day before to the
+ * day after (none while on leave). The database already enforces this for crew logins; this
+ * repeats it so the developer's "View as" preview shows exactly the same thing.
+ */
+export function visibleToCrew<T extends Pick<Job, "job_date" | "lead_id" | "crew_ids">>(
+  jobs: T[],
+  me: { id: string; employment?: string },
+  today: string,
+): T[] {
+  if (me.employment === "leave") return [];
+  const d = new Date(today + "T00:00:00Z");
+  const shift = (n: number) => new Date(d.getTime() + n * 86_400_000).toISOString().slice(0, 10);
+  return jobs.filter(
+    (j) =>
+      (j.lead_id === me.id || j.crew_ids.includes(me.id)) &&
+      (me.employment !== "on_call" || (j.job_date >= shift(-1) && j.job_date <= shift(1))),
+  );
+}

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { EMPLOYMENT, ROLE_LABEL, requireMember, type Employment } from "@/lib/crew";
+import { EMPLOYMENT, ROLE_LABEL, roleLabel, requireMember, type Employment } from "@/lib/crew";
 import { addDays, fmtShort, isISODate, mondayOf, todayISO } from "@/lib/dates";
 import { money } from "@/lib/pricing";
 import { getClockInEnabled } from "@/lib/settings";
@@ -48,12 +48,12 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
   const enabled = await getClockInEnabled(supabase);
 
   const [{ data: crewRows }, { data: payRows }, { data: entryRows }, { data: openRows }] = await Promise.all([
-    supabase.from("crew_members").select("id, full_name, role, active, employment, phone").order("full_name"),
+    supabase.from("crew_members").select("id, full_name, role, active, employment, phone, is_dev").order("full_name"),
     supabase.from("crew_pay").select("crew_id, hourly_rate, terminated_at"),
     supabase.from("time_entries").select(TIME_COLUMNS).gte("clock_in", start).lt("clock_in", end).order("clock_in"),
     supabase.from("time_entries").select(TIME_COLUMNS).is("clock_out", null),
   ]);
-  const crew = (crewRows ?? []) as { id: string; full_name: string; role: keyof typeof ROLE_LABEL; active: boolean; employment: Employment; phone: string | null }[];
+  const crew = (crewRows ?? []) as { id: string; full_name: string; role: keyof typeof ROLE_LABEL; active: boolean; employment: Employment; phone: string | null; is_dev?: boolean }[];
   const terminatedIds = new Set((payRows ?? []).filter((r) => r.terminated_at).map((r) => r.crew_id as string));
   const names = new Map(crew.map((c) => [c.id, c.full_name]));
   const setup = await setupForAll(supabase, crew.filter((c) => c.role !== "owner"));
@@ -83,7 +83,7 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Payroll" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Payroll" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         {/* The on/off switch */}
         <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4">
@@ -131,7 +131,7 @@ async function Payroll({ searchParams }: Pick<PageProps<"/payroll">, "searchPara
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-semibold text-ink">{c.full_name}</span>
                         <span className="block truncate text-xs text-muted">
-                          {ROLE_LABEL[c.role]} · {r != null ? `${money(r)}/hr` : "No pay rate"}
+                          {roleLabel(c)} · {r != null ? `${money(r)}/hr` : "No pay rate"}
                           {(() => {
                             const st = setup.get(c.id);
                             return st && !gone ? (

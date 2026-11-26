@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember, type Role } from "@/lib/crew";
+import { roleLabel, requireMember, type Role } from "@/lib/crew";
 import { JOB_COLUMNS, type Job } from "@/lib/jobs";
 import { JobForm } from "../../JobForm";
 import { loadAvailability } from "@/lib/availability";
@@ -30,7 +30,7 @@ async function EditJob({ params }: Pick<PageProps<"/jobs/[id]/edit">, "params">)
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Edit job" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Edit job" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto w-full max-w-3xl px-4 pt-4">
         <JobForm job={job as Job} crew={(crew ?? []) as { id: string; full_name: string; role: Role }[]} defaultDate={(job as Job).job_date} avail={avail} />
       </main>

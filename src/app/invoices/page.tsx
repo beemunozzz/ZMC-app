@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { PAY_LABEL, type PayMethod } from "@/lib/invoices";
 import { money } from "@/lib/pricing";
 
@@ -56,7 +56,7 @@ async function Invoices() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Invoices" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Invoices" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-line bg-card p-4">

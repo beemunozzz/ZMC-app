@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
+import { Suspense } from "react";
+import { DevBar } from "@/components/dev/DevBar";
 import "./globals.css";
 import "./look-depth.css"; // the "depth" look (shadows, glass header, glowing buttons); on via data-look="depth" below
 
@@ -32,7 +34,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Developer "View as" bar (only Brandon sees it) */}
+        <Suspense fallback={null}>
+          <DevBar />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

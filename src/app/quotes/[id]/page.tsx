@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { QUOTE_COLUMNS, QUOTE_STATUS, type Quote } from "@/lib/quotes";
 import { getPrices } from "@/lib/settings";
 import { QuoteForm } from "../QuoteForm";
@@ -32,7 +32,7 @@ async function QuoteView({ params, searchParams }: Pick<PageProps<"/quotes/[id]"
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Quote" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Quote" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 pt-4">
         <Link href="/quotes" className="text-sm font-semibold text-primary">
           ‹ All quotes

@@ -6,8 +6,9 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { WeatherNote } from "@/components/WeatherNote";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { DAY_SHORT, ZMC_TZ, addDays, minutes as minutesOf, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
+import { visibleToCrew } from "@/lib/jobs";
 import { JOB_COLUMNS, cityOf, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
 import { money } from "@/lib/pricing";
 import type { QuoteStatus } from "@/lib/quotes";
@@ -43,8 +44,9 @@ async function Home() {
     // On leave: home screen only. On call: home screen unless a job is in their window (day before to day after).
     if (me.employment === "leave") return <LimitedHome me={me} kind="leave" phone={(await getPrices(supabase)).business_phone} setup={await setupFor(supabase, me)} />;
     if (me.employment === "on_call") {
-      const { data: visible } = await supabase.from("jobs").select("id").neq("status", "canceled").limit(1);
-      if (!visible?.length) return <LimitedHome me={me} kind="on_call" phone={(await getPrices(supabase)).business_phone} setup={await setupFor(supabase, me)} />;
+      const { data: rows } = await supabase.from("jobs").select("id, job_date, lead_id, crew_ids").neq("status", "canceled").gte("job_date", addDays(todayISO(), -1));
+      const visible = visibleToCrew((rows ?? []) as Pick<Job, "job_date" | "lead_id" | "crew_ids">[], me, todayISO());
+      if (!visible.length) return <LimitedHome me={me} kind="on_call" phone={(await getPrices(supabase)).business_phone} setup={await setupFor(supabase, me)} />;
     }
     redirect("/schedule"); // crew home: checklist, next job, coming up, shortcuts
   }
@@ -199,7 +201,7 @@ async function Home() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Home" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} newJobHref={`/jobs/new?date=${today}`} />
+      <AppHeader title="Home" isOwner name={me.full_name} roleLabel={roleLabel(me)} newJobHref={`/jobs/new?date=${today}`} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
         {/* Today: the one thing that matters now, on the navy band */}

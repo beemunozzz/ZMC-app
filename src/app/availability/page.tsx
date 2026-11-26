@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { TIME_OFF_COLUMNS, timeOffText, type TimeOff } from "@/lib/availability";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { fmtDay, todayISO } from "@/lib/dates";
 import { cancelTimeOff } from "./actions";
 import { TimeOffForm } from "./TimeOffForm";
@@ -36,7 +36,7 @@ async function Availability() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="My time off" isOwner={me.role === "owner"} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="My time off" isOwner={me.role === "owner"} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-4">
         <p className="text-sm text-muted">Tell Zach ahead of time when you can&apos;t work, so he doesn&apos;t put you on those jobs.</p>
         <TimeOffForm today={today} />

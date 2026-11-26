@@ -1,5 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
-import { ROLE_LABEL, type CrewMember } from "@/lib/crew-types";
+import { roleLabel, type CrewMember } from "@/lib/crew-types";
 import { telUrl } from "@/lib/jobs";
 import type { SetupItem } from "@/lib/setup";
 import { CrewShortcuts, SetupChecklist } from "./CrewSetup";
@@ -9,7 +9,7 @@ export function LimitedHome({ me, kind, phone, setup }: { me: CrewMember; kind: 
   const first = me.full_name.split(" ")[0];
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Home" isOwner={false} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Home" isOwner={false} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 py-6">
         <section className="rounded-2xl border border-line bg-card p-5">
           <h1 className="font-display text-3xl font-extrabold uppercase leading-tight text-ink">Hi {first}</h1>

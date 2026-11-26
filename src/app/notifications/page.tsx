@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { ToggleRow } from "@/components/Toggle";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { pushReady, vapidPublicKey } from "@/lib/push";
 import { setNightBefore } from "./actions";
 import { EnablePush } from "./EnablePush";
@@ -26,7 +26,7 @@ async function Notifications() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Notifications" isOwner={isOwner} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Notifications" isOwner={isOwner} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-4">
         <EnablePush publicKey={pushReady() ? vapidPublicKey() : ""} />
 

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { PageLoading } from "@/components/PageLoading";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
-import { ROLE_LABEL, requireMember, type CrewMember } from "@/lib/crew";
+import { roleLabel, requireMember, type CrewMember } from "@/lib/crew";
 import { CrewRow } from "./CrewRow";
 import { MemberForm } from "./MemberForm";
 
@@ -22,7 +22,7 @@ async function TeamPageContent() {
 
   const { data } = await supabase
     .from("crew_members")
-    .select("id, user_id, email, full_name, phone, role, active")
+    .select("id, user_id, email, full_name, phone, role, active, is_dev")
     .returns<CrewMember[]>();
 
   // Pay rates: owner-only table.
@@ -35,7 +35,7 @@ async function TeamPageContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="Crew" isOwner name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="Crew" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
         <section>

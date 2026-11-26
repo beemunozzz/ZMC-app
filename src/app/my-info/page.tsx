@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { ROLE_LABEL, requireMember } from "@/lib/crew";
+import { roleLabel, requireMember } from "@/lib/crew";
 import { PROFILE_COLUMNS, type Profile } from "@/lib/setup";
 import { InfoForm } from "./InfoForm";
 
@@ -21,7 +21,7 @@ async function MyInfo() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader title="My info" isOwner={me.role === "owner"} name={me.full_name} roleLabel={ROLE_LABEL[me.role]} />
+      <AppHeader title="My info" isOwner={me.role === "owner"} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-4">
         <InfoForm phone={me.phone ?? ""} profile={(data ?? null) as Profile | null} />
       </main>
