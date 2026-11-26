@@ -1,14 +1,33 @@
-// ZMC pricing rules. Every number comes from the Settings page (the `settings` table),
+// ZMC pricing rules (Dec 2026). Every number comes from the Prices page (the `settings` table),
 // so Zach can change prices without touching code. Safe to use on the server and the phone.
+//
+// Customer pricing:
+// - Labor only (customer's truck): rate per mover per hour (default $75).
+// - All-inclusive (2 movers + our 26' truck): one hourly rate ($195 local, $215 when the pickup is
+//   far_miles+ from the shop). Extra movers add the per-mover rate. Gas and mileage included.
+// - 3-hour minimum. The clock runs from arrival at the first address to the end of unloading.
+// - Travel (shop -> first pickup + last drop-off -> shop, by drive TIME): under 2 h free;
+//   2 to under 3 h = 1 extra hour per mover; 3 h+ = half the travel time per mover.
+// - Overtime: billed hours past the 8th are paid at 1.5x the labor part of the rate.
+// - Flat rate (owner's choice for long days): see flatRate().
+//
+// The old rules ($65/hr, 2-hour minimum, 25 free miles, $1/mile truck) are no longer used.
 
 export type Prices = {
-  rate: number; // $ per mover per hour
+  rate: number; // $ per mover per hour (labor only, extra movers, and the floor)
   min_hours: number; // billed hours are never less than this
   min_movers: number;
-  trip_free_miles: number; // shop -> pickup + drop-off -> shop, free up to this
-  trip_step_miles: number; // then charge for every this-many miles (or part)
-  trip_step_hours: number; // ...this many hours per mover
-  truck_per_mile: number; // only when ZMC brings the truck; all truck miles
+  allin_rate: number; // all-inclusive: movers included + our truck, per hour, local
+  allin_far_rate: number; // ...when the pickup is far_miles or more from the shop
+  far_miles: number;
+  allin_movers: number; // movers included in the all-inclusive rate
+  travel_free_hours: number; // total travel under this: no charge
+  travel_mid_hours: number; // from free_hours to under this: travel_mid_charge hours per mover
+  travel_mid_charge: number;
+  travel_long_share: number; // at mid_hours or more: this share of the travel time per mover
+  long_day_hours: number; // longer than this = long day (flag; overtime after this many billed hours)
+  ot_multiplier: number; // overtime pay on the labor part of the rate
+  long_day_bonus: number; // flat rate: bonus per mover on long days
   materials: number; // per job, quotes only
   water: number; // per job, quotes only
   nte_cushion_hours: number; // suggested not-to-exceed = estimate + this many hours
@@ -21,13 +40,20 @@ export type Prices = {
 };
 
 export const DEFAULT_PRICES: Prices = {
-  rate: 65,
-  min_hours: 2,
+  rate: 75,
+  min_hours: 3,
   min_movers: 2,
-  trip_free_miles: 25,
-  trip_step_miles: 25,
-  trip_step_hours: 0.5,
-  truck_per_mile: 1,
+  allin_rate: 195,
+  allin_far_rate: 215,
+  far_miles: 45,
+  allin_movers: 2,
+  travel_free_hours: 2,
+  travel_mid_hours: 3,
+  travel_mid_charge: 1,
+  travel_long_share: 0.5,
+  long_day_hours: 8,
+  ot_multiplier: 1.5,
+  long_day_bonus: 100,
   materials: 20,
   water: 5,
   nte_cushion_hours: 1,
@@ -40,43 +66,92 @@ export const DEFAULT_PRICES: Prices = {
 };
 
 export const PRICE_COLUMNS =
-  "rate, min_hours, min_movers, trip_free_miles, trip_step_miles, trip_step_hours, truck_per_mile, materials, water, nte_cushion_hours, business_phone, expect_url, zelle, cashapp, venmo, apple_cash";
+  "rate, min_hours, min_movers, allin_rate, allin_far_rate, far_miles, allin_movers, travel_free_hours, travel_mid_hours, travel_mid_charge, travel_long_share, long_day_hours, ot_multiplier, long_day_bonus, materials, water, nte_cushion_hours, business_phone, expect_url, zelle, cashapp, venmo, apple_cash";
 
 export type QuoteInputs = {
   movers: number | string | null;
+  /** Hours on the clock: arrival at the first address to the end of unloading (drive between addresses included). */
   est_hours: number | string | null;
   miles_out: number | string | null;
   miles_between: number | string | null;
   miles_back: number | string | null;
   truck: "ours" | "theirs";
+  /** Drive time, shop -> first pickup (minutes). */
+  drive_out_min?: number | string | null;
+  /** Drive time, last drop-off -> shop (minutes). */
+  drive_back_min?: number | string | null;
 };
 
 const num = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/** Travel charge: hours per mover for a total travel time (hours). */
+export function travelHoursPerMover(travelHours: number, s: Prices) {
+  if (travelHours < s.travel_free_hours) return 0;
+  if (travelHours < s.travel_mid_hours) return s.travel_mid_charge;
+  return round2(travelHours * s.travel_long_share);
+}
+
+/** Hourly price. `extraHours` adds hours on the clock (used for the not-to-exceed cushion). */
 export function priceQuote(q: QuoteInputs, s: Prices, extraHours = 0) {
   const movers = Math.max(s.min_movers, Math.round(num(q.movers)) || s.min_movers);
   const hours = Math.max(s.min_hours, num(q.est_hours) + extraHours);
-  const out = num(q.miles_out);
-  const between = num(q.miles_between);
-  const back = num(q.miles_back);
+  const allIn = q.truck !== "theirs";
+  const far = allIn && num(q.miles_out) >= s.far_miles;
 
-  const labor = movers * hours * s.rate;
+  // The hourly rate for the whole crew.
+  const baseRate = far ? s.allin_far_rate : s.allin_rate;
+  const extraMovers = allIn ? Math.max(0, movers - s.allin_movers) : 0;
+  const hourlyRate = allIn ? baseRate + extraMovers * s.rate : movers * s.rate;
+  /** The part of an all-inclusive hour that pays for the truck (customer side). */
+  const truckPerHour = allIn ? Math.max(0, hourlyRate - movers * s.rate) : 0;
 
-  const tripMiles = out + back;
-  const tripSteps = tripMiles <= s.trip_free_miles ? 0 : Math.ceil((tripMiles - s.trip_free_miles) / s.trip_step_miles);
-  const tripHoursPerMover = tripSteps * s.trip_step_hours;
-  const trip = tripHoursPerMover * movers * s.rate;
+  // Overtime: billed hours past long_day_hours pay ot_multiplier on the labor part.
+  const regularHours = Math.min(hours, s.long_day_hours);
+  const otHours = Math.max(0, hours - s.long_day_hours);
+  const otRate = hourlyRate + (s.ot_multiplier - 1) * movers * s.rate;
+  const clock = round2(hourlyRate * regularHours + otRate * otHours);
 
-  const truckMiles = out + between + back;
-  const truck = q.truck === "theirs" ? 0 : truckMiles * s.truck_per_mile;
+  // Travel time to and from the shop.
+  const driveOut = num(q.drive_out_min);
+  const driveBack = num(q.drive_back_min);
+  const travelHours = round2((driveOut + driveBack) / 60);
+  const travelPerMover = travelHoursPerMover(travelHours, s);
+  const travel = round2(travelPerMover * movers * s.rate);
 
+  const dayHours = round2(hours + travelHours);
+  const longDay = dayHours > s.long_day_hours;
   const supplies = s.materials + s.water;
-  const total = labor + trip + truck + supplies;
+  const total = round2(clock + travel + supplies);
+  const truckMiles = num(q.miles_out) + num(q.miles_between) + num(q.miles_back);
 
-  return { movers, hours, labor, tripMiles, tripSteps, tripHoursPerMover, trip, truckMiles, truck, supplies, total };
+  return {
+    movers,
+    hours,
+    allIn,
+    far,
+    hourlyRate,
+    truckPerHour,
+    regularHours,
+    otHours,
+    otRate,
+    clock,
+    travelHours,
+    travelPerMover,
+    travel,
+    dayHours,
+    longDay,
+    supplies,
+    total,
+    truckMiles,
+    // Older names, still used by saved invoices: labor = time on the clock, trip = travel, truck = 0 (included).
+    labor: clock,
+    trip: travel,
+    truck: 0,
+  };
 }
 
 /** Estimate plus the cushion hours, rounded up to the next $10. */
@@ -84,16 +159,51 @@ export function suggestedNte(q: QuoteInputs, s: Prices) {
   return Math.ceil(priceQuote(q, s, s.nte_cushion_hours).total / 10) * 10;
 }
 
+/**
+ * Flat rate for long days: all day hours (clock + travel) x movers x the floor rate,
+ * + the long-day bonus per mover, + our truck cost, then the profit margin. Rounded up to $10.
+ */
+export function flatRate(q: QuoteInputs, s: Prices, truckCost: number, margin: number) {
+  const p = priceQuote(q, s);
+  const labor = round2(p.dayHours * p.movers * s.rate);
+  const bonus = p.longDay ? p.movers * s.long_day_bonus : 0;
+  const truck = p.allIn ? truckCost : 0;
+  const subtotal = round2(labor + bonus + truck);
+  const marginAmount = round2(subtotal * margin);
+  const total = Math.ceil((subtotal + marginAmount) / 10) * 10;
+  return { dayHours: p.dayHours, movers: p.movers, labor, bonus, truck, subtotal, margin, marginAmount, total };
+}
+
 export const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+
+/** "1 h 05 min" from hours. */
+export const fmtDuration = (h: number) => {
+  const m = Math.round(h * 60);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${String(m % 60).padStart(2, "0")} min` : ""}`;
+};
+
+/** Typed drive time -> minutes. Accepts "45", "1:30", "1.5h", "1 h 30", "90 min". Empty or bad = null. */
+export function parseDrive(raw: string): number | null {
+  const t = raw.trim().toLowerCase();
+  if (!t) return null;
+  let m = t.match(/^(\d+):(\d{1,2})$/);
+  if (m) return Number(m[1]) * 60 + Number(m[2]);
+  m = t.match(/^(\d+(?:\.\d+)?)\s*h(?:rs?|ours?)?\s*(?:(\d+)\s*m(?:in)?)?$/);
+  if (m) return Math.round(Number(m[1]) * 60 + Number(m[2] ?? 0));
+  m = t.match(/^(\d+(?:\.\d+)?)\s*(?:m|min|mins|minutes)?$/);
+  if (m) return Math.round(Number(m[1]));
+  return null;
+}
 
 export const REFER_ITEMS = /piano|hot ?tub|jacuzzi|spa tub/i;
 
 /**
- * Invoice math. Same labor, trip and truck rules as quotes, but no materials, water or extra lines.
- * (How the trip charge and truck miles should show on invoices is still to be confirmed with Zach.)
+ * Invoice math: the same hourly and travel rules, but no materials, water or extra lines.
+ * A job booked at a flat rate is billed at that flat rate.
  */
-export function priceInvoice(q: QuoteInputs, s: Prices) {
+export function priceInvoice(q: QuoteInputs, s: Prices, flatPrice?: number | null) {
   const p = priceQuote(q, s);
-  return { ...p, supplies: 0, total: p.labor + p.trip + p.truck };
+  if (flatPrice != null && flatPrice > 0) return { ...p, supplies: 0, clock: flatPrice, labor: flatPrice, travel: 0, trip: 0, total: flatPrice, flat: true as const };
+  return { ...p, supplies: 0, total: round2(p.clock + p.travel), flat: false as const };
 }

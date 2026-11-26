@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/crew";
 import { isISODate } from "@/lib/dates";
 import { HOUSE_FIELDS, JOB_TYPES, type House } from "@/lib/jobs";
-import { priceQuote, suggestedNte } from "@/lib/pricing";
+import { flatRate, parseDrive, priceQuote, suggestedNte } from "@/lib/pricing";
 import type { QuoteStatus } from "@/lib/quotes";
-import { getPrices } from "@/lib/settings";
+import { getOwnerCosts, getPrices } from "@/lib/settings";
+import { truckCost, type TruckChoices } from "@/lib/truck-cost";
 
 export type QuoteFormState = { error?: string; ok?: string };
 
@@ -45,6 +46,22 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
   const miles_between = numOrNull(form, "miles_between");
   const miles_back = numOrNull(form, "miles_back");
   let nte = numOrNull(form, "nte");
+  const driveOutRaw = text(form, "drive_out", 12);
+  const driveBackRaw = text(form, "drive_back", 12);
+  const drive_out_min = parseDrive(driveOutRaw);
+  const drive_back_min = parseDrive(driveBackRaw);
+  if (driveOutRaw && drive_out_min == null) return { error: "Drive time to the pickup: type minutes (45) or hours and minutes (1:30)." };
+  if (driveBackRaw && drive_back_min == null) return { error: "Drive time back to the shop: type minutes (45) or hours and minutes (1:30)." };
+  const pricing = text(form, "pricing", 8) === "flat" ? "flat" : "hourly";
+  // The owner's "Our truck cost" choices (owner-only; saved with the quote, never shown to customers).
+  const tc: TruckChoices = {
+    miles: Number(text(form, "tc_miles", 8)) || 0,
+    days: Math.max(1, Math.round(Number(text(form, "tc_days", 3)) || 1)),
+    type: text(form, "tc_type", 8) === "oneway" ? "oneway" : "round",
+    oneway_price: Number(text(form, "tc_oneway", 10)) || 0,
+    fuel: text(form, "tc_fuel", 10) === "diesel" ? "diesel" : "unleaded",
+    follow_miles: Number(text(form, "tc_follow", 8)) || 0,
+  };
 
   if (!customer_name) return { error: "Add the customer's name." };
   if (move_date && !isISODate(move_date)) return { error: "That move date doesn't look right." };
@@ -62,13 +79,17 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
   }
 
   const prices = await getPrices(supabase);
-  const inputs = { movers, est_hours, miles_out, miles_between, miles_back, truck } as const;
+  const inputs = { movers, est_hours, miles_out, miles_between, miles_back, truck, drive_out_min, drive_back_min } as const;
   const price = priceQuote(inputs, prices);
+  const costs = await getOwnerCosts(supabase);
+  const flat = flatRate(inputs, prices, truck === "ours" ? truckCost({ ...tc, miles: tc.miles || price.truckMiles }, costs).total : 0, costs.flat_margin);
+  const flat_price = pricing === "flat" ? flat.total : null;
+  const total = pricing === "flat" ? flat.total : price.total;
 
   if (intent === "book") {
     if (!move_date) return { error: "Add a move date before booking." };
-    if (nte == null) nte = suggestedNte(inputs, prices);
-    if (nte < price.total) return { error: "The not-to-exceed price is lower than the estimate. Raise it before booking." };
+    if (nte == null) nte = pricing === "flat" ? flat.total : suggestedNte(inputs, prices);
+    if (nte < total) return { error: "The not-to-exceed price is lower than the estimate. Raise it before booking." };
     status = "booked";
   }
 
@@ -93,8 +114,13 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
     miles_out,
     miles_between,
     miles_back,
-    quote_total: price.total,
+    quote_total: total,
     nte,
+    drive_out_min,
+    drive_back_min,
+    pricing,
+    flat_price,
+    truck_cost: tc,
   };
 
   let quoteId = id;
@@ -142,7 +168,8 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
     .single();
   if (jobError) return { error: `The quote saved, but the job couldn't be made: ${jobError.message}` };
   // Copy the miles so the invoice can fill them in (ignored if the invoices setup hasn't run yet).
-  await supabase.from("jobs").update({ miles_out, miles_between, miles_back }).eq("id", job.id);
+  // Copy the miles, drive times and any flat price so the invoice can use them.
+  await supabase.from("jobs").update({ miles_out, miles_between, miles_back, drive_min: drive_out_min, drive_back_min, flat_price }).eq("id", job.id);
 
   await supabase.from("quotes").update({ status: "booked", job_id: job.id }).eq("id", quoteId);
   redirect(`/jobs/${job.id}?booked=1`);

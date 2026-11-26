@@ -9,34 +9,45 @@ const input =
 
 type Field = { key: keyof Prices; label: string; help?: string; prefix?: string; suffix?: string; step?: number };
 
-const GROUPS: { title: string; fields: Field[] }[] = [
+const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   {
-    title: "Labor",
+    title: "Hourly rates",
+    note: "The clock runs from arrival at the first address until unloading is done at the last one. The drive between the customer's addresses is on the clock.",
     fields: [
-      { key: "rate", label: "Rate", prefix: "$", suffix: "per mover per hour", step: 1 },
-      { key: "min_hours", label: "Minimum hours", suffix: "hours", help: "Billed hours are never less than this.", step: 0.5 },
-      { key: "min_movers", label: "Minimum movers", suffix: "movers", step: 1 },
+      { key: "rate", label: "Labor only (customer's truck)", prefix: "$", suffix: "per mover per hour", help: "Also the price of each extra mover, and the lowest labor pay per mover-hour for a whole day (the floor).", step: 1 },
+      { key: "allin_rate", label: "All-inclusive (movers + our 26' truck)", prefix: "$", suffix: "per hour, local", help: "Gas and mileage included.", step: 1 },
+      { key: "allin_far_rate", label: "All-inclusive, far pickup", prefix: "$", suffix: "per hour", step: 1 },
+      { key: "far_miles", label: "Far pickup means", suffix: "miles or more from the shop", step: 1 },
+      { key: "allin_movers", label: "Movers included in the all-inclusive rate", suffix: "movers", step: 1 },
+      { key: "min_hours", label: "Minimum", suffix: "hours", help: "Billed hours are never less than this.", step: 0.5 },
+      { key: "min_movers", label: "Quotes start with", suffix: "movers", step: 1 },
     ],
   },
   {
-    title: "Trip charge",
+    title: "Travel time (to and from the shop)",
+    note: "Drive time from the shop to the first pickup plus from the last drop-off back to the shop.",
     fields: [
-      { key: "trip_free_miles", label: "Free miles", suffix: "miles", help: "Shop → pickup plus drop-off → shop, added together.", step: 1 },
-      { key: "trip_step_miles", label: "Then, for every", suffix: "miles (or part of it)", step: 1 },
-      { key: "trip_step_hours", label: "Add", suffix: "hours per mover", step: 0.25 },
+      { key: "travel_free_hours", label: "No charge under", suffix: "hours total", step: 0.25 },
+      { key: "travel_mid_hours", label: "From there up to", suffix: "hours total…", step: 0.25 },
+      { key: "travel_mid_charge", label: "…add", suffix: "hours per mover", step: 0.25 },
+      { key: "travel_long_share", label: "At or over that: charge this share of the travel time", suffix: "per mover (0.5 = half)", step: 0.05 },
     ],
   },
   {
-    title: "Truck and supplies",
+    title: "Long days",
     fields: [
-      { key: "truck_per_mile", label: "Truck, when we bring ours", prefix: "$", suffix: "per mile (all truck miles)", step: 0.25 },
+      { key: "long_day_hours", label: "A long day is more than", suffix: "hours (on the clock + travel)", help: "Long days are flagged, and a flat rate is suggested.", step: 0.5 },
+      { key: "ot_multiplier", label: "Overtime after that many billed hours", suffix: "× the labor rate (1.5 = time and a half)", step: 0.1 },
+      { key: "long_day_bonus", label: "Flat rate: long-day bonus", prefix: "$", suffix: "per mover", step: 5 },
+    ],
+  },
+  {
+    title: "Supplies and not-to-exceed",
+    fields: [
       { key: "materials", label: "Materials", prefix: "$", suffix: "per job (quotes only)", step: 1 },
       { key: "water", label: "Crew water", prefix: "$", suffix: "per job (quotes only)", step: 1 },
+      { key: "nte_cushion_hours", label: "Suggested not-to-exceed cushion", suffix: "extra hours on top of the estimate", step: 0.5 },
     ],
-  },
-  {
-    title: "Not-to-exceed price",
-    fields: [{ key: "nte_cushion_hours", label: "Suggested cushion", suffix: "extra hours on top of the estimate", step: 0.5 }],
   },
 ];
 
@@ -48,15 +59,16 @@ export function PricesForm({ prices }: { prices: Prices }) {
   const live: Prices = {
     ...prices,
     ...Object.fromEntries(Object.entries(v).map(([k, val]) => [k, typeof prices[k as keyof Prices] === "string" ? val : Number(val) || 0])),
-    trip_step_miles: Number(v.trip_step_miles) || 1,
   };
-  const ex = priceQuote({ movers: 2, est_hours: 4, miles_out: 15, miles_between: 12, miles_back: 20, truck: "ours" }, live);
+  const ex = priceQuote({ movers: 2, est_hours: 4, miles_out: 10, miles_between: 15, miles_back: 12, truck: "ours", drive_out_min: 20, drive_back_min: 20 }, live);
+  const exTheirs = priceQuote({ movers: 2, est_hours: 4, miles_out: 10, miles_between: 15, miles_back: 12, truck: "theirs", drive_out_min: 20, drive_back_min: 20 }, live);
 
   return (
     <form action={action} className="flex flex-col gap-4 pb-6">
       {GROUPS.map((g) => (
         <section key={g.title} className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4">
           <h2 className="font-display text-lg font-extrabold uppercase text-ink">{g.title}</h2>
+          {g.note && <p className="-mt-1 text-xs text-muted">{g.note}</p>}
           {g.fields.map((f) => (
             <label key={f.key} className="flex flex-col gap-1 text-sm font-medium text-ink">
               {f.label}
@@ -128,11 +140,15 @@ export function PricesForm({ prices }: { prices: Prices }) {
 
       <section className="rounded-2xl bg-tape/15 p-4 text-sm text-ink">
         <p className="font-semibold">Example with these prices</p>
-        <p className="mt-1 text-muted">2 movers, 4 hours, our truck, 15 mi to pickup, 12 mi between, 20 mi back:</p>
+        <p className="mt-1 text-muted">A local 4-hour move, 2 movers, 20 minutes each way from the shop:</p>
         <p className="mt-2 tabular-nums">
-          Labor {money(ex.labor)} · Trip {money(ex.trip)} · Truck {money(ex.truck)} · Supplies {money(ex.supplies)}
+          Our truck: {money(ex.hourlyRate)}/hr × {ex.hours} hrs = {money(ex.clock)} + supplies {money(ex.supplies)} ={" "}
+          <b>{money(ex.total)}</b>
         </p>
-        <p className="mt-1 font-display text-2xl font-extrabold tabular-nums">= {money(ex.total)}</p>
+        <p className="mt-1 tabular-nums">
+          Their truck: {money(exTheirs.hourlyRate)}/hr × {exTheirs.hours} hrs = {money(exTheirs.clock)} + supplies {money(exTheirs.supplies)} ={" "}
+          <b>{money(exTheirs.total)}</b>
+        </p>
       </section>
 
       {state.error && (

@@ -25,7 +25,7 @@ export async function createInvoice(_: InvoiceFormState, form: FormData): Promis
 
   const jobId = text(form, "job_id", 40);
   if (!UUID.test(jobId)) return { error: "Job not found." };
-  const { data: job } = await supabase.from("jobs").select("id, lead_id, customer_name, customer_phone, nte, status").eq("id", jobId).maybeSingle();
+  const { data: job } = await supabase.from("jobs").select("id, lead_id, customer_name, customer_phone, nte, status, drive_min, drive_back_min, flat_price").eq("id", jobId).maybeSingle();
   if (!job) return { error: "Job not found." };
   if (me.role !== "owner" && job.lead_id !== me.id) return { error: "Only Zach or this job's crew lead can invoice it." };
   if (job.status === "canceled") return { error: "This job is canceled." };
@@ -55,7 +55,11 @@ export async function createInvoice(_: InvoiceFormState, form: FormData): Promis
   if (!METHODS.includes(method)) return { error: "Pick how the customer is paying." };
 
   const prices = await getPrices(supabase);
-  const p = priceInvoice({ movers, est_hours: hours, miles_out, miles_between, miles_back, truck }, prices);
+  const p = priceInvoice(
+    { movers, est_hours: hours, miles_out, miles_between, miles_back, truck, drive_out_min: job.drive_min, drive_back_min: job.drive_back_min },
+    prices,
+    job.flat_price != null ? Number(job.flat_price) : null,
+  );
   if (p.total > nteIn) {
     return { error: `The total (${p.total.toFixed(2)}) is over the not-to-exceed price (${nteIn.toFixed(2)}). By law the bill can't go over it. Lower the hours or charges.` };
   }

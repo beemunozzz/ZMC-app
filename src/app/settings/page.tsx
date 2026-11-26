@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
 import { roleLabel, requireMember } from "@/lib/crew";
-import { getPrices } from "@/lib/settings";
+import { getOwnerCosts, getPrices } from "@/lib/settings";
+import { OwnerCostsForm } from "./OwnerCostsForm";
 import { PricesForm } from "./PricesForm";
 import { MeetForm } from "./MeetForm";
 import { LoadListForm } from "./LoadListForm";
@@ -21,7 +22,7 @@ export default function SettingsPage() {
 async function Settings() {
   const { supabase, me } = await requireMember();
   if (!me || me.role !== "owner") redirect("/");
-  const [prices, meet, loadList] = await Promise.all([getPrices(supabase), getMeetSettings(supabase), getLoadList(supabase)]);
+  const [prices, meet, loadList, costs] = await Promise.all([getPrices(supabase), getMeetSettings(supabase), getLoadList(supabase), getOwnerCosts(supabase)]);
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader title="Prices" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
@@ -32,6 +33,7 @@ async function Settings() {
           their price until you open and save them again.
         </p>
         <PricesForm prices={prices} />
+        <OwnerCostsForm costs={costs} />
         <MeetForm shop={meet.shop_address} buffer={meet.meet_buffer_min} />
         <LoadListForm list={loadList} />
       </main>

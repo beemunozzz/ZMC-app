@@ -35,8 +35,15 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
   if (existing) redirect(`/invoices/${existing.id}`);
 
   // Miles were copied from the quote when the job was booked (empty if typed in by hand).
-  const { data: miles } = await supabase.from("jobs").select("miles_out, miles_between, miles_back").eq("id", id).maybeSingle();
-  const m = (miles ?? {}) as { miles_out?: number | null; miles_between?: number | null; miles_back?: number | null };
+  const { data: miles } = await supabase.from("jobs").select("miles_out, miles_between, miles_back, drive_min, drive_back_min, flat_price").eq("id", id).maybeSingle();
+  const m = (miles ?? {}) as {
+    miles_out?: number | null;
+    miles_between?: number | null;
+    miles_back?: number | null;
+    drive_min?: number | null;
+    drive_back_min?: number | null;
+    flat_price?: number | null;
+  };
   const prices = await getPrices(supabase);
   const str = (x: number | null | undefined) => (x == null ? "" : String(x));
 
@@ -85,6 +92,9 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
             miles_out: str(m.miles_out),
             miles_between: str(m.miles_between),
             miles_back: str(m.miles_back),
+            driveOut: m.drive_min ?? null,
+            driveBack: m.drive_back_min ?? null,
+            flatPrice: m.flat_price != null ? Number(m.flat_price) : null,
             nte: job.nte != null ? Number(job.nte) : null,
           }}
         />

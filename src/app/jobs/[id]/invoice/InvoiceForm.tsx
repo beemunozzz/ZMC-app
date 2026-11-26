@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { SignaturePad } from "@/components/SignaturePad";
 import { PAY_METHODS, type PayMethod } from "@/lib/invoices";
-import { money, priceInvoice, type Prices } from "@/lib/pricing";
+import { fmtDuration, money, priceInvoice, type Prices } from "@/lib/pricing";
 import { createInvoice, type InvoiceFormState } from "@/app/invoices/actions";
 
 const input =
@@ -24,6 +24,11 @@ export type InvoiceStart = {
   miles_out: string;
   miles_between: string;
   miles_back: string;
+  /** Drive time shop -> pickup and drop-off -> shop (minutes), from the quote. */
+  driveOut: number | null;
+  driveBack: number | null;
+  /** Booked at a flat rate: the bill is this price. */
+  flatPrice: number | null;
   /** null = the job has no not-to-exceed price yet, so ask for it */
   nte: number | null;
 };
@@ -45,7 +50,7 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
   const [method, setMethod] = useState<PayMethod | "">("");
   const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setV((o) => ({ ...o, [k]: e.target.value }));
 
-  const p = priceInvoice({ ...v, est_hours: v.hours }, prices);
+  const p = priceInvoice({ ...v, est_hours: v.hours, drive_out_min: start.driveOut, drive_back_min: start.driveBack }, prices, start.flatPrice);
   const nte = Number(v.nte) || 0;
   const over = nte > 0 && p.total > nte;
   // The customer verifies the hours. If the hours or movers change afterwards, they need to verify again.
@@ -117,23 +122,29 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
       <section className={section}>
         <h2 className={heading}>Invoice</h2>
         <div className="divide-y divide-line">
-          {line(
+          {p.flat ? (
+            line(<>Flat rate (agreed when booked)</>, p.total)
+          ) : (
             <>
-              Labor · {p.movers} movers × {p.hours} hrs × {money(prices.rate)}
-              {Number(v.hours) < prices.min_hours && <span className="block text-xs text-muted">{prices.min_hours}-hour minimum</span>}
-            </>,
-            p.labor,
+              {line(
+                <>
+                  {p.allIn ? `${p.movers} movers + our truck` : `${p.movers} movers`} · {money(p.hourlyRate)}/hr × {p.regularHours} hrs
+                  {Number(v.hours) < prices.min_hours && <span className="block text-xs text-muted">{prices.min_hours}-hour minimum</span>}
+                </>,
+                p.hourlyRate * p.regularHours,
+              )}
+              {p.otHours > 0 && line(<>Overtime · {money(p.otRate)}/hr × {p.otHours} hrs</>, p.otRate * p.otHours)}
+              {line(
+                <>
+                  Travel time · {fmtDuration(p.travelHours)} to and from the shop
+                  <span className="block text-xs text-muted">
+                    {p.travelPerMover ? `+${p.travelPerMover} hr per mover` : `Free under ${prices.travel_free_hours} hours`}
+                  </span>
+                </>,
+                p.travel,
+              )}
+            </>
           )}
-          {line(
-            <>
-              Trip charge · {p.tripMiles} mi out and back
-              <span className="block text-xs text-muted">
-                {p.tripSteps ? `+${p.tripHoursPerMover} hr per mover (first ${prices.trip_free_miles} mi free)` : `Under ${prices.trip_free_miles} free miles`}
-              </span>
-            </>,
-            p.trip,
-          )}
-          {v.truck === "ours" && line(<>Truck · {p.truckMiles} mi × {money(prices.truck_per_mile)}</>, p.truck)}
         </div>
         <div className="flex items-baseline justify-between border-t-2 border-ink pt-2">
           <span className="font-display text-xl font-extrabold uppercase text-ink">Total</span>

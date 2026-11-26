@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PageLoading } from "@/components/PageLoading";
 import { roleLabel, requireMember } from "@/lib/crew";
-import { getPrices } from "@/lib/settings";
+import { getOwnerCosts, getPrices } from "@/lib/settings";
 import { QuoteForm } from "../QuoteForm";
 
 export default function NewQuotePage() {
@@ -17,12 +17,12 @@ export default function NewQuotePage() {
 async function NewQuote() {
   const { supabase, me } = await requireMember();
   if (!me || me.role !== "owner") redirect("/");
-  const prices = await getPrices(supabase);
+  const [prices, costs] = await Promise.all([getPrices(supabase), getOwnerCosts(supabase)]);
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader title="New quote" isOwner name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <QuoteForm prices={prices} />
+        <QuoteForm prices={prices} costs={costs} />
       </main>
     </div>
   );

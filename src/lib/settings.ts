@@ -1,30 +1,26 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DEFAULT_PRICES, PRICE_COLUMNS, type Prices } from "./pricing";
+import { DEFAULT_PRICES, type Prices } from "./pricing";
+import { COST_KEYS, DEFAULT_COSTS, type OwnerCosts } from "./truck-cost";
 
-// If a newer setup step hasn't been run in Supabase yet, its columns don't exist. Try newest first.
-const COLUMN_SETS = [
-  PRICE_COLUMNS,
-  PRICE_COLUMNS.replace(", zelle, cashapp, venmo, apple_cash", ""), // before step 0005
-  PRICE_COLUMNS.replace(", expect_url, zelle, cashapp, venmo, apple_cash", ""), // before step 0004
-];
-
-/** Zach's current prices and business settings. Falls back to the starting values if not set up yet. */
+/** Zach's current prices and business settings. Falls back to the starting values for anything not set up yet. */
 export async function getPrices(supabase: SupabaseClient): Promise<Prices> {
-  let data: Record<string, unknown> | null = null;
-  for (const cols of COLUMN_SETS) {
-    const res = await supabase.from("settings").select(cols).eq("id", 1).maybeSingle();
-    if (res.data) {
-      data = res.data as unknown as Record<string, unknown>;
-      break;
-    }
-  }
+  // "*" so a setup step that hasn't run yet (missing columns) never breaks this; missing values use the defaults.
+  const { data } = await supabase.from("settings").select("*").eq("id", 1).maybeSingle();
   if (!data) return DEFAULT_PRICES;
   const out = { ...DEFAULT_PRICES };
   for (const k of Object.keys(DEFAULT_PRICES) as (keyof Prices)[]) {
-    const v = data[k];
+    const v = (data as Record<string, unknown>)[k];
     if (v == null) continue;
     (out as Record<string, unknown>)[k] = typeof DEFAULT_PRICES[k] === "string" ? String(v) : Number(v);
   }
+  return out;
+}
+
+/** OWNER ONLY: what things cost us (truck rental, gas, margin). Crew get nothing back from this table. */
+export async function getOwnerCosts(supabase: SupabaseClient): Promise<OwnerCosts> {
+  const { data } = await supabase.from("owner_costs").select("*").eq("id", 1).maybeSingle();
+  const out = { ...DEFAULT_COSTS };
+  if (data) for (const k of COST_KEYS) if ((data as Record<string, unknown>)[k] != null) out[k] = Number((data as Record<string, unknown>)[k]);
   return out;
 }
 

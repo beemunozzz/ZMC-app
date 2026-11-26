@@ -197,9 +197,15 @@ async function InvoiceView({ params, searchParams }: Pick<PageProps<"/invoices/[
             {job?.job_type ? ` · ${job.job_type}` : ""}
           </p>
           <div className="mt-2 divide-y divide-line">
-            {row(<>Labor · {inv.movers} movers × {Number(inv.hours)} hrs × {money(prices.rate)}</>, inv.labor)}
-            {row(<>Trip charge · {(Number(inv.miles_out) || 0) + (Number(inv.miles_back) || 0)} mi out and back</>, inv.trip)}
-            {inv.truck === "ours" && row(<>Truck · {truckMiles} mi</>, inv.truck_charge)}
+            {row(
+              <>
+                {inv.truck === "ours" ? "Movers + our truck" : "Labor"} · {inv.movers} movers · {Number(inv.hours)} hrs
+              </>,
+              inv.labor,
+            )}
+            {Number(inv.trip) > 0 && row(<>Travel time to and from the shop</>, inv.trip)}
+            {/* Invoices made before the Dec 2026 prices had a separate truck charge. */}
+            {Number(inv.truck_charge) > 0 && row(<>Truck · {truckMiles} mi</>, inv.truck_charge)}
           </div>
           <div className="flex items-baseline justify-between border-t-2 border-ink pt-2">
             <span className="font-display text-xl font-extrabold uppercase text-ink">Total</span>

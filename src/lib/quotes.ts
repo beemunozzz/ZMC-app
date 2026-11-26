@@ -31,10 +31,18 @@ export type Quote = {
   nte: number | null;
   job_id: string | null;
   created_at: string;
+  /** Drive time shop -> first pickup and last drop-off -> shop, in minutes. */
+  drive_out_min: number | null;
+  drive_back_min: number | null;
+  /** Hourly, or a flat price (for long days). */
+  pricing: "hourly" | "flat";
+  flat_price: number | null;
+  /** OWNER ONLY: the "Our truck cost" panel's choices (quotes are an owner-only table). */
+  truck_cost: Partial<import("./truck-cost").TruckChoices>;
 };
 
 export const QUOTE_COLUMNS =
-  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at";
+  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost";
 
 export const QUOTE_STATUS: Record<QuoteStatus, { label: string; cls: string }> = {
   new: { label: "New", cls: "bg-warn/12 text-warn" },
@@ -53,22 +61,33 @@ export const HEARD_FROM = [
   "Other",
 ];
 
-/** The ready-to-send reply for the customer. */
+/** The ready-to-send reply for the customer. Never mentions our costs. */
 export function quoteText(
-  q: Pick<Quote, "customer_name" | "move_date" | "start_time" | "truck" | "heavy_items" | "movers" | "est_hours" | "miles_out" | "miles_between" | "miles_back" | "nte">,
+  q: Pick<
+    Quote,
+    "customer_name" | "move_date" | "start_time" | "truck" | "heavy_items" | "movers" | "est_hours" | "miles_out" | "miles_between" | "miles_back" | "nte" | "drive_out_min" | "drive_back_min" | "pricing" | "flat_price"
+  >,
   s: Prices,
 ) {
   const p = priceQuote(q, s);
   const first = q.customer_name.trim().split(/\s+/)[0] || "there";
   const when = q.move_date ? ` on ${fmtDayLong(q.move_date)}${q.start_time ? ` at ${fmtTime(q.start_time)}` : ""}` : "";
   const nte = Number(q.nte) || 0;
+  const flat = q.pricing === "flat" && Number(q.flat_price) > 0;
+  const crew = `${p.movers} movers${p.allIn ? " and our 26' truck" : ""}`;
+  const rateLine = p.allIn
+    ? `Our rate is ${money(p.hourlyRate)} per hour for ${p.movers} movers and the truck, gas and mileage included, with a ${s.min_hours}-hour minimum.`
+    : `Our rate is ${money(s.rate)} per mover per hour with a ${s.min_hours}-hour minimum.`;
   return [
     `Hi ${first}, thanks for reaching out to Zachery's Moving Co.!`,
-    `For your move${when}, we'd send ${p.movers} movers${q.truck === "theirs" ? "" : " with our truck"}.`,
-    `Estimate: about ${p.hours} hours, ${money(p.total)} total.${nte ? ` Written not-to-exceed price: ${money(nte)}.` : ""}`,
-    `We charge ${money(s.rate)} per mover per hour with a ${s.min_hours}-hour minimum.${
-      REFER_ITEMS.test(q.heavy_items) ? " We don't move pianos or hot tubs ourselves, but we'll connect you with a specialist." : ""
-    }`,
+    `For your move${when}, we'd send ${crew}.`,
+    flat
+      ? `Flat rate for the whole move: ${money(Number(q.flat_price))}.`
+      : `Estimate: about ${p.hours} hours on the clock, ${money(p.total)} total.${nte ? ` Written not-to-exceed price: ${money(nte)}.` : ""}`,
+    flat ? "" : `${rateLine} The clock starts when we arrive and stops when the last item is unloaded.${p.travel ? ` It includes ${money(p.travel)} for travel time to and from our shop.` : ""}`,
+    REFER_ITEMS.test(q.heavy_items) ? "We don't move pianos or hot tubs ourselves, but we'll connect you with a specialist." : "",
     `Reply YES to book, or call/text ${s.business_phone} with any questions.`,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
