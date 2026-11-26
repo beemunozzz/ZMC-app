@@ -230,7 +230,7 @@ Brandon's idea: when the crew runs into something hard (and figures it out), it 
   4. The same box also makes a third key, `CRON_SECRET` (type Secret), for the night-before reminders. Add it too.
   5. Tell Claude "keys added" so it can republish the app.
   6. Turn notifications on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → Turn on → Allow. Android or computer: ☰ → My settings → Notifications → Turn on → Allow. Then tap "Send me a test".
-- [ ] Add the shop address (Zach's house) on ☰ → Prices → Meeting at the shop, so meet times use the real drive.
+- [x] Shop address added (Nov 26): 8410 Kelley Dr, Stockton. Meet times use it for jobs without a typed drive time.
 - [ ] Add Zach's payment details (☰ → Prices → Getting paid: Zelle, Cash App, Venmo, Apple Cash) so those show as choices on invoices.
 - [ ] Send Claude the ZMC logo files (black and white) for the app icon.
 - [ ] Set up a free email sender called Resend, so "Forgot password" emails can reach the crew. Supabase's built-in email only sends to Brandon.
