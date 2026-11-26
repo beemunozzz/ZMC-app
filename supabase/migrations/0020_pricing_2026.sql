@@ -49,3 +49,7 @@ alter table public.quotes add column if not exists truck_cost jsonb not null def
 -- 4. Jobs: drive time back to the shop (jobs.drive_min is already the drive out), and a flat price if booked flat.
 alter table public.jobs add column if not exists drive_back_min int;
 alter table public.jobs add column if not exists flat_price numeric(10, 2);
+
+-- 5. An adjusted all-inclusive hourly rate for one quote/job (e.g. to cover a costly truck). Applied Nov 26, 2026.
+alter table public.quotes add column if not exists rate_override numeric(8, 2);
+alter table public.jobs add column if not exists rate_override numeric(8, 2);

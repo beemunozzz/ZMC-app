@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
 import { HouseFields } from "@/components/HouseFields";
 import { JOB_TYPES } from "@/lib/jobs";
 import { REFER_ITEMS, flatRate, fmtDuration, money, parseDrive, priceQuote, suggestedNte, type Prices } from "@/lib/pricing";
 import { truckCost, type OwnerCosts } from "@/lib/truck-cost";
+import { estimateTrip } from "./estimate-actions";
 import { TruckCostPanel, toChoices, type TruckForm } from "./TruckCostPanel";
 import { HEARD_FROM, QUOTE_STATUS, quoteText, type Quote, type QuoteStatus } from "@/lib/quotes";
 import { deleteQuote, saveQuote, type QuoteFormState } from "./actions";
@@ -38,7 +39,30 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
     drive_out: minsText(quote?.drive_out_min),
     drive_back: minsText(quote?.drive_back_min),
     pricing: quote?.pricing ?? ("hourly" as "hourly" | "flat"),
+    rate_override: str(quote?.rate_override),
   });
+  const formRef = useRef<HTMLFormElement>(null);
+  const [estimating, startEstimate] = useTransition();
+  const [estMsg, setEstMsg] = useState<{ ok?: string; error?: string }>({});
+  function fillFromAddresses() {
+    const f = formRef.current ? new FormData(formRef.current) : null;
+    const pickup = String(f?.get("pickup_address") ?? "");
+    const dropoff = String(f?.get("dropoff_address") ?? "");
+    startEstimate(async () => {
+      setEstMsg({});
+      const r = await estimateTrip(pickup, dropoff);
+      if (r.error) return setEstMsg({ error: r.error });
+      setV((o) => ({
+        ...o,
+        miles_out: String(r.miles_out ?? ""),
+        miles_between: String(r.miles_between ?? ""),
+        miles_back: String(r.miles_back ?? ""),
+        drive_out: minsText(r.drive_out),
+        drive_back: minsText(r.drive_back),
+      }));
+      setEstMsg({ ok: "Filled in from Zach's address. These are estimates (straight-line map distance × 1.25); change any number if you know better." });
+    });
+  }
   const tc0 = quote?.truck_cost ?? {};
   const [tf, setTf] = useState<TruckForm>({
     miles: tc0.miles ? String(tc0.miles) : "",
@@ -81,6 +105,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
       drive_out_min: driveOut,
       drive_back_min: driveBack,
       flat_price: isFlat ? flat.total : null,
+      rate_override: Number(v.rate_override) || null,
     },
     prices,
   );
@@ -107,7 +132,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
 
   return (
     <div className="flex flex-col gap-4">
-      <form action={action} className="flex flex-col gap-4">
+      <form ref={formRef} action={action} className="flex flex-col gap-4">
         {quote && <input type="hidden" name="id" value={quote.id} />}
 
         <section className={section}>
@@ -232,6 +257,16 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
           <p className="text-xs text-muted">
             The clock runs from arrival at the first address until unloading is done at the last one. The drive between the customer&apos;s addresses is on the clock.
           </p>
+          <button
+            type="button"
+            onClick={fillFromAddresses}
+            disabled={estimating}
+            className="press flex h-11 items-center justify-center rounded-xl border border-primary/50 px-3 text-sm font-semibold text-primary disabled:opacity-60"
+          >
+            {estimating ? "Working it out…" : "Fill in miles and drive times from Zach's address"}
+          </button>
+          {estMsg.error && <p className="text-sm text-bad">{estMsg.error}</p>}
+          {estMsg.ok && <p className="text-xs text-ok">✓ {estMsg.ok}</p>}
           <div className="grid grid-cols-2 gap-3">
             <label className={label}>
               Drive: shop → pickup
@@ -269,6 +304,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
         <section className={section}>
           <h2 className={heading}>Price</h2>
           <input type="hidden" name="pricing" value={v.pricing} />
+          <input type="hidden" name="rate_override" value={v.rate_override} />
           <div className="divide-y divide-line">
             {line(
               <>
@@ -278,6 +314,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
                     ? `${p.far ? `Far pickup (${prices.far_miles}+ mi)` : "Local"} all-inclusive${p.movers > prices.allin_movers ? `, incl. ${p.movers - prices.allin_movers} extra mover${p.movers - prices.allin_movers > 1 ? "s" : ""} at ${money(prices.rate)}/hr` : ""}. Gas and mileage included.`
                     : "Customer provides the truck."}
                   {Number(v.est_hours) < prices.min_hours && ` ${prices.min_hours}-hour minimum.`}
+                  {p.adjusted && ` Adjusted rate for this quote (standard ${money(p.standardRate)}/hr).`}
                 </span>
               </>,
               p.hourlyRate * p.regularHours,
@@ -398,7 +435,9 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
             movers={p.movers}
             hours={p.hours}
             hourlyRate={p.hourlyRate}
+            standardRate={p.standardRate}
             truckPerHour={p.truckPerHour}
+            onUseRate={(r) => setV((o) => ({ ...o, rate_override: r == null ? "" : String(r) }))}
           />
         )}
 

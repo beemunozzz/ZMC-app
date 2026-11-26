@@ -13,10 +13,10 @@ export async function getMeetSettings(supabase: { from: (t: string) => any }): P
 }
 
 const AVG_MPH = 45; // rough average for local driving with a truck
-const ROAD_FACTOR = 1.25; // roads are longer than a straight line
+export const ROAD_FACTOR = 1.25; // roads are longer than a straight line
 
 /** Straight-line miles between two map spots. */
-function milesBetween(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
+export function milesBetween(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
   const R = 3958.8;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);

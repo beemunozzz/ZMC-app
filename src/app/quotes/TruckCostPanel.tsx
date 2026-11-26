@@ -1,6 +1,6 @@
 "use client";
 
-import { money, type Prices } from "@/lib/pricing";
+import { money, roundTo5, type Prices } from "@/lib/pricing";
 import { truckCost, type OwnerCosts, type TruckChoices } from "@/lib/truck-cost";
 
 const input =
@@ -35,7 +35,9 @@ export function TruckCostPanel({
   movers,
   hours,
   hourlyRate,
+  standardRate,
   truckPerHour,
+  onUseRate,
 }: {
   t: TruckForm;
   setT: (f: (o: TruckForm) => TruckForm) => void;
@@ -46,7 +48,11 @@ export function TruckCostPanel({
   movers: number;
   hours: number;
   hourlyRate: number;
+  /** The normal all-inclusive rate for this crew size (before any adjustment). */
+  standardRate: number;
   truckPerHour: number;
+  /** Put an adjusted hourly rate on the quote (or null to go back to the standard rate). */
+  onUseRate: (rate: number | null) => void;
 }) {
   const choices = toChoices(t, autoMiles, autoFollow);
   const c = truckCost(choices, costs);
@@ -54,8 +60,10 @@ export function TruckCostPanel({
   const diff = Math.round((customerPays - c.total) * 100) / 100;
   const profit = diff >= 0;
   const laborPerHour = movers * prices.rate;
-  const breakEven = Math.ceil(laborPerHour + c.total / hours);
-  const withProfit = Math.ceil(laborPerHour + (c.total + prices.rate) / hours);
+  const breakEven = roundTo5(laborPerHour + c.total / hours);
+  // The adjusted rate: covers our truck plus $75 (one labor hour) on the truck, rounded to the nearest $5.
+  const suggested = roundTo5(laborPerHour + (c.total + prices.rate) / hours);
+  const needsMore = suggested > standardRate;
 
   // Long trips: compare a round trip with a one-way rental.
   const long = choices.miles >= LONG_TRIP_MILES;
@@ -167,12 +175,33 @@ export function TruckCostPanel({
           <span>{profit ? "▲ Profit on the truck" : "▼ Loss on the truck"}</span>
           <span className="tabular-nums">{money(Math.abs(diff))}</span>
         </div>
-        {!profit && (
-          <p className="text-sm text-ink">
-            To break even, charge <b className="tabular-nums">{money(breakEven)}/hr</b>. To make {money(prices.rate)} on the truck:{" "}
-            <b className="tabular-nums">{money(withProfit)}/hr</b> (for {movers} movers, {hours} hrs).
-          </p>
-        )}
+        {/* Adjusted hourly rate that covers our truck */}
+        <div className="mt-1 flex flex-col gap-2 rounded-xl border border-line p-3">
+          {needsMore ? (
+            <>
+              <p className="text-sm text-ink">
+                To cover our truck plus {money(prices.rate)}, charge <b className="tabular-nums">{money(suggested)}/hr</b> instead of{" "}
+                {money(standardRate)}/hr ({movers} movers, {hours} hrs, rounded to the nearest $5). Break-even is about {money(breakEven)}/hr.
+              </p>
+              {hourlyRate === suggested ? (
+                <p className="text-sm font-semibold text-ok">✓ This quote uses {money(suggested)}/hr.</p>
+              ) : (
+                <button type="button" onClick={() => onUseRate(suggested)} className="press h-11 rounded-xl bg-primary px-4 font-semibold text-white dark:text-navy">
+                  Use {money(suggested)}/hr on this quote
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-ink">
+              ✓ The standard {money(standardRate)}/hr already covers our truck plus {money(prices.rate)}.
+            </p>
+          )}
+          {hourlyRate !== standardRate && (
+            <button type="button" onClick={() => onUseRate(null)} className="self-start text-sm font-semibold text-muted">
+              Go back to the standard {money(standardRate)}/hr
+            </button>
+          )}
+        </div>
       </div>
 
       {long && (

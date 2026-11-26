@@ -29,6 +29,8 @@ export type InvoiceStart = {
   driveBack: number | null;
   /** Booked at a flat rate: the bill is this price. */
   flatPrice: number | null;
+  /** Adjusted hourly rate agreed in the quote (null = standard). */
+  rateOverride: number | null;
   /** null = the job has no not-to-exceed price yet, so ask for it */
   nte: number | null;
 };
@@ -50,7 +52,7 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
   const [method, setMethod] = useState<PayMethod | "">("");
   const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setV((o) => ({ ...o, [k]: e.target.value }));
 
-  const p = priceInvoice({ ...v, est_hours: v.hours, drive_out_min: start.driveOut, drive_back_min: start.driveBack }, prices, start.flatPrice);
+  const p = priceInvoice({ ...v, est_hours: v.hours, drive_out_min: start.driveOut, drive_back_min: start.driveBack, rate_override: start.rateOverride }, prices, start.flatPrice);
   const nte = Number(v.nte) || 0;
   const over = nte > 0 && p.total > nte;
   // The customer verifies the hours. If the hours or movers change afterwards, they need to verify again.

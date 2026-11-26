@@ -39,10 +39,12 @@ export type Quote = {
   flat_price: number | null;
   /** OWNER ONLY: the "Our truck cost" panel's choices (quotes are an owner-only table). */
   truck_cost: Partial<import("./truck-cost").TruckChoices>;
+  /** Adjusted hourly rate for this quote (null = standard). */
+  rate_override: number | null;
 };
 
 export const QUOTE_COLUMNS =
-  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost";
+  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost, rate_override";
 
 export const QUOTE_STATUS: Record<QuoteStatus, { label: string; cls: string }> = {
   new: { label: "New", cls: "bg-warn/12 text-warn" },
@@ -65,7 +67,7 @@ export const HEARD_FROM = [
 export function quoteText(
   q: Pick<
     Quote,
-    "customer_name" | "move_date" | "start_time" | "truck" | "heavy_items" | "movers" | "est_hours" | "miles_out" | "miles_between" | "miles_back" | "nte" | "drive_out_min" | "drive_back_min" | "pricing" | "flat_price"
+    "customer_name" | "move_date" | "start_time" | "truck" | "heavy_items" | "movers" | "est_hours" | "miles_out" | "miles_between" | "miles_back" | "nte" | "drive_out_min" | "drive_back_min" | "pricing" | "flat_price" | "rate_override"
   >,
   s: Prices,
 ) {
