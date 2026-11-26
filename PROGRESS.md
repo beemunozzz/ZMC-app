@@ -143,6 +143,8 @@
 
 - Built (setup step 0020): **Dec 2026 pricing** ($75 labor only, $195/$215 all-inclusive, 3-hour minimum, drive-time travel charge, overtime, flat rates side by side) for quotes and invoices, and the owner-only **Our truck cost** panel on quotes (U-Haul rental + gas + pickup time vs what the customer pays for the truck, profit/loss, break-even rate, round trip vs one-way). Our costs live in the owner-only `owner_costs` table (☰ → Prices → Our costs). See `CLAUDE.md` section 3.
 
+- Quotes (Nov 26): **Fill in miles and drive times from Zach's address** button (free map lookup, estimate), and the truck panel's **adjusted hourly rate** (covers our truck + $75, nearest $5) with "Use $X/hr on this quote"; the rate goes to the job and invoice.
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 

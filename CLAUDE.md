@@ -46,6 +46,7 @@ All numbers live in **☰ → Prices** (`settings` table; crew can read these, t
 - **No pianos and no hot tubs** (refer out; flagged automatically).
 - **Not-to-exceed (California):** every quote and job carries one. Suggested = hourly estimate + the cushion hours (setting), or the flat price. **An invoice can't be saved over the NTE.**
 - **Our costs (owner only, never shown to crew or customers):** the `owner_costs` table (☰ → Prices → Our costs) and `src/lib/truck-cost.ts`: U-Haul 26' round trip $50.95/day + $1.09/mi + $30/day coverage (est.) + 9% tax + $5 env. fee (est.); one-way = U-Haul's price + coverage + tax + fee + the crew's ride home; gas = miles ÷ 8 MPG × $5.60; $75 truck pickup/return time. The "Our truck cost" panel on quotes compares that with what the customer pays for the truck: (all-inclusive rate − movers × $75) × hours.
+- **Adjusted rate:** when our truck costs more than the standard rate covers, the panel suggests an all-inclusive rate that covers our truck + $75, **rounded to the nearest $5**; "Use $X/hr on this quote" saves it on the quote (`rate_override`), and it carries to the booked job and the invoice. **Fill in from Zach's address** (quote screen) estimates miles and drive times from the shop address (straight-line × 1.25 until Google Maps is set up).
 - The old rules ($65/hr, 2-hour minimum, 25 free trip miles, $1/mile truck) were replaced in Dec 2026; old quotes and invoices keep their saved totals.
 
 ### Open questions for Zach (ask before finalizing invoices)
