@@ -38,7 +38,7 @@ export type Quote = {
   pricing: "hourly" | "flat";
   flat_price: number | null;
   /** OWNER ONLY: the "Our truck cost" panel's choices (quotes are an owner-only table). */
-  truck_cost: Partial<import("./truck-cost").TruckChoices>;
+  truck_cost: Partial<import("./truck-cost").TruckChoices> & { rate_mode?: "standard" | "atCost" | "manual" };
   /** Older fixed crew rate (null = none). */
   rate_override: number | null;
   /** Truck at cost: the truck's share per hour (null = standard all-inclusive rate). */

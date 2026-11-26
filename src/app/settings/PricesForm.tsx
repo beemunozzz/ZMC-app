@@ -43,9 +43,10 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   },
   {
     title: "Supplies and not-to-exceed",
+    note: "Materials and crew water are our expense: shown on your side of each quote, never charged to the customer.",
     fields: [
-      { key: "materials", label: "Materials", prefix: "$", suffix: "per job (quotes only)", step: 1 },
-      { key: "water", label: "Crew water", prefix: "$", suffix: "per job (quotes only)", step: 1 },
+      { key: "materials", label: "Materials (our cost)", prefix: "$", suffix: "per job", step: 1 },
+      { key: "water", label: "Crew water (our cost)", prefix: "$", suffix: "per job", step: 1 },
       { key: "nte_cushion_hours", label: "Suggested not-to-exceed cushion", suffix: "extra hours on top of the estimate", step: 0.5 },
     ],
   },
@@ -142,11 +143,11 @@ export function PricesForm({ prices }: { prices: Prices }) {
         <p className="font-semibold">Example with these prices</p>
         <p className="mt-1 text-muted">A local 4-hour move, 2 movers, 20 minutes each way from the shop:</p>
         <p className="mt-2 tabular-nums">
-          Our truck: {money(ex.hourlyRate)}/hr × {ex.hours} hrs = {money(ex.clock)} + supplies {money(ex.supplies)} ={" "}
+          Our truck: {money(ex.hourlyRate)}/hr × {ex.hours} hrs ={" "}
           <b>{money(ex.total)}</b>
         </p>
         <p className="mt-1 tabular-nums">
-          Their truck: {money(exTheirs.hourlyRate)}/hr × {exTheirs.hours} hrs = {money(exTheirs.clock)} + supplies {money(exTheirs.supplies)} ={" "}
+          Their truck: {money(exTheirs.hourlyRate)}/hr × {exTheirs.hours} hrs ={" "}
           <b>{money(exTheirs.total)}</b>
         </p>
       </section>

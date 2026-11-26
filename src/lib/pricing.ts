@@ -28,8 +28,8 @@ export type Prices = {
   long_day_hours: number; // longer than this = long day (flag; overtime after this many billed hours)
   ot_multiplier: number; // overtime pay on the labor part of the rate
   long_day_bonus: number; // flat rate: bonus per mover on long days
-  materials: number; // per job, quotes only
-  water: number; // per job, quotes only
+  materials: number; // per job: OUR expense (not charged to the customer)
+  water: number; // per job: OUR expense (not charged to the customer)
   nte_cushion_hours: number; // suggested not-to-exceed = estimate + this many hours
   business_phone: string;
   expect_url: string; // "What to expect" page, linked in texts
@@ -135,8 +135,9 @@ export function priceQuote(q: QuoteInputs, s: Prices, extraHours = 0) {
 
   const dayHours = round2(hours + travelHours);
   const longDay = dayHours > s.long_day_hours;
+  // Materials and crew water are our expense: tracked on the owner's side, never charged to the customer.
   const supplies = s.materials + s.water;
-  const total = round2(clock + travel + supplies);
+  const total = round2(clock + travel);
   const truckMiles = num(q.miles_out) + num(q.miles_between) + num(q.miles_back);
 
   return {
@@ -174,18 +175,19 @@ export function suggestedNte(q: QuoteInputs, s: Prices) {
 
 /**
  * Flat rate for long days: all day hours (clock + travel) x movers x the floor rate,
- * + the long-day bonus per mover, + the margin on that labor, + our truck cost at cost (no margin). Rounded up to $10.
+ * + the long-day bonus per mover, + the margin on that labor, + our truck and supplies at cost (no margin). Rounded up to $10.
  */
 export function flatRate(q: QuoteInputs, s: Prices, truckCost: number, margin: number) {
   const p = priceQuote(q, s);
   const labor = round2(p.dayHours * p.movers * s.rate);
   const bonus = p.longDay ? p.movers * s.long_day_bonus : 0;
   const truck = p.allIn ? truckCost : 0;
-  const subtotal = round2(labor + bonus + truck);
+  const supplies = p.supplies;
+  const subtotal = round2(labor + bonus + truck + supplies);
   // The margin is on labor only: the truck is passed through at cost.
   const marginAmount = round2((labor + bonus) * margin);
   const total = Math.ceil((subtotal + marginAmount) / 10) * 10;
-  return { dayHours: p.dayHours, movers: p.movers, labor, bonus, truck, subtotal, margin, marginAmount, total };
+  return { dayHours: p.dayHours, movers: p.movers, labor, bonus, truck, supplies, subtotal, margin, marginAmount, total };
 }
 
 export const money = (n: number) =>

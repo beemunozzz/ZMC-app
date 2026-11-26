@@ -41,9 +41,24 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
     pricing: quote?.pricing ?? ("hourly" as "hourly" | "flat"),
     rate_override: str(quote?.rate_override),
   });
-  // Truck at cost: the rate is movers x $75 + the truck's share per hour, worked out live from our truck cost,
-  // so changing the movers, hours or miles updates the price.
-  const [atCost, setAtCost] = useState(quote?.truck_rate != null || quote?.rate_override != null);
+  // How the hourly rate is set:
+  //  standard = the normal rate from Prices;
+  //  atCost   = movers x $75 + our truck's share per hour (worked out live from our truck cost);
+  //  manual   = Zach types the crew's hourly rate. With our truck it's saved as the truck's share, so it still
+  //             follows the number of movers; with the customer's truck it's a fixed crew rate.
+  type RateMode = "standard" | "atCost" | "manual";
+  const savedMode = (quote?.truck_cost as { rate_mode?: RateMode } | undefined)?.rate_mode;
+  const [mode, setMode] = useState<RateMode>(
+    savedMode ?? (quote?.truck_rate != null ? "atCost" : quote?.rate_override != null ? "manual" : "standard"),
+  );
+  const atCost = mode === "atCost";
+  const setAtCost = (on: boolean) => setMode(on ? "atCost" : "standard");
+  const [manualRate, setManualRate] = useState(() => {
+    if (quote?.truck_rate != null) return String(Number(quote.truck_rate) + (quote.movers || 2) * prices.rate);
+    if (quote?.rate_override != null) return String(quote.rate_override);
+    return "";
+  });
+  const [editRate, setEditRate] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const [estimating, startEstimate] = useTransition();
   const [estMsg, setEstMsg] = useState<{ ok?: string; error?: string }>({});
@@ -87,8 +102,15 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
   const p0 = priceQuote(base, prices);
   const autoFollow0 = Number(v.miles_back) || 0;
   const tCost0 = p0.allIn ? truckCost(toChoices(tf, p0.truckMiles, autoFollow0), costs).total : 0;
-  const truckRate = atCost && p0.allIn ? roundTo5(tCost0 / p0.hours) : null;
-  const inputs = { ...base, truck_rate: truckRate };
+  const manual = Number(manualRate) || 0;
+  const truckRate =
+    p0.allIn && atCost
+      ? roundTo5(tCost0 / p0.hours)
+      : p0.allIn && mode === "manual" && manual > 0
+        ? Math.max(0, manual - p0.movers * prices.rate)
+        : null;
+  const fixedRate = !p0.allIn && mode === "manual" && manual > 0 ? manual : null;
+  const inputs = { ...base, truck_rate: truckRate, rate_override: fixedRate };
   const p = priceQuote(inputs, prices);
   // Our truck cost (owner only) feeds the flat rate.
   const autoFollow = Number(v.miles_back) || 0;
@@ -113,7 +135,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
       drive_out_min: driveOut,
       drive_back_min: driveBack,
       flat_price: isFlat ? flat.total : null,
-      rate_override: null,
+      rate_override: fixedRate,
       truck_rate: truckRate,
     },
     prices,
@@ -314,8 +336,9 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
           <h2 className={heading}>Price</h2>
           <input type="hidden" name="pricing" value={v.pricing} />
           {/* The old fixed crew rate is cleared on save; truck-at-cost is saved as the truck's share per hour. */}
-          <input type="hidden" name="rate_override" value="" />
+          <input type="hidden" name="rate_override" value={fixedRate ?? ""} />
           <input type="hidden" name="truck_rate" value={truckRate ?? ""} />
+          <input type="hidden" name="rate_mode" value={mode} />
           <div className="divide-y divide-line">
             {line(
               <>
@@ -325,8 +348,59 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
                     ? `${p.far ? `Far pickup (${prices.far_miles}+ mi)` : "Local"} all-inclusive${p.movers > prices.allin_movers ? `, incl. ${p.movers - prices.allin_movers} extra mover${p.movers - prices.allin_movers > 1 ? "s" : ""} at ${money(prices.rate)}/hr` : ""}. Gas and mileage included.`
                     : "Customer provides the truck."}
                   {Number(v.est_hours) < prices.min_hours && ` ${prices.min_hours}-hour minimum.`}
-                  {p.adjusted && ` Adjusted rate for this quote (standard ${money(p.standardRate)}/hr).`}
+                  {p.adjusted &&
+                    ` ${mode === "atCost" ? "Truck at cost" : "Your rate"} for this quote (standard ${money(p.standardRate)}/hr).`}
                 </span>
+                {/* Adjust the hourly rate */}
+                {editRate ? (
+                  <span className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-muted">Hourly rate for the crew</span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-muted">$</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step={5}
+                        autoFocus
+                        aria-label="Hourly rate for the crew"
+                        value={manualRate}
+                        onChange={(e) => {
+                          setManualRate(e.target.value);
+                          setMode(e.target.value ? "manual" : "standard");
+                        }}
+                        className="h-10 w-24 rounded-lg border border-line bg-bg px-2 text-base tabular-nums text-ink outline-none focus:border-primary"
+                      />
+                      <span className="text-xs text-muted">/hr</span>
+                    </span>
+                    <button type="button" onClick={() => setEditRate(false)} className="text-sm font-semibold text-primary">
+                      Done
+                    </button>
+                  </span>
+                ) : (
+                  <span className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManualRate(String(p.hourlyRate));
+                        setEditRate(true);
+                      }}
+                      className="text-sm font-semibold text-primary"
+                    >
+                      Adjust rate
+                    </button>
+                    {mode !== "standard" && (
+                      <button type="button" onClick={() => setMode("standard")} className="text-sm font-semibold text-muted">
+                        Back to {money(p.standardRate)}/hr
+                      </button>
+                    )}
+                  </span>
+                )}
+                {mode === "manual" && p.allIn && (
+                  <span className="mt-1 block text-xs text-muted">
+                    Saved as {money(p.truckPerHour)}/hr for the truck + {money(prices.rate)} per mover, so it still follows the number of movers.
+                  </span>
+                )}
               </>,
               p.hourlyRate * p.regularHours,
             )}
@@ -351,7 +425,6 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
               </>,
               p.travel,
             )}
-            {line(<>Materials and crew water</>, p.supplies)}
           </div>
 
           {p.longDay && (
@@ -406,6 +479,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
                 + {Math.round(flat.margin * 100)}% margin on the labor {money(flat.marginAmount)}
               </p>
               {flat.truck > 0 && <p>+ our truck at cost (estimate, no margin) {money(flat.truck)}</p>}
+              {flat.supplies > 0 && <p>+ materials and crew water at cost {money(flat.supplies)}</p>}
               <p>→ rounded up to {money(flat.total)}</p>
               <p className="text-xs text-muted">Only you see this breakdown. The customer just sees the flat price.</p>
             </div>
@@ -414,6 +488,32 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
           <div className="flex items-baseline justify-between border-t-2 border-ink pt-2">
             <span className="font-display text-xl font-extrabold uppercase text-ink">{isFlat ? "Flat rate" : "Estimate"}</span>
             <span className="font-display text-3xl font-extrabold tabular-nums text-ink">{money(chosenTotal)}</span>
+          </div>
+
+          {/* Our side: expenses we don't charge the customer for (only Zach sees this) */}
+          <div className="flex flex-col gap-1 rounded-xl border border-primary/30 bg-bg p-3 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-ink">Our side</span>
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Only you see this</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-ink">Customer pays</span>
+              <span className="tabular-nums text-ink">{money(chosenTotal)}</span>
+            </div>
+            {p.allIn && (
+              <div className="flex justify-between gap-3">
+                <span className="text-ink">− Our truck (estimate)</span>
+                <span className="tabular-nums text-ink">{money(tCost)}</span>
+              </div>
+            )}
+            <div className="flex justify-between gap-3">
+              <span className="text-ink">− Materials and crew water (not charged)</span>
+              <span className="tabular-nums text-ink">{money(p.supplies)}</span>
+            </div>
+            <div className="flex justify-between gap-3 border-t border-line pt-1 font-semibold">
+              <span className="text-ink">Left for crew pay and profit</span>
+              <span className="tabular-nums text-ink">{money(Math.round((chosenTotal - (p.allIn ? tCost : 0) - p.supplies) * 100) / 100)}</span>
+            </div>
           </div>
 
           <label className={label}>

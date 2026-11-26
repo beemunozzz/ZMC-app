@@ -124,7 +124,7 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
     drive_back_min,
     pricing,
     flat_price,
-    truck_cost: tc,
+    truck_cost: { ...tc, rate_mode: ["standard", "atCost", "manual"].includes(text(form, "rate_mode", 10)) ? text(form, "rate_mode", 10) : "standard" },
     rate_override: rate_override || null,
     truck_rate: truck === "ours" ? truck_rate || null : null,
   };
