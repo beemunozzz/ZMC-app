@@ -383,7 +383,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
           <p className={`text-xs ${nte && nte < chosenTotal ? "font-semibold text-bad" : "text-muted"}`}>
             {nte && nte < chosenTotal
               ? "⚠ This is lower than the estimate. Raise it: the final bill can't go over it."
-              : `California requires a written not-to-exceed price on hourly moves. ${isFlat ? "On a flat rate, use the flat price." : `Suggested: the estimate plus ${prices.nte_cushion_hours} hours, rounded up.`}`}
+              : `California requires a written not-to-exceed price on hourly moves. ${isFlat ? "On a flat rate, use the flat price." : `Suggested: the estimate plus ${prices.nte_cushion_hours} hour${prices.nte_cushion_hours === 1 ? "" : "s"}, rounded up.`}`}
           </p>
         </section>
 

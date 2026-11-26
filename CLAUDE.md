@@ -32,20 +32,21 @@ How Zach works today: customers call or text him, he gives a price and a day and
 
 ---
 
-## 3. Pricing rules (source of truth)
+## 3. Pricing rules (source of truth, Dec 2026)
 
-- **$65 per mover per hour.**
-- **Minimum: 2 movers × 2 hours = $260.** Billed hours are never less than 2.
-- Quotes default to **2 movers**. The owner adjusts the crew size. Suggest a **3rd mover for two-story homes** and big or full-garage jobs.
-- **Drive time between the customer's two addresses is on the hourly clock.**
-- **Trip charge.** Add up the miles shop → pickup plus drop-off → shop. The first **25 miles are free**. Then add **0.5 hour per mover for each 25 miles** or part of 25 miles.
-  - Example for 2 movers: 26–50 mi = $65, 51–75 mi = $130, 76–100 mi = $195, then +$65 for each extra 25 mi.
-- **Truck.** If ZMC provides the truck, charge **$1 per mile on all truck miles** (shop → pickup → drop-off → shop), "for now". If the customer provides the truck, there's no truck charge.
-- **Supplies on quotes:** $20 materials plus $5 crew water per job. **Invoices do not include materials, water or extra-item lines.** This is Brandon's latest decision.
-- **No pianos and no hot tubs.** Refer those customers to partner movers, and flag these items automatically when they appear in a quote.
-- **California requires a written not-to-exceed (NTE) price on hourly moves.** Every quote and job carries an NTE. The prototype suggests the estimate plus a 1-hour cushion. **An invoice can't be saved if its total is over the NTE.**
-
-Put all of these numbers in one settings table or config so Zach can change them later without code changes.
+All numbers live in **☰ → Prices** (`settings` table; crew can read these, they need them for invoices). The code is `src/lib/pricing.ts`.
+- **Labor only** (customer's truck): **$75 per mover per hour**.
+- **All-inclusive** (2 movers + our 26' box truck): **$195/hour** local, **$215/hour** when the pickup is **45+ miles** from the shop. Extra movers **$75/hour** each. Gas and mileage included. "Our truck" is always priced as a 26' box truck.
+- **3-hour minimum.** The clock runs from arrival at the first address until unloading is done at the last one; the drive between the customer's addresses is on the clock. Quotes default to 2 movers.
+- **Travel time** (by drive TIME: shop → first pickup + last drop-off → shop): under 2 h = free; 2 to under 3 h = +1 hour per mover; 3 h+ = half the travel time per mover (all at $75 per mover-hour).
+- **Long days** (clock + travel over 8 h): flagged, flat rate suggested. **Overtime:** billed hours past the 8th pay 1.5× on the labor part ($75 → $112.50 per mover).
+- **Flat rate:** all day hours (clock + travel) × movers × $75 + $100 per mover on long days + our truck cost (when we bring it) + 15% margin, rounded up to $10. Hourly and flat are shown side by side; Zach picks.
+- **Floor:** labor shouldn't drop below $75 per mover-hour over the whole day. The quote screen shows a note when the hourly price works out under it (e.g. free travel under 2 h); flat rates are built on it.
+- **Supplies on quotes:** $20 materials + $5 crew water. **Invoices don't include them.**
+- **No pianos and no hot tubs** (refer out; flagged automatically).
+- **Not-to-exceed (California):** every quote and job carries one. Suggested = hourly estimate + the cushion hours (setting), or the flat price. **An invoice can't be saved over the NTE.**
+- **Our costs (owner only, never shown to crew or customers):** the `owner_costs` table (☰ → Prices → Our costs) and `src/lib/truck-cost.ts`: U-Haul 26' round trip $50.95/day + $1.09/mi + $30/day coverage (est.) + 9% tax + $5 env. fee (est.); one-way = U-Haul's price + coverage + tax + fee + the crew's ride home; gas = miles ÷ 8 MPG × $5.60; $75 truck pickup/return time. The "Our truck cost" panel on quotes compares that with what the customer pays for the truck: (all-inclusive rate − movers × $75) × hours.
+- The old rules ($65/hr, 2-hour minimum, 25 free trip miles, $1/mile truck) were replaced in Dec 2026; old quotes and invoices keep their saved totals.
 
 ### Open questions for Zach (ask before finalizing invoices)
 1. How exactly should the trip or travel charge show on invoices?

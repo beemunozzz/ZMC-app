@@ -100,19 +100,22 @@ export function TruckCostPanel({
         <label className={label}>
           <span>Rental type</span>
           <select value={t.type} onChange={set("type")} className={input}>
-            <option value="round">Round trip (Stockton)</option>
-            <option value="oneway">One-way (drop at destination)</option>
+            <option value="round">Round trip</option>
+            <option value="oneway">One-way</option>
           </select>
         </label>
         <label className={label}>
           <span>Fuel</span>
           <select value={t.fuel} onChange={set("fuel")} className={input}>
-            <option value="unleaded">Unleaded (U-Haul)</option>
+            <option value="unleaded">Unleaded</option>
             <option value="diesel">Diesel</option>
           </select>
         </label>
       </div>
-      <p className="-mt-1 text-xs text-muted">Truck miles = shop → pickup → drop-off → shop. Filled in from the miles above; type over it to change.</p>
+      <p className="-mt-1 text-xs text-muted">
+        Truck miles = shop → pickup → drop-off → shop, filled in from the miles above (type over it to change). Round trip = pick up and return in Stockton.
+        One-way = drop the truck at the destination. U-Haul trucks take unleaded.
+      </p>
 
       {t.type === "oneway" && (
         <div className="grid grid-cols-2 gap-3">
