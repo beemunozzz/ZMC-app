@@ -95,3 +95,9 @@ delete from public.weekly_schedules where crew_id in ('7434e403-fbb5-43f4-acdc-b
 update public.crew_members set role = 'mover' where id = '22041240-bc0c-425f-995a-e30a562f8139';
 ```
 Deleting a job also removes its meet-at-site choices, checklist ticks, cover requests, photos and on-call checks.
+
+## Done in the app after the demo was loaded (Nov 24 evening)
+- 6:17 PM: Valley Dental Office (demo job, Nov 30) edited: Brandon and Zach added as crew, no lead picked. Removed by the undo.
+- 6:36 PM: **Matt filled in his regular schedule** (available every day, saved as his Original). **Not demo data: the undo keeps it** unless Brandon says to remove it too:
+  `delete from public.weekly_schedules where crew_id = '54e8234d-0535-4379-99db-bdde3c868b3c';`
+- 7:31 PM: Marcus Reed's invoice (demo) marked paid by Zelle. Removed by the undo.
