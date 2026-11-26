@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "./Icon";
@@ -26,6 +26,13 @@ export function AppHeader({
   preview?: { options: PreviewOption[]; current: string; hrefFor: Record<string, string> };
 }) {
   const [open, setOpen] = useState(false);
+  // Escape closes the menu.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   const router = useRouter();
 
   async function signOut() {
@@ -38,6 +45,9 @@ export function AppHeader({
   const section = "px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-muted";
 
   return (
+    <>
+    {/* Tap anywhere outside the menu to close it. Outside the header so it covers the whole page. */}
+    {open && <div aria-hidden className="fixed inset-0 z-10 bg-ink/10 dark:bg-black/30" onClick={() => setOpen(false)} />}
     <header className="sticky top-0 z-20 border-b border-line bg-bg/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
         <Link href="/" className="font-logo text-xl text-ink">
@@ -66,8 +76,9 @@ export function AppHeader({
       </div>
 
       {open && (
-        <nav className="mx-auto max-w-6xl px-4 pb-4">
-          <div className="menu-pop ml-auto max-w-sm rounded-2xl border border-line bg-card p-2">
+        // Floats over the page (doesn't push it down).
+        <nav className="absolute inset-x-0 top-full mx-auto max-w-6xl px-4 pt-2">
+          <div className="menu-pop ml-auto max-h-[calc(100dvh-5rem)] max-w-sm overflow-y-auto rounded-2xl border border-line bg-card p-2 shadow-xl">
             <p className="px-4 pb-1 pt-2 text-xs text-muted">
               Signed in as <span className="font-semibold text-ink">{name}</span> · {roleLabel}
             </p>
@@ -152,5 +163,6 @@ export function AppHeader({
         </nav>
       )}
     </header>
+    </>
   );
 }
