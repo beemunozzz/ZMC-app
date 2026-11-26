@@ -38,7 +38,7 @@ export default function NewPasswordPage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
       <div className="mb-8 flex flex-col items-center gap-2">
-        <span className="font-display text-6xl font-extrabold uppercase tracking-wide text-ink">ZMC</span>
+        <span className="font-logo text-6xl text-ink">ZMC</span>
         <span className="h-1.5 w-16 rounded-full bg-tape" aria-hidden />
       </div>
       <div className="rise rounded-2xl border border-line bg-card p-6">

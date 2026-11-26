@@ -223,3 +223,13 @@ input[type="time"]::-webkit-date-and-time-value {
   text-align: left;
   min-height: 1.5em;
 }
+
+/* The ZMC logo: the letters "ZMC" in Georgia (Brandon's pick). Georgia is built into iPhones, Macs and
+   Windows; other phones (like Android) get Gelasio, a free look-alike loaded with the app. */
+.font-logo {
+  font-family: Georgia, var(--font-gelasio), "Times New Roman", serif;
+  font-stretch: normal;
+  font-variation-settings: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
