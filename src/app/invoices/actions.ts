@@ -25,7 +25,7 @@ export async function createInvoice(_: InvoiceFormState, form: FormData): Promis
 
   const jobId = text(form, "job_id", 40);
   if (!UUID.test(jobId)) return { error: "Job not found." };
-  const { data: job } = await supabase.from("jobs").select("id, lead_id, customer_name, customer_phone, nte, status, drive_min, drive_back_min, flat_price, rate_override").eq("id", jobId).maybeSingle();
+  const { data: job } = await supabase.from("jobs").select("id, lead_id, customer_name, customer_phone, nte, status, drive_min, drive_back_min, flat_price, rate_override, truck_rate").eq("id", jobId).maybeSingle();
   if (!job) return { error: "Job not found." };
   if (me.role !== "owner" && job.lead_id !== me.id) return { error: "Only Zach or this job's crew lead can invoice it." };
   if (job.status === "canceled") return { error: "This job is canceled." };
@@ -56,7 +56,7 @@ export async function createInvoice(_: InvoiceFormState, form: FormData): Promis
 
   const prices = await getPrices(supabase);
   const p = priceInvoice(
-    { movers, est_hours: hours, miles_out, miles_between, miles_back, truck, drive_out_min: job.drive_min, drive_back_min: job.drive_back_min, rate_override: job.rate_override },
+    { movers, est_hours: hours, miles_out, miles_between, miles_back, truck, drive_out_min: job.drive_min, drive_back_min: job.drive_back_min, rate_override: job.rate_override, truck_rate: job.truck_rate },
     prices,
     job.flat_price != null ? Number(job.flat_price) : null,
   );

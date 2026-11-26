@@ -80,8 +80,10 @@ export type QuoteInputs = {
   drive_out_min?: number | string | null;
   /** Drive time, last drop-off -> shop (minutes). */
   drive_back_min?: number | string | null;
-  /** An adjusted hourly rate for the whole crew on this quote/job (e.g. to cover a costly truck). Empty = standard rate. */
+  /** Older: a fixed hourly rate for the whole crew. Kept for saved quotes; new quotes use truck_rate. */
   rate_override?: number | string | null;
+  /** Truck at cost: the truck's share per hour. Rate = movers x labor rate + this (follows the number of movers). */
+  truck_rate?: number | string | null;
 };
 
 /** Hourly rates are rounded to the nearest $5. */
@@ -111,9 +113,10 @@ export function priceQuote(q: QuoteInputs, s: Prices, extraHours = 0) {
   const baseRate = far ? s.allin_far_rate : s.allin_rate;
   const extraMovers = allIn ? Math.max(0, movers - s.allin_movers) : 0;
   const standardRate = allIn ? baseRate + extraMovers * s.rate : movers * s.rate;
+  const truckRate = allIn ? num(q.truck_rate) : 0;
   const override = num(q.rate_override);
-  const hourlyRate = override > 0 ? override : standardRate;
-  const adjusted = override > 0 && override !== standardRate;
+  const hourlyRate = truckRate > 0 ? movers * s.rate + truckRate : override > 0 ? override : standardRate;
+  const adjusted = hourlyRate !== standardRate;
   /** The part of an all-inclusive hour that pays for the truck (customer side). */
   const truckPerHour = allIn ? Math.max(0, hourlyRate - movers * s.rate) : 0;
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { HouseFields } from "@/components/HouseFields";
 import { JOB_TYPES } from "@/lib/jobs";
-import { REFER_ITEMS, flatRate, fmtDuration, money, parseDrive, priceQuote, suggestedNte, type Prices } from "@/lib/pricing";
+import { REFER_ITEMS, roundTo5, flatRate, fmtDuration, money, parseDrive, priceQuote, suggestedNte, type Prices } from "@/lib/pricing";
 import { truckCost, type OwnerCosts } from "@/lib/truck-cost";
 import { estimateTrip } from "./estimate-actions";
 import { TruckCostPanel, toChoices, type TruckForm } from "./TruckCostPanel";
@@ -41,6 +41,9 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
     pricing: quote?.pricing ?? ("hourly" as "hourly" | "flat"),
     rate_override: str(quote?.rate_override),
   });
+  // Truck at cost: the rate is movers x $75 + the truck's share per hour, worked out live from our truck cost,
+  // so changing the movers, hours or miles updates the price.
+  const [atCost, setAtCost] = useState(quote?.truck_rate != null || quote?.rate_override != null);
   const formRef = useRef<HTMLFormElement>(null);
   const [estimating, startEstimate] = useTransition();
   const [estMsg, setEstMsg] = useState<{ ok?: string; error?: string }>({});
@@ -80,7 +83,12 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
 
   const driveOut = parseDrive(v.drive_out);
   const driveBack = parseDrive(v.drive_back);
-  const inputs = { ...v, drive_out_min: driveOut, drive_back_min: driveBack };
+  const base = { ...v, rate_override: null, drive_out_min: driveOut, drive_back_min: driveBack };
+  const p0 = priceQuote(base, prices);
+  const autoFollow0 = Number(v.miles_back) || 0;
+  const tCost0 = p0.allIn ? truckCost(toChoices(tf, p0.truckMiles, autoFollow0), costs).total : 0;
+  const truckRate = atCost && p0.allIn ? roundTo5(tCost0 / p0.hours) : null;
+  const inputs = { ...base, truck_rate: truckRate };
   const p = priceQuote(inputs, prices);
   // Our truck cost (owner only) feeds the flat rate.
   const autoFollow = Number(v.miles_back) || 0;
@@ -105,7 +113,8 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
       drive_out_min: driveOut,
       drive_back_min: driveBack,
       flat_price: isFlat ? flat.total : null,
-      rate_override: Number(v.rate_override) || null,
+      rate_override: null,
+      truck_rate: truckRate,
     },
     prices,
   );
@@ -304,7 +313,9 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
         <section className={section}>
           <h2 className={heading}>Price</h2>
           <input type="hidden" name="pricing" value={v.pricing} />
-          <input type="hidden" name="rate_override" value={v.rate_override} />
+          {/* The old fixed crew rate is cleared on save; truck-at-cost is saved as the truck's share per hour. */}
+          <input type="hidden" name="rate_override" value="" />
+          <input type="hidden" name="truck_rate" value={truckRate ?? ""} />
           <div className="divide-y divide-line">
             {line(
               <>
@@ -438,7 +449,8 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
             hourlyRate={p.hourlyRate}
             standardRate={p.standardRate}
             truckPerHour={p.truckPerHour}
-            onUseRate={(r) => setV((o) => ({ ...o, rate_override: r == null ? "" : String(r) }))}
+            atCost={atCost}
+            onAtCost={setAtCost}
           />
         )}
 

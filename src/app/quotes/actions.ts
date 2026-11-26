@@ -54,7 +54,9 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
   if (driveBackRaw && drive_back_min == null) return { error: "Drive time back to the shop: type minutes (45) or hours and minutes (1:30)." };
   const pricing = text(form, "pricing", 8) === "flat" ? "flat" : "hourly";
   const rate_override = numOrNull(form, "rate_override");
+  const truck_rate = numOrNull(form, "truck_rate");
   if (Number.isNaN(rate_override) || (rate_override != null && rate_override > 2000)) return { error: "The adjusted hourly rate doesn't look right." };
+  if (Number.isNaN(truck_rate) || (truck_rate != null && truck_rate > 1000)) return { error: "The truck's hourly share doesn't look right." };
   // The owner's "Our truck cost" choices (owner-only; saved with the quote, never shown to customers).
   const tc: TruckChoices = {
     miles: Number(text(form, "tc_miles", 8)) || 0,
@@ -81,7 +83,7 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
   }
 
   const prices = await getPrices(supabase);
-  const inputs = { movers, est_hours, miles_out, miles_between, miles_back, truck, drive_out_min, drive_back_min, rate_override } as const;
+  const inputs = { movers, est_hours, miles_out, miles_between, miles_back, truck, drive_out_min, drive_back_min, rate_override, truck_rate } as const;
   const price = priceQuote(inputs, prices);
   const costs = await getOwnerCosts(supabase);
   const flat = flatRate(inputs, prices, truck === "ours" ? truckCost({ ...tc, miles: tc.miles || price.truckMiles }, costs).total : 0, costs.flat_margin);
@@ -124,6 +126,7 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
     flat_price,
     truck_cost: tc,
     rate_override: rate_override || null,
+    truck_rate: truck === "ours" ? truck_rate || null : null,
   };
 
   let quoteId = id;
@@ -172,7 +175,7 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
   if (jobError) return { error: `The quote saved, but the job couldn't be made: ${jobError.message}` };
   // Copy the miles so the invoice can fill them in (ignored if the invoices setup hasn't run yet).
   // Copy the miles, drive times and any flat price so the invoice can use them.
-  await supabase.from("jobs").update({ miles_out, miles_between, miles_back, drive_min: drive_out_min, drive_back_min, flat_price, rate_override: rate_override || null }).eq("id", job.id);
+  await supabase.from("jobs").update({ miles_out, miles_between, miles_back, drive_min: drive_out_min, drive_back_min, flat_price, rate_override: rate_override || null, truck_rate: truck === "ours" ? truck_rate || null : null }).eq("id", job.id);
 
   await supabase.from("quotes").update({ status: "booked", job_id: job.id }).eq("id", quoteId);
   redirect(`/jobs/${job.id}?booked=1`);

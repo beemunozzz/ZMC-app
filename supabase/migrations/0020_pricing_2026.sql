@@ -53,3 +53,8 @@ alter table public.jobs add column if not exists flat_price numeric(10, 2);
 -- 5. An adjusted all-inclusive hourly rate for one quote/job (e.g. to cover a costly truck). Applied Nov 26, 2026.
 alter table public.quotes add column if not exists rate_override numeric(8, 2);
 alter table public.jobs add column if not exists rate_override numeric(8, 2);
+
+-- 6. The truck's share of the hourly rate when the truck is "at cost" (replaces rate_override, which fixed the
+--    whole crew's rate and didn't follow the number of movers). Rate = movers x $75 + truck_rate. Applied Nov 26, 2026.
+alter table public.quotes add column if not exists truck_rate numeric(8, 2);
+alter table public.jobs add column if not exists truck_rate numeric(8, 2);

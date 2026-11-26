@@ -37,7 +37,8 @@ export function TruckCostPanel({
   hourlyRate,
   standardRate,
   truckPerHour,
-  onUseRate,
+  atCost: usingAtCost,
+  onAtCost,
 }: {
   t: TruckForm;
   setT: (f: (o: TruckForm) => TruckForm) => void;
@@ -51,8 +52,10 @@ export function TruckCostPanel({
   /** The normal all-inclusive rate for this crew size (before any adjustment). */
   standardRate: number;
   truckPerHour: number;
-  /** Put an adjusted hourly rate on the quote (or null to go back to the standard rate). */
-  onUseRate: (rate: number | null) => void;
+  /** Is the quote using the truck-at-cost rate? */
+  atCost: boolean;
+  /** Turn truck-at-cost on (true) or go back to the standard rate (false). */
+  onAtCost: (on: boolean) => void;
 }) {
   const choices = toChoices(t, autoMiles, autoFollow);
   const c = truckCost(choices, costs);
@@ -62,7 +65,8 @@ export function TruckCostPanel({
   const laborPerHour = movers * prices.rate;
   // No profit on the truck: the rate covers labor plus our truck cost (rental + gas + the $75 pickup/return time),
   // spread over the hours, rounded to the nearest $5.
-  const atCost = roundTo5(laborPerHour + c.total / hours);
+  // Same as the quote: labor + the truck's share per hour rounded to the nearest $5.
+  const atCost = laborPerHour + roundTo5(c.total / hours);
 
   // Long trips: compare a round trip with a one-way rental.
   const long = choices.miles >= LONG_TRIP_MILES;
@@ -179,18 +183,20 @@ export function TruckCostPanel({
           <p className="text-sm text-ink">
             Rate with our truck at cost: <b className="tabular-nums">{money(atCost)}/hr</b>
             <span className="block text-xs text-muted tabular-nums">
-              {movers} × {money(prices.rate)} labor + {money(c.total)} truck ÷ {hours} hrs, rounded to the nearest $5. Standard rate: {money(standardRate)}/hr.
+              {movers} × {money(prices.rate)} labor + our truck {money(c.total)} ÷ {hours} hrs (rounded to the nearest $5). Standard rate: {money(standardRate)}/hr.
             </span>
           </p>
-          {hourlyRate === atCost ? (
-            <p className="text-sm font-semibold text-ok">✓ This quote uses {money(atCost)}/hr.</p>
+          {usingAtCost ? (
+            <p className="text-sm font-semibold text-ok">
+              ✓ This quote uses the truck at cost ({money(hourlyRate)}/hr). It updates when you change the movers, hours or miles.
+            </p>
           ) : (
-            <button type="button" onClick={() => onUseRate(atCost)} className="press h-11 rounded-xl bg-primary px-4 font-semibold text-white dark:text-navy">
+            <button type="button" onClick={() => onAtCost(true)} className="press h-11 rounded-xl bg-primary px-4 font-semibold text-white dark:text-navy">
               Use {money(atCost)}/hr on this quote
             </button>
           )}
-          {hourlyRate !== standardRate && (
-            <button type="button" onClick={() => onUseRate(null)} className="self-start text-sm font-semibold text-muted">
+          {usingAtCost && (
+            <button type="button" onClick={() => onAtCost(false)} className="self-start text-sm font-semibold text-muted">
               Go back to the standard {money(standardRate)}/hr
             </button>
           )}

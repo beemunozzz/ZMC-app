@@ -35,7 +35,7 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
   if (existing) redirect(`/invoices/${existing.id}`);
 
   // Miles were copied from the quote when the job was booked (empty if typed in by hand).
-  const { data: miles } = await supabase.from("jobs").select("miles_out, miles_between, miles_back, drive_min, drive_back_min, flat_price, rate_override").eq("id", id).maybeSingle();
+  const { data: miles } = await supabase.from("jobs").select("miles_out, miles_between, miles_back, drive_min, drive_back_min, flat_price, rate_override, truck_rate").eq("id", id).maybeSingle();
   const m = (miles ?? {}) as {
     miles_out?: number | null;
     miles_between?: number | null;
@@ -44,6 +44,7 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
     drive_back_min?: number | null;
     flat_price?: number | null;
     rate_override?: number | null;
+    truck_rate?: number | null;
   };
   const prices = await getPrices(supabase);
   const str = (x: number | null | undefined) => (x == null ? "" : String(x));
@@ -97,6 +98,7 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
             driveBack: m.drive_back_min ?? null,
             flatPrice: m.flat_price != null ? Number(m.flat_price) : null,
             rateOverride: m.rate_override != null ? Number(m.rate_override) : null,
+            truckRate: m.truck_rate != null ? Number(m.truck_rate) : null,
             nte: job.nte != null ? Number(job.nte) : null,
           }}
         />
