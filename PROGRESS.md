@@ -131,6 +131,8 @@
 
 - Nov 27: **Temperatures on the calendar** (Stockton, 7 AM to 8 PM, from the hourly forecast; `stocktonTemps`): month view on phones shows the high under the weather icon (always the same spot); on computers "L49° H62°" left of the icon. Week view: "L49° H62°" next to the day's weather on computers, stacked under it on phones. About 6 days ahead.
 
+- Nov 27 (setup step 0026 applied): **Weather is kept after the day passes.** The forecast only covers upcoming days, so the app saves the last forecast for today and tomorrow: Stockton's weather and 7 AM–8 PM low/high per day (`weather_days`) and each job's weather by stop plus its low/high (`jobs.wx_saved`). Past days in the week and month views and past jobs (cards and job page) show what it was; past jobs don't show the "bring extra blankets" tips. Saved quietly after the page loads whenever Zach (or Brandon) opens Home, the schedule or a job (`src/lib/weather-saved.ts`); only the daytime forecast is saved, so tonight's forecast never replaces the day's. Tested the rules: Zach can save; the public can't read or change it. Limits: days before today (Nov 27) have nothing saved; a day nobody opens the app keeps the last forecast from the day before. Later: the nightly timer can save it too once the notification keys are set up, and real measured weather (NWS station observations) could replace the forecast.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
