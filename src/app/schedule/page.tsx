@@ -3,6 +3,7 @@ import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { CrewHours, lowHoursCount, weekHours, type CrewForHours } from "@/components/CrewHours";
 import { JobCard } from "@/components/JobCard";
 import { NextJob } from "@/components/NextJob";
 import { NotActive } from "@/components/NotActive";
@@ -64,7 +65,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   // Everyone on the active crew (names for the cards).
   const { data: crewRows } = await supabase
     .from("crew_members")
-    .select("id, full_name, is_dev")
+    .select("id, full_name, is_dev, role, employment")
     .eq("active", true)
     .order("full_name");
   const crew = crewRows ?? [];
@@ -163,6 +164,27 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
     hours = { thisWeek: clock.weekHours, lastWeek: ((prev ?? []) as TimeEntry[]).filter((e) => e.clock_out).reduce((n, e) => n + entryHours(e), 0) };
   }
 
+  // Owner's week: scheduled hours for each crew member (owners and the developer aren't counted).
+  let crewHours: { rows: ReturnType<typeof weekHours>; offDays: Map<string, number> } | null = null;
+  if (isOwner && !who && view === "week") {
+    const people = workers.filter((c) => c.role !== "owner") as CrewForHours[];
+    const { data: offRows } = await supabase
+      .from("time_off")
+      .select("crew_id, start_date, end_date, until_time")
+      .eq("status", "approved")
+      .is("until_time", null)
+      .lte("start_date", to)
+      .gte("end_date", from);
+    const offDays = new Map<string, number>();
+    for (const o of offRows ?? []) {
+      const s = (o.start_date as string) > from ? (o.start_date as string) : from;
+      const e = (o.end_date as string) < to ? (o.end_date as string) : to;
+      const n = Math.round((Date.parse(e) - Date.parse(s)) / 86_400_000) + 1;
+      offDays.set(o.crew_id as string, Math.min(7, (offDays.get(o.crew_id as string) ?? 0) + n));
+    }
+    crewHours = { rows: weekHours(people, allJobs), offDays };
+  }
+
   const dayJobs = (d: string) => jobs.filter((j) => j.job_date === d);
   const isDoubleBooked = (j: Job) => conflicts(j, allJobs.filter((o) => o.job_date === j.job_date)).length > 0;
   const whoName = who ? names.get(who) : "";
@@ -201,7 +223,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
           </p>
         )}
 
-        {isOwner && view !== "today" && <Summary jobs={jobs.filter((j) => j.job_date >= (view === "month" ? firstOfMonth(date) : from) && j.job_date <= (view === "month" ? lastOfMonth(date) : to))} />}
+        {isOwner && view !== "today" && <Summary lowHours={crewHours ? lowHoursCount(crewHours.rows) : 0} jobs={jobs.filter((j) => j.job_date >= (view === "month" ? firstOfMonth(date) : from) && j.job_date <= (view === "month" ? lastOfMonth(date) : to))} />}
 
         {view === "week" && (
           // Phone: a calendar-style agenda (big day number on the left, that day's jobs on the right).
@@ -254,6 +276,8 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
             })}
           </div>
         )}
+
+        {crewHours && <CrewHours rows={crewHours.rows} offDays={crewHours.offDays} whoHref={(id) => href({ who: id })} />}
 
         {view === "month" && <Month date={date} today={today} from={from} jobs={jobs} href={href} dayWx={dayWx} />}
 
@@ -355,7 +379,7 @@ function Toolbar({
   );
 }
 
-function Summary({ jobs }: { jobs: Job[] }) {
+function Summary({ jobs, lowHours = 0 }: { jobs: Job[]; lowHours?: number }) {
   const live = jobs.filter((j) => j.status !== "canceled");
   const hrs = live.reduce((s, j) => s + (Number(j.est_hours) || 0), 0);
   const noCrew = live.filter((j) => isLive(j) && !jobCrew(j).length).length;
@@ -377,6 +401,11 @@ function Summary({ jobs }: { jobs: Job[] }) {
         <span className={`${chip} border-warn/40 text-warn`}>
           <Icon name="truck" className="h-3.5 w-3.5" /> Trucks to reserve: <b>{trucks}</b>
         </span>
+      )}
+      {lowHours > 0 && (
+        <a href="#crew-hours" className={`${chip} border-warn/40 text-warn`}>
+          <Icon name="clock" className="h-3.5 w-3.5" /> Low on hours: <b>{lowHours}</b>
+        </a>
       )}
       {live.length > 0 &&
         (open > 0 ? (
