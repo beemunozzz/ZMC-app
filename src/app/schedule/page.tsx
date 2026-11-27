@@ -539,17 +539,38 @@ function Month({
                   Phones: time range on top, last name under it (2 jobs). Computers: one line each (3 jobs). The count has the total. */}
               {list.length > 0 && (
                 <span className="absolute inset-x-0.5 top-[1.95rem] flex flex-col gap-0.5 md:inset-x-1 md:top-7">
-                  {list.slice(0, 3).map((j, i) => (
-                    <span
-                      key={j.id}
-                      className={`${i === 2 ? "hidden md:block" : "block"} overflow-hidden rounded px-[3px] md:truncate text-[9.5px] font-semibold leading-[12px] tabular-nums md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
-                        isLive(j) && openSpots(j) > 0 ? "bg-bad-fill text-white" : "bg-primary/10 text-primary"
-                      }`}
-                    >
-                      <span className="block tracking-tight md:inline">{shortSpan(j).split("–").map((part, k) => (k ? <Fragment key={k}>–<wbr />{part}</Fragment> : part))}</span>
-                      <span className="block truncate font-medium md:inline"><span className="hidden md:inline"> </span>{lastName(j.customer_name)}</span>
-                    </span>
-                  ))}
+                  {list.slice(0, 4).map((j, i) => {
+                    // Phones: 1-2 jobs show the time range and name; 3+ jobs switch to one short line each (start time) so up to 4 fit.
+                    const compact = list.length >= 3;
+                    const onPhone = i < (compact ? 4 : 2);
+                    const onComputer = i < 3;
+                    return (
+                      <span
+                        key={j.id}
+                        className={`${onPhone ? "block" : "hidden"} ${onComputer ? "md:block" : "md:hidden"} overflow-hidden rounded px-[3px] text-[9.5px] font-semibold leading-[12px] tabular-nums md:truncate md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
+                          isLive(j) && openSpots(j) > 0 ? "bg-bad-fill text-white" : "bg-primary/10 text-primary"
+                        }`}
+                      >
+                        {compact ? (
+                          <>
+                            <span className="block truncate md:hidden">{shortTime(j.start_time)}</span>
+                            <span className="hidden md:inline">
+                              {shortSpan(j)} <span className="font-medium">{lastName(j.customer_name)}</span>
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="block tracking-tight md:inline">{shortSpan(j).split("–").map((part, k) => (k ? <Fragment key={k}>–<wbr />{part}</Fragment> : part))}</span>
+                            <span className="block truncate font-medium md:inline">
+                              <span className="hidden md:inline"> </span>
+                              {lastName(j.customer_name)}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    );
+                  })}
+                  {list.length > 3 && <span className="hidden px-1 text-[10px] font-semibold text-muted md:block">+{list.length - 3} more</span>}
                 </span>
               )}
               {/* Fixed spot: job count, bottom-center */}
@@ -579,7 +600,7 @@ function Month({
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-warn-fill" /> Weather at a job site
         </span>
-        <span>Weather: the forecast for the next 7 days, with Stockton's high (computers: low and high) from 7 AM to 8 PM; a faded 🌦️ on days 8–14 means NOAA&apos;s outlook leans wetter than usual (rough). Tap a day to open its week.</span>
+        <span>Weather: the forecast for the next 7 days, with Stockton&apos;s high (computers: low and high) from 7 AM to 8 PM; a faded 🌦️ on days 8–14 means NOAA&apos;s outlook leans wetter than usual (rough). Tap a day to open its week.</span>
       </div>
     </div>
   );
