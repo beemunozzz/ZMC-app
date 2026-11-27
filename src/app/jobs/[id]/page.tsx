@@ -18,7 +18,8 @@ import { loadMeet } from "@/lib/meet";
 import { loadChecklist } from "@/lib/checklist-server";
 import { LoadChecklist } from "@/components/LoadChecklist";
 import { money } from "@/lib/pricing";
-import { jobForecast, jobOutlook, stocktonForecast, stocktonOutlook } from "@/lib/weather";
+import { jobForecast, jobOutlook, jobTemps, stocktonForecast, stocktonOutlook } from "@/lib/weather";
+import { WX_EMOJI, WX_LABEL } from "@/lib/weather-kinds";
 import { getPrices } from "@/lib/settings";
 import { bookingText, reminderText } from "@/lib/texts";
 import { OnMyWay, TextLink } from "@/components/TextButtons";
@@ -60,6 +61,8 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   // Zach: who could swap in (free that day, fewest hours first).
   const candidates = isOwner && isLive(job) ? await swapCandidates(supabase, job) : null;
   const wx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
+  // Low and high during working hours (7 AM to 8 PM) at the pickup, for the header.
+  const temps = wx && isLive(job) ? await jobTemps(job) : null;
   // Days 8-14: NOAA's rough outlook until the real forecast is available.
   const later = !wx && isLive(job) && job.job_date >= todayISO() ? await jobOutlook(job, await stocktonOutlook()) : null;
 
@@ -131,7 +134,20 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
               <h1 className="min-w-0 break-words font-display text-3xl font-extrabold uppercase leading-[0.95] text-ink">{job.customer_name}</h1>
               <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
             </div>
-            <p className="text-[15px] tabular-nums text-muted">{fmtDayLong(job.job_date)}</p>
+            <p className="text-[15px] tabular-nums text-muted">
+              {fmtDayLong(job.job_date)}
+              {wx && (
+                <span className="text-ink">
+                  {" · "}
+                  <span aria-hidden>{WX_EMOJI[wx.kind]}</span> {wx.text || WX_LABEL[wx.kind]}
+                </span>
+              )}
+              {temps && (
+                <span className="whitespace-nowrap text-ink" title="Low and high between 7 AM and 8 PM">
+                  {" · "}L {temps.lo}° H {temps.hi}°
+                </span>
+              )}
+            </p>
             <p className="font-display text-4xl font-extrabold tabular-nums leading-none text-tape">{timeSpan(job)}</p>
             <p className="text-sm tabular-nums text-muted">
               {hrs ? `About ${fmtHours(hrs)} hrs` : "Hours not set"}

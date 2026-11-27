@@ -173,3 +173,36 @@ export async function jobsOutlook(jobs: { id: string; job_date: string; pickup_a
   const list = await Promise.all(later.map(async (j) => [j.id, await jobOutlook(j, window)] as const));
   return new Map(list.filter((x): x is readonly [string, JobOutlook] => !!x[1]));
 }
+
+// ---- Working-hours temperatures (7 AM to 8 PM) from the hourly forecast ----
+export type DayTemps = { lo: number; hi: number };
+const WORK_FROM = 7;
+const WORK_TO = 20;
+
+/** Low and high between 7 AM and 8 PM for each date, about 6 days ahead. Saved for an hour. */
+export async function workTempsAt(lat: number, lon: number): Promise<Record<string, DayTemps>> {
+  "use cache";
+  cacheLife("hours");
+  const point = await getJSON(`https://api.weather.gov/points/${lat.toFixed(3)},${lon.toFixed(3)}`);
+  const url: string | undefined = point?.properties?.forecastHourly;
+  if (!url) return {};
+  const fc = await getJSON(url);
+  const out: Record<string, DayTemps> = {};
+  for (const p of (fc?.properties?.periods ?? []) as { startTime: string; temperature: number; temperatureUnit: string }[]) {
+    const hour = Number(p.startTime.slice(11, 13)); // NWS times are already local
+    if (hour < WORK_FROM || hour > WORK_TO || p.temperature == null) continue;
+    const f = p.temperatureUnit === "C" ? Math.round(p.temperature * 1.8 + 32) : p.temperature;
+    const d = (out[p.startTime.slice(0, 10)] ??= { lo: f, hi: f });
+    d.lo = Math.min(d.lo, f);
+    d.hi = Math.max(d.hi, f);
+  }
+  return out;
+}
+
+/** A job's working-hours low and high, at the pickup (Stockton if the address can't be found). */
+export async function jobTemps(job: { job_date: string; pickup_address: string }): Promise<DayTemps | null> {
+  const at = job.pickup_address.trim().length > 5 ? await withTimeout(geocode(job.pickup_address), 3000) : null;
+  const spot = at ?? STOCKTON;
+  const temps = await withTimeout(workTempsAt(spot.lat, spot.lon), 4000);
+  return temps?.[job.job_date] ?? null;
+}
