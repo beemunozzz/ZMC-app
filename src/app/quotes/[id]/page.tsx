@@ -9,6 +9,8 @@ import { followUpDue, followUpText } from "@/lib/followups";
 import { siteUrl } from "@/lib/site-url";
 import { todayISO } from "@/lib/dates";
 import { FollowUpButton } from "../FollowUpButton";
+import { markThanked } from "../lead-actions";
+import { smsHref } from "@/lib/texts";
 
 const whenTs = (ts: string) =>
   new Date(ts).toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -40,6 +42,12 @@ async function QuoteView({ params, searchParams }: Pick<PageProps<"/quotes/[id]"
   const quote = data as Quote;
   const st = QUOTE_STATUS[quote.status];
   const due = followUpDue(quote, todayISO());
+  // The referrer's phone, if they're one of our customers (matched by name).
+  let referrerPhone = "";
+  if (quote.referred_by && quote.status === "booked" && !quote.referral_thanked_at) {
+    const { data: ref } = await supabase.from("quotes").select("customer_phone").ilike("customer_name", quote.referred_by.trim().replace(/[%_\\]/g, (c) => `\\${c}`)).neq("customer_phone", "").limit(1);
+    referrerPhone = (ref?.[0]?.customer_phone as string) ?? "";
+  }
   const followText = quote.share_token ? followUpText(quote, due?.kind ?? (quote.followups ? "second" : "first"), `${await siteUrl()}/q/${quote.share_token}`, prices.business_phone) : "";
 
   return (
@@ -54,6 +62,30 @@ async function QuoteView({ params, searchParams }: Pick<PageProps<"/quotes/[id]"
           <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
         </div>
         {sp.saved && <p className="rise rounded-xl bg-ok/12 px-4 py-3 text-sm font-medium text-ok">✓ Quote saved</p>}
+        {quote.referred_by && quote.status === "booked" && (
+          <section className="flex flex-col gap-2 rounded-2xl border border-line bg-card p-4">
+            <p className="text-sm text-ink">
+              <b>{quote.referred_by}</b> referred {quote.customer_name.split(" ")[0]}.{" "}
+              {quote.referral_thanked_at ? <span className="text-ok">✓ Thanked</span> : "Send a quick thank-you."}
+            </p>
+            {!quote.referral_thanked_at && (
+              <div className="flex flex-wrap gap-2">
+                {referrerPhone && (
+                  <a
+                    href={smsHref(referrerPhone, `Hi ${quote.referred_by.split(" ")[0]}, Zach with Zachery's Moving Co. Thank you so much for sending ${quote.customer_name.split(" ")[0]} our way. We really appreciate it!`)}
+                    className="press flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-white dark:text-navy"
+                  >
+                    Text a thank-you
+                  </a>
+                )}
+                <form action={markThanked}>
+                  <input type="hidden" name="id" value={quote.id} />
+                  <button className="press h-10 rounded-xl border border-line px-4 text-sm font-semibold text-ink">Mark thanked</button>
+                </form>
+              </div>
+            )}
+          </section>
+        )}
         {quote.sent_at && !quote.accepted_at && (quote.status === "quoted" || quote.status === "follow_up") && quote.share_token && (
           <section className={`flex flex-col gap-2 rounded-2xl border p-4 ${due ? "border-warn/50 bg-warn/8" : "border-line bg-card"}`}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">

@@ -246,6 +246,17 @@ async function InvoiceView({ params, searchParams }: Pick<PageProps<"/invoices/[
           )}
         </section>
 
+        {inv.rating ? (
+          <section className={`flex flex-col gap-1 rounded-2xl border p-4 ${inv.rating <= 3 ? "border-bad/40 bg-bad/8" : "border-line bg-card"}`}>
+            <p className="text-sm font-semibold text-ink">
+              Customer&apos;s rating: <span className="text-tape">{"★".repeat(inv.rating)}</span>
+              <span className="text-line">{"★".repeat(5 - inv.rating)}</span>
+            </p>
+            {inv.rating_comment && <p className="whitespace-pre-wrap text-sm text-ink">&ldquo;{inv.rating_comment}&rdquo;</p>}
+            {inv.rating <= 3 && <p className="text-xs text-muted">Only you see this. Reach out to make it right.</p>}
+          </section>
+        ) : null}
+
         {isOwner && <JobProfit supabase={supabase} inv={inv} prices={prices} />}
 
         {isOwner && <EditHours id={inv.id} hours={Number(inv.hours)} movers={inv.movers} />}

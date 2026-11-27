@@ -215,6 +215,13 @@ async function Home() {
   }
   if (newQuotes.length > 5)
     attention.push({ key: "qmore", tone: "bad", text: `${newQuotes.length - 5} more new leads waiting`, sub: "Open Leads", href: "/quotes" });
+  // Unhappy customers (3 stars or fewer in the last 2 weeks) and referrals to thank.
+  const { data: lowRows } = await supabase.from("invoices").select("id, customer_name, rating").lte("rating", 3).gte("rated_at", addDays(today, -14));
+  for (const r of (lowRows ?? []) as { id: string; customer_name: string; rating: number }[])
+    attention.push({ key: `rate${r.id}`, tone: "bad", text: `${r.rating}-star rating: ${r.customer_name}`, sub: "Reach out to make it right", href: `/invoices/${r.id}` });
+  const { data: thankRows } = await supabase.from("quotes").select("id, customer_name, referred_by").eq("status", "booked").neq("referred_by", "").is("referral_thanked_at", null).limit(5);
+  for (const r of (thankRows ?? []) as { id: string; customer_name: string; referred_by: string }[])
+    attention.push({ key: `ref${r.id}`, tone: "warn", text: `Thank ${r.referred_by} for referring ${r.customer_name}`, sub: "A quick thank-you text goes a long way", href: `/quotes/${r.id}` });
   // Quotes that need a follow-up text today.
   const site = await siteUrl();
   const followUps = quotes

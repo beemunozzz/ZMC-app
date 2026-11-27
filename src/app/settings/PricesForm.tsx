@@ -136,6 +136,34 @@ export function PricesForm({ prices }: { prices: Prices }) {
           />
           <span className="text-xs font-normal text-muted">Added to booking and reminder texts. Leave blank until the page is up.</span>
         </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+          Google review link
+          <input
+            name="review_url"
+            type="url"
+            inputMode="url"
+            value={v.review_url}
+            onChange={(e) => setV((o) => ({ ...o, review_url: e.target.value }))}
+            placeholder="https://g.page/r/…/review"
+            className={input}
+          />
+          <span className="text-xs font-normal text-muted">
+            Customers who rate their move 4 or 5 stars get this link. Find it in Google Business Profile: Ask for reviews → copy the link.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+          Cancellation policy (on the estimate)
+          <textarea
+            name="cancellation_policy"
+            rows={2}
+            maxLength={240}
+            value={v.cancellation_policy}
+            onChange={(e) => setV((o) => ({ ...o, cancellation_policy: e.target.value }))}
+            placeholder="Free to reschedule or cancel up to 48 hours before your move."
+            className="rounded-xl border border-line bg-bg p-3 text-base text-ink outline-none focus:border-primary"
+          />
+          <span className="text-xs font-normal text-muted">One short sentence. Leave blank to leave it off.</span>
+        </label>
       </section>
 
       <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4">

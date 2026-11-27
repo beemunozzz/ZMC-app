@@ -127,6 +127,15 @@ export function AppHeader({
                 <Link href="/invoices" className={item} onClick={() => setOpen(false)}>
                   Invoices
                 </Link>
+                <Link href="/customers" className={item} onClick={() => setOpen(false)}>
+                  Customers
+                </Link>
+                <Link href="/partners" className={item} onClick={() => setOpen(false)}>
+                  Referral partners
+                </Link>
+                <Link href="/reports/accuracy" className={item} onClick={() => setOpen(false)}>
+                  Estimate accuracy
+                </Link>
                 <Link href="/settings" className={item} onClick={() => setOpen(false)}>
                   Prices
                 </Link>

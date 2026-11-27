@@ -63,3 +63,13 @@ export async function setStage(form: FormData) {
   if (stage !== "new") await supabase.from("quotes").update({ contacted_at: new Date().toISOString() }).eq("id", id).is("contacted_at", null);
   refresh(id);
 }
+
+/** Zach thanked whoever referred this customer. */
+export async function markThanked(form: FormData) {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner") return;
+  const id = text(form, "id", 40);
+  if (!UUID.test(id)) return;
+  await supabase.from("quotes").update({ referral_thanked_at: new Date().toISOString() }).eq("id", id);
+  refresh(id);
+}

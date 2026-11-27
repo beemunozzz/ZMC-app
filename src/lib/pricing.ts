@@ -37,6 +37,8 @@ export type Prices = {
   cashapp: string; // $cashtag
   venmo: string; // @username
   apple_cash: string; // phone number
+  review_url: string; // Zach's Google review link (happy customers get it after rating the move)
+  cancellation_policy: string; // short text on the customer's estimate
 };
 
 export const DEFAULT_PRICES: Prices = {
@@ -63,10 +65,12 @@ export const DEFAULT_PRICES: Prices = {
   cashapp: "",
   venmo: "",
   apple_cash: "",
+  review_url: "",
+  cancellation_policy: "",
 };
 
 export const PRICE_COLUMNS =
-  "rate, min_hours, min_movers, allin_rate, allin_far_rate, far_miles, allin_movers, travel_free_hours, travel_mid_hours, travel_mid_charge, travel_long_share, long_day_hours, ot_multiplier, long_day_bonus, materials, water, nte_cushion_hours, business_phone, expect_url, zelle, cashapp, venmo, apple_cash";
+  "rate, min_hours, min_movers, allin_rate, allin_far_rate, far_miles, allin_movers, travel_free_hours, travel_mid_hours, travel_mid_charge, travel_long_share, long_day_hours, ot_multiplier, long_day_bonus, materials, water, nte_cushion_hours, business_phone, expect_url, zelle, cashapp, venmo, apple_cash, review_url, cancellation_policy";
 
 export type QuoteInputs = {
   movers: number | string | null;

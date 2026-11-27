@@ -39,7 +39,7 @@ export async function sendInvoiceLink(invoiceId: string): Promise<InvoiceSendRes
     url,
     "",
     inv.paid_at ? `Total: ${money(Number(inv.total))}, paid by ${PAY_LABEL[inv.payment_method]}. Thank you!` : `Total due: ${money(Number(inv.total))}.`,
-    "You can save a copy as a PDF from that page.",
+    "You can save a copy as a PDF there, and tell us how we did.",
     "",
     "Questions? Call or text (209) 326-5601.",
   ].join("\n");

@@ -9,6 +9,7 @@ import { PAY_LABEL, payLink } from "@/lib/invoices";
 import { money, type Prices } from "@/lib/pricing";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import "../../q/[token]/quote-doc.css";
+import { RateMove } from "./RateMove";
 
 export const metadata: Metadata = {
   title: "Your invoice · Zachery's Moving Co.",
@@ -37,7 +38,11 @@ async function CustomerInvoice({ params }: { params: Promise<{ token: string }> 
   const { token } = await params;
   if (!/^[0-9a-f]{40,80}$/.test(token)) notFound();
   const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
-  const { data } = await db.rpc("public_invoice", { p_token: token });
+  const [{ data }, { data: rateRows }] = await Promise.all([
+    db.rpc("public_invoice", { p_token: token }),
+    db.rpc("public_invoice_rating", { p_token: token }),
+  ]);
+  const rated = ((rateRows ?? []) as { rating: number | null; review_url: string }[])[0];
   const row = ((data ?? []) as InvoiceRow[])[0];
   if (!row?.view) notFound();
   const v = row.view;
@@ -329,6 +334,9 @@ async function CustomerInvoice({ params }: { params: Promise<{ token: string }> 
           Save your invoice (PDF)
         </a>
         <p className="text-xs text-[#5b6672]">Saves a one-page copy of this invoice.</p>
+      </div>
+      <div className="no-print mx-auto mt-4 max-w-[8.5in] rounded-2xl bg-white p-5 shadow-sm">
+        <RateMove token={token} initial={rated?.rating ?? null} reviewUrl={rated?.review_url ?? ""} />
       </div>
     </div>
   );

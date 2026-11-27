@@ -22,6 +22,15 @@ export async function savePrices(_: SettingsState, form: FormData): Promise<Sett
       row[k] = raw.slice(0, 80);
       continue;
     }
+    if (k === "review_url") {
+      if (raw && !/^https:\/\/\S+$/.test(raw)) return { error: "The Google review link should start with https://" };
+      row.review_url = raw.slice(0, 400);
+      continue;
+    }
+    if (k === "cancellation_policy") {
+      row.cancellation_policy = raw.replace(/\s+/g, " ").slice(0, 240);
+      continue;
+    }
     if (k === "expect_url") {
       if (raw && !/^https:\/\/\S+$/.test(raw)) return { error: "The What to expect link should start with https://" };
       row.expect_url = raw.slice(0, 300);

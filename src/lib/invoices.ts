@@ -47,10 +47,14 @@ export type Invoice = {
   /** When the customer's invoice link was last made, and its private code. */
   sent_at?: string | null;
   share_token?: string | null;
+  /** The customer's private rating of the move (from their invoice link). */
+  rating?: number | null;
+  rating_comment?: string;
+  rated_at?: string | null;
 };
 
 export const INVOICE_COLUMNS =
-  "id, job_id, customer_name, customer_phone, hours, movers, truck, miles_out, miles_between, miles_back, labor, trip, truck_charge, total, nte, signature, signed_name, signed_at, hours_verified_at, verified_hours, verified_movers, owner_edited_at, payment_method, paid_at, created_at, sent_at, share_token";
+  "id, job_id, customer_name, customer_phone, hours, movers, truck, miles_out, miles_between, miles_back, labor, trip, truck_charge, total, nte, signature, signed_name, signed_at, hours_verified_at, verified_hours, verified_movers, owner_edited_at, payment_method, paid_at, created_at, sent_at, share_token, rating, rating_comment, rated_at";
 
 const amount = (n: number) => (Math.round(n * 100) / 100).toString();
 
