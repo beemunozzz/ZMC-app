@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
-import { Suspense } from "react";
+import { Fragment, Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { CrewHours, lowHoursCount, weekHours, type CrewForHours } from "@/components/CrewHours";
@@ -495,7 +495,7 @@ function Month({
               href={href({ view: "week", date: d })}
               aria-label={`${fmtDayLong(d)}: ${list.length} job${list.length === 1 ? "" : "s"}${short ? ", needs crew" : ""}${wxText ? ". " + wxText : ""}`}
               title={wxText || undefined}
-              className={`press relative h-[7.25rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
+              className={`press relative h-[8rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
                 inMonth ? "border-line" : "border-transparent bg-transparent opacity-40"
               }`}
             >
@@ -519,11 +519,11 @@ function Month({
                   {list.slice(0, 3).map((j, i) => (
                     <span
                       key={j.id}
-                      className={`${i === 2 ? "hidden md:block" : "block"} truncate rounded px-[3px] text-[9.5px] font-semibold leading-[12px] tabular-nums md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
+                      className={`${i === 2 ? "hidden md:block" : "block"} overflow-hidden rounded px-[3px] md:truncate text-[9.5px] font-semibold leading-[12px] tabular-nums md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
                         isLive(j) && openSpots(j) > 0 ? "bg-bad/12 text-bad" : "bg-primary/10 text-primary"
                       }`}
                     >
-                      <span className="block truncate tracking-tight md:inline">{shortSpan(j)}</span>
+                      <span className="block tracking-tight md:inline">{shortSpan(j).split("–").map((part, k) => (k ? <Fragment key={k}>–<wbr />{part}</Fragment> : part))}</span>
                       <span className="block truncate font-medium md:inline"><span className="hidden md:inline"> </span>{lastName(j.customer_name)}</span>
                     </span>
                   ))}
