@@ -95,4 +95,6 @@
   .qdoc .foot { margin-top: auto; }
   .no-print { display: none !important; }
   .qdoc .sigline.print-only { display: grid; }
+  .qdoc .sigspace, .qdoc .sigspace img { height: 36px; }
+  .qdoc .sigrule { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }

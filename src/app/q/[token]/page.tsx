@@ -274,8 +274,13 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
               )}
             </div>
             <div className="sigrule">
-              {accepted && row.signed_name ? <b>{row.signed_name}</b> : null}
-              {accepted && row.signed_name ? " · " : ""}Customer signature (accepts this estimate and not-to-exceed price)
+              {accepted && row.signed_name ? (
+                <>
+                  <b>{row.signed_name}</b> · Customer signature
+                </>
+              ) : (
+                "Customer signature (accepts this estimate and not-to-exceed price)"
+              )}
             </div>
           </div>
           <div>
