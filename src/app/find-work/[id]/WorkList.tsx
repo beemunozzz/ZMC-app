@@ -58,7 +58,7 @@ export function WorkList({ personId, first, items }: { personId: string; first: 
               {it.route && <p className="text-sm text-muted">{it.route}</p>}
               {it.note && <p className="text-xs font-semibold text-warn">{it.note}</p>}
             </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${it.open ? "bg-warn/12 text-warn" : "bg-bg text-muted"}`}>
+            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${it.open ? "bg-bad/10 text-bad" : "bg-bg text-muted"}`}>
               {it.open ? `Needs ${it.open}` : "Full"} · {it.hours} hrs
             </span>
           </div>

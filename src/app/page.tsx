@@ -162,7 +162,7 @@ async function Home() {
     const people = jobCrew(j).length;
     if (!people) attention.push({ key: `nc${j.id}`, tone: "bad", text: `No crew: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}/edit` });
     else if (openSpots(j) > 0)
-      attention.push({ key: `os${j.id}`, tone: "warn", text: `Needs ${openSpots(j)} more: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}/edit` });
+      attention.push({ key: `os${j.id}`, tone: "bad", text: `Needs ${openSpots(j)} more: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}/edit` });
     const clash = conflicts(j, jobs.filter((o) => o.job_date === j.job_date));
     if (clash.length)
       attention.push({
@@ -247,7 +247,7 @@ async function Home() {
                 <h2 className="font-display text-lg font-extrabold uppercase text-muted">{todays.indexOf(nextUp) === 0 && nowMin < (minutesOf(nextUp.start_time) ?? 0) ? "First job" : "Next up"}</h2>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                    !jobCrew(nextUp).length ? "bg-bad/15 text-bad" : openSpots(nextUp) ? "bg-warn/15 text-warn" : "bg-ok/15 text-ok"
+                    !jobCrew(nextUp).length || openSpots(nextUp) ? "bg-bad/15 text-bad" : "bg-ok/15 text-ok"
                   }`}
                 >
                   {jobCrew(nextUp).length}/{nextUp.movers_needed} crew

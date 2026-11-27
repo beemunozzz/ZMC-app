@@ -83,7 +83,7 @@ export function CrewSwap({ jobId, members, candidates, short, needed }: { jobId:
       ) : (
         <p className="mt-1 text-sm text-muted">Nobody assigned yet.</p>
       )}
-      {short > 0 && members.length > 0 && <p className="mt-2 text-sm font-medium text-warn">Need {short} more.</p>}
+      {short > 0 && members.length > 0 && <p className="mt-2 text-sm font-semibold text-bad">Need {short} more.</p>}
 
       {!mode && (short > 0 || !members.length) && (
         <button

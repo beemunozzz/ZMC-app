@@ -21,6 +21,7 @@ import {
   fmtShort,
   isISODate,
   lastOfMonth,
+  minutes,
   mondayOf,
   todayISO,
 } from "@/lib/dates";
@@ -409,7 +410,7 @@ function Summary({ jobs, lowHours = 0 }: { jobs: Job[]; lowHours?: number }) {
       )}
       {live.length > 0 &&
         (open > 0 ? (
-          <span className={`${chip} border-warn/40 text-warn`}>
+          <span className={`${chip} border-bad/40 text-bad`}>
             <b>{open}</b> open spot{open === 1 ? "" : "s"}
           </span>
         ) : (
@@ -419,6 +420,14 @@ function Summary({ jobs, lowHours = 0 }: { jobs: Job[]; lowHours?: number }) {
         ))}
     </div>
   );
+}
+
+/** "8a", "8:30a", "1p": a start time that fits in a small month box. */
+function shortTime(t: string | null) {
+  const m = minutes(t);
+  if (m == null) return "—";
+  const h = Math.floor(m / 60), mm = m % 60;
+  return `${h % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "a" : "p"}`;
 }
 
 function Month({
@@ -463,7 +472,7 @@ function Month({
               href={href({ view: "week", date: d })}
               aria-label={`${fmtDayLong(d)}: ${list.length} job${list.length === 1 ? "" : "s"}${short ? ", needs crew" : ""}${wxText ? ". " + wxText : ""}`}
               title={wxText || undefined}
-              className={`press relative h-16 min-w-0 overflow-hidden rounded-lg border bg-card md:h-24 ${
+              className={`press relative h-[5.25rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
                 inMonth ? "border-line" : "border-transparent bg-transparent opacity-40"
               }`}
             >
@@ -480,6 +489,16 @@ function Month({
                 {wx ? WX_EMOJI[wx.kind] : ""}
                 {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
               </span>
+              {/* Fixed spot: start times, middle (red = that job still needs crew). Phones show 2, computers 3. */}
+              {list.length > 0 && (
+                <span className="absolute inset-x-0 top-6 flex flex-col items-center text-[10px] font-semibold leading-[13px] tabular-nums md:top-8 md:text-xs md:leading-4">
+                  {list.slice(0, 3).map((j, i) => (
+                    <span key={j.id} className={`${i === 2 ? "hidden md:block" : ""} ${isLive(j) && openSpots(j) > 0 ? "text-bad" : "text-ink"}`}>
+                      {shortTime(j.start_time)}
+                    </span>
+                  ))}
+                </span>
+              )}
               {/* Fixed spot: job count, bottom-center */}
               {list.length > 0 && (
                 <span

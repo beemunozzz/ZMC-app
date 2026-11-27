@@ -1,5 +1,5 @@
 // Weather kinds, emojis and tips. Safe to use on both the server and the phone.
-export type Wx = "clear" | "cloudy" | "fog" | "rain" | "hot" | "wind";
+export type Wx = "clear" | "cloudy" | "fog" | "rain" | "snow" | "hot" | "wind";
 
 export type DayWx = {
   kind: Wx;
@@ -18,6 +18,7 @@ export const WX_EMOJI: Record<Wx, string> = {
   cloudy: "☁️",
   fog: "☁️",
   rain: "🌧️",
+  snow: "❄️",
   hot: "🔥",
   wind: "💨",
 };
@@ -27,22 +28,24 @@ export const WX_LABEL: Record<Wx, string> = {
   cloudy: "Cloudy",
   fog: "Fog",
   rain: "Rain likely",
+  snow: "Snow or ice",
   hot: "Hot (100°F+)",
   wind: "Windy",
 };
 
 export const WX_TIP: Partial<Record<Wx, string>> = {
   rain: "Rain expected: bring extra blankets, plastic covers and floor runners.",
+  snow: "Snow or ice expected: leave early, drive carefully, and bring extra floor runners and salt for steps.",
   hot: "Hot day: extra water, start early, take breaks in the shade.",
   wind: "Windy: strap loads tight and watch mattresses and boxes on the ramp.",
   fog: "Morning fog (tule fog): leave early and drive carefully.",
 };
 
-/** Weather worth warning the crew about. */
-export const WX_WATCH: Wx[] = ["rain", "hot", "wind", "fog"];
+/** Weather worth warning about in orange. Fog is shown quietly (grey) with its tip, not as a warning. */
+export const WX_WATCH: Wx[] = ["rain", "snow", "hot", "wind"];
 
 /** Worst first. */
-const RANK: Wx[] = ["rain", "hot", "wind", "fog", "cloudy", "clear"];
+const RANK: Wx[] = ["snow", "rain", "hot", "wind", "fog", "cloudy", "clear"];
 
 export function worse<T extends { kind: Wx }>(a: T | null | undefined, b: T | null | undefined): T | null {
   if (!a) return b ?? null;
@@ -61,7 +64,8 @@ export function classify(p: {
 }): Wx | null {
   const t = (p.shortForecast ?? "").toLowerCase();
   const pop = p.probabilityOfPrecipitation?.value;
-  const wet = /thunder|rain|shower|drizzle|sleet|snow/.test(t);
+  const wet = /thunder|rain|shower|drizzle|sleet|snow|ice|freezing/.test(t);
+  if (/snow|sleet|ice|freezing|flurr/.test(t) && (pop == null || pop >= 40)) return "snow";
   if (wet && (pop == null || pop >= 40)) return "rain";
   const tempF = p.temperatureUnit === "C" && p.temperature != null ? p.temperature * 1.8 + 32 : p.temperature;
   if (p.isDaytime && tempF != null && tempF >= 100) return "hot";
