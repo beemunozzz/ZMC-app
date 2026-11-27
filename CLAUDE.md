@@ -180,7 +180,7 @@ These come from Brandon's feedback and the `zmc-app-design` skill.
   - primary blue `#1F4E8C` / `#8FB2E6`
   - tape accent `#D9A25B` / `#E0B072`
   - lines `#E2DBD0`
-  - red: text `--bad` (`#B3261E` / soft `#F2B8B5` in dark); filled red shapes use `bg-bad-fill` (`#B3261E` / `#D63A31`) with white text, so they never look pink in dark mode
+  - red `#B3261E` / `#EC5B52` (one red in dark mode for text, chips and filled shapes; filled shapes use `bg-bad-fill` with white text so they never look pink)
 - Fonts: **Archivo** for everything (Brandon's pick, Nov 2026): its narrow width (`.font-display`, wdth 62) for bold uppercase headings, regular width for body. Before that: Barlow Condensed + Inter (Version 1).
 - **Logo (Nov 2026, Brandon's pick):** the letters "ZMC." (with the period) in **Georgia**, bold (`.font-logo` in `globals.css`; Gelasio, a free Georgia look-alike, stands in on Android). Used in the header, the login screen and the loading screen. ZMC logo files (black and white) may still come from Zach.
 - Motion: subtle and quick, ease-out, animate only transform and opacity, press scale 0.97, and respect "reduce motion".
