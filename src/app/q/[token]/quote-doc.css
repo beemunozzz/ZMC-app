@@ -97,4 +97,6 @@
   .qdoc .sigline.print-only { display: grid; }
   .qdoc .sigspace, .qdoc .sigspace img { height: 36px; }
   .qdoc .sigrule { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qdoc .foot { flex-wrap: nowrap; font-size: 9.5px; }
+  .qdoc .foot span:last-child { white-space: nowrap; }
 }
