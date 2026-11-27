@@ -11,7 +11,31 @@ export type DayWx = {
   pop?: number;
 };
 
-export type JobWx = DayWx & { atSite: boolean };
+/** One place on a job: the pickup, the drop-off, or halfway along the drive. */
+export type WxStop = { label: "Pickup" | "Drop-off" | "On the drive"; place: string; wx: DayWx };
+
+/**
+ * A job's weather: the worst of its stops. `where` names the worst place ("Livermore", "the drive")
+ * when the stops differ; `stops` has each one for the job page.
+ */
+export type JobWx = DayWx & { atSite: boolean; where?: string; stops?: WxStop[] };
+
+/** Short words for chips: "Rain in Livermore", "Windy on the drive". */
+export const WX_SHORT: Record<Wx, string> = {
+  clear: "Clear",
+  cloudy: "Cloudy",
+  fog: "Fog",
+  rain: "Rain",
+  snow: "Snow",
+  hot: "Hot",
+  wind: "Windy",
+};
+
+/** "Rain in Livermore" / "Windy on the drive" / "Rain likely". */
+export function wxChip(w: Pick<JobWx, "kind" | "where">) {
+  if (!w.where) return WX_LABEL[w.kind];
+  return `${WX_SHORT[w.kind]} ${w.where === "the drive" ? "on the drive" : `in ${w.where}`}`;
+}
 
 export const WX_EMOJI: Record<Wx, string> = {
   clear: "☀️",

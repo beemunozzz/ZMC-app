@@ -27,7 +27,7 @@ import { Avatars } from "@/components/Avatars";
 import { answerOnCall } from "@/app/payroll/employee-actions";
 import { decideTimeOff, resolveCover } from "@/app/availability/actions";
 import { COVER_COLUMNS, TIME_OFF_COLUMNS, timeOffText, type CoverRequest, type TimeOff } from "@/lib/availability";
-import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, type JobWx } from "@/lib/weather-kinds";
+import { WX_EMOJI, WX_LABEL, WX_WATCH, worse, wxChip, type JobWx } from "@/lib/weather-kinds";
 
 export default function HomePage() {
   return (
@@ -189,7 +189,7 @@ async function Home() {
     attention.push({
       key: `wx${d}`,
       tone: "warn",
-      text: `${WX_EMOJI[x.kind]} ${WX_LABEL[x.kind]}: ${x.jobs.length === 1 ? x.jobs[0].customer_name : `${x.jobs.length} jobs`}`,
+      text: `${WX_EMOJI[x.kind]} ${x.jobs.length === 1 ? wxChip(jobWx.get(x.jobs[0].id) ?? { kind: x.kind }) : WX_LABEL[x.kind]}: ${x.jobs.length === 1 ? x.jobs[0].customer_name : `${x.jobs.length} jobs`}`,
       sub: d === today ? "Today" : fmtDay(d),
       href: x.jobs.length === 1 ? `/jobs/${x.jobs[0].id}` : `/schedule?view=today&date=${d}`,
     });

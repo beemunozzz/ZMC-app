@@ -1,6 +1,6 @@
 // Weather from the free National Weather Service (api.weather.gov). Server only.
 import { cacheLife } from "next/cache";
-import { periodsToDays, worse, type DayWx, type JobWx, type Wx } from "./weather-kinds";
+import { periodsToDays, worse, type DayWx, type JobWx, type Wx, type WxStop } from "./weather-kinds";
 
 const UA = "ZMC Hub (zmcmove.com)";
 export const STOCKTON = { lat: 37.9577, lon: -121.2908 };
@@ -43,22 +43,61 @@ export async function stocktonForecast() {
   return (await withTimeout(forecastAt(STOCKTON.lat, STOCKTON.lon), 4000)) ?? {};
 }
 
-/** A job's weather: the worse of its pickup and drop-off cities. Falls back to Stockton. */
+/** Miles between two map spots (straight line). */
+function milesApart(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
+  const r = (d: number) => (d * Math.PI) / 180;
+  const h = Math.sin(r(b.lat - a.lat) / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(r(b.lon - a.lon) / 2) ** 2;
+  return 2 * 3959 * Math.asin(Math.sqrt(h));
+}
+/** Moves at least this far apart (straight line, about 25 road miles) also check halfway along the drive. */
+const MIDPOINT_MILES = 20;
+
+const cityName = (address: string) => {
+  const parts = address.split(",").map((s) => s.trim()).filter(Boolean);
+  return (parts.length >= 2 ? parts[1] : parts[0]) ?? "";
+};
+
+/**
+ * A job's weather: the worst of its pickup, its drop-off and (on longer moves) halfway along the drive,
+ * with each stop listed. Falls back to Stockton when the addresses can't be found.
+ */
 export async function jobForecast(
   job: { job_date: string; pickup_address: string; dropoff_address: string },
   stockton: Record<string, DayWx>,
 ): Promise<JobWx | null> {
   const home = stockton[job.job_date];
-  let best: DayWx | null = null;
-  for (const addr of [job.pickup_address, job.dropoff_address].filter((a) => a.trim().length > 5)) {
-    const spot = await withTimeout(geocode(addr), 3000);
-    if (!spot) continue;
-    const fc = await withTimeout(forecastAt(spot.lat, spot.lon), 4000);
-    best = worse(best, fc?.[job.job_date]);
+  const [pick, drop] = await Promise.all(
+    [job.pickup_address, job.dropoff_address].map((a) => (a.trim().length > 5 ? withTimeout(geocode(a), 3000) : Promise.resolve(null))),
+  );
+  const spots: { label: WxStop["label"]; place: string; at: { lat: number; lon: number } }[] = [];
+  if (pick) spots.push({ label: "Pickup", place: cityName(job.pickup_address), at: pick });
+  if (pick && drop && milesApart(pick, drop) >= MIDPOINT_MILES)
+    spots.push({ label: "On the drive", place: "the drive", at: { lat: Math.round(((pick.lat + drop.lat) / 2) * 100) / 100, lon: Math.round(((pick.lon + drop.lon) / 2) * 100) / 100 } });
+  if (drop && !(pick && drop.lat === pick.lat && drop.lon === pick.lon)) spots.push({ label: "Drop-off", place: cityName(job.dropoff_address), at: drop });
+
+  const stops: WxStop[] = [];
+  for (const s of await Promise.all(spots.map(async (s) => ({ ...s, fc: await withTimeout(forecastAt(s.at.lat, s.at.lon), 4000) })))) {
+    const wx = s.fc?.[job.job_date];
+    if (wx) stops.push({ label: s.label, place: s.place, wx });
   }
-  const pick = best ?? home;
-  if (!pick) return null;
-  return { ...pick, atSite: !!best && (!home || (best.kind as Wx) !== home.kind) };
+  let best: DayWx | null = null;
+  let bestStop: WxStop | null = null;
+  for (const st of stops) {
+    if (worse(best, st.wx) !== best) {
+      best = st.wx;
+      bestStop = st;
+    }
+  }
+  const out = best ?? home;
+  if (!out) return null;
+  // Name the place only when the stops disagree (otherwise it's the same everywhere on the job).
+  const differs = stops.some((st) => st.wx.kind !== out.kind);
+  return {
+    ...out,
+    atSite: !!best && (!home || (best.kind as Wx) !== home.kind),
+    where: bestStop && differs ? bestStop.place : undefined,
+    stops: stops.length > 1 ? stops : undefined,
+  };
 }
 
 /** Weather for many jobs at once (only the next 7 days have a forecast). */

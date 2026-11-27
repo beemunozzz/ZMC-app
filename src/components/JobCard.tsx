@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { fmtHours } from "@/lib/dates";
 import { STATUS, cityOf, jobCrew, needsTruck, openSpots, timeSpan, type Job } from "@/lib/jobs";
-import { WX_EMOJI, WX_LABEL, WX_WATCH, type JobWx } from "@/lib/weather-kinds";
+import { WX_EMOJI, WX_WATCH, wxChip, type JobWx } from "@/lib/weather-kinds";
 
 export function JobCard({
   job,
@@ -96,7 +96,7 @@ export function JobCard({
           )}
           {wxWatch && (
             <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">
-              {WX_EMOJI[wxWatch.kind]} {WX_LABEL[wxWatch.kind]}
+              {WX_EMOJI[wxWatch.kind]} {wxChip(wxWatch)}
             </span>
           )}
         </div>
