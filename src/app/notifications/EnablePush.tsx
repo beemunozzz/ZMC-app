@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { InstallApp } from "@/components/InstallApp";
 import { Switch } from "@/components/Toggle";
 import { removePhone, savePhone, sendTest } from "./actions";
 
@@ -94,30 +95,31 @@ export function EnablePush({ publicKey }: { publicKey: string }) {
       {/* One switch, same spot every time */}
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-[17px] font-semibold text-ink">Notifications</h2>
+          <h2 className="text-[17px] font-semibold text-ink">Pop-up notifications</h2>
           <p className="text-sm text-muted">
-            {status === "checking" ? "Checking…" : on ? "On for this phone" : status === "off" ? "Off" : "Not available yet"}
+            {status === "checking"
+              ? "Checking…"
+              : on
+                ? "On for this phone"
+                : status === "off" && publicKey
+                  ? "Off"
+                  : status === "off"
+                    ? "Not switched on for the app yet"
+                    : "Not available yet"}
           </p>
         </div>
-        <Switch on={on} label="Notifications" disabled={busy || !canToggle} onClick={on ? turnOff : turnOn} />
+        <Switch on={on} label="Pop-up notifications" disabled={busy || !canToggle} onClick={on ? turnOff : turnOn} />
       </div>
+      <p className="-mt-1 text-sm text-muted">
+        Banners on your lock screen, like a text message, even when the app is closed: new jobs, changes, and the night-before reminder.
+      </p>
 
       {status === "ios-needs-install" && (
-        <div className="flex flex-col gap-2 rounded-xl bg-bg p-3 text-[15px] text-ink">
-          <p>
-            <b>First, add ZMC Hub to your home screen:</b>
+        <div className="flex flex-col gap-2 rounded-xl bg-bg p-3">
+          <p className="text-[15px] text-ink">
+            <b>On iPhone, first add ZMC Hub to your home screen</b>, then open it from the home screen icon and come back here.
           </p>
-          <ol className="list-decimal space-y-1 pl-5">
-            <li>
-              In Safari, tap <b>Share</b> (the square with an arrow).
-            </li>
-            <li>
-              Tap <b>Add to Home Screen</b>, then <b>Add</b>.
-            </li>
-            <li>
-              Open <b>ZMC Hub</b> from your home screen and come back here (☰ → My settings → Notifications).
-            </li>
-          </ol>
+          <InstallApp compact />
         </div>
       )}
 
@@ -129,7 +131,9 @@ export function EnablePush({ publicKey }: { publicKey: string }) {
         </p>
       )}
 
-      {status === "off" && !publicKey && <p className="text-sm text-muted">Zach hasn&apos;t switched notifications on for the app yet.</p>}
+      {status === "off" && !publicKey && (
+        <p className="text-sm text-muted">The switch starts working once Zach (or Brandon) finishes the one-time notifications setup. Nothing to do on your phone until then.</p>
+      )}
 
       {on && (
         <button

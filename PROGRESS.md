@@ -150,6 +150,8 @@
   - **Add to home screen** (`src/components/InstallApp.tsx`): Android shows an "Add to home screen" button when Chrome allows it, otherwise the ⋮ menu steps; iPhone shows the three Share → Add to Home Screen → Add steps with the Share icon drawn (Apple doesn't allow a button), and a Safari tip in other browsers; says "✓ on your home screen" when it already is. Always in ☰ → My settings → Add to home screen (My settings also links to My info).
   - **Birthdays:** "🎂 Demetri's birthday is Sat, Nov 30" on Zach's Home and the crew's Home for the next 7 days ("Happy birthday!" for the person themselves). Month and day only, never the year or age (`upcoming_birthdays`).
 
+- Nov 27: Notifications screen: the one switch is now "Pop-up notifications" with what it means (lock-screen banners like a text, even when the app is closed); on iPhone it shows the Add to home screen steps first. It stays greyed out until the one-time notifications setup (VAPID keys + CRON_SECRET in Vercel, made with ☰ → My settings → Notifications on Zach's/Brandon's login) is done. App Store question answered: it's a web app (PWA); an App Store version is possible later (Capacitor wrapper, Apple $99/yr + Google $25 once, Apple review risk), not needed now.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
