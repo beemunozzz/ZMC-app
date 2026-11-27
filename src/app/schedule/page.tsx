@@ -26,8 +26,8 @@ import {
   todayISO,
 } from "@/lib/dates";
 import { JOB_COLUMNS, conflicts, isLive, jobCrew, needsTruck, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
-import { jobsForecast, stocktonForecast } from "@/lib/weather";
-import { WX_EMOJI, WX_LABEL, worse, type JobWx } from "@/lib/weather-kinds";
+import { jobsForecast, jobsOutlook, stocktonForecast, stocktonOutlook } from "@/lib/weather";
+import { WX_EMOJI, WX_LABEL, outlookWet, worse, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
 import { CrewShortcuts, SetupChecklist } from "@/components/CrewSetup";
@@ -112,6 +112,12 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   // Weather: Stockton for every day, plus each job's own cities (next 7 days).
   const stockton = await stocktonForecast();
   const jobWx = await jobsForecast(jobs.filter((j) => j.status !== "canceled"), stockton);
+  // Days 8-14: NOAA's rough outlook (a faded 🌦️ when it leans wetter than usual).
+  const later = view === "today" ? null : await stocktonOutlook();
+  const jobLater = await jobsOutlook(jobs.filter((j) => j.status !== "canceled" && j.job_date >= today), new Set(Object.keys(stockton)));
+  const wetLater = (d: string) =>
+    !stockton[d] && d >= today && !!later && d >= later.start && d <= later.end &&
+    (outlookWet(later) || jobs.some((j) => j.job_date === d && outlookWet(jobLater.get(j.id))));
   const dayWx = (d: string) => {
     const home = stockton[d] ? { ...stockton[d], atSite: false } : null;
     let w: JobWx | null = home;
@@ -245,7 +251,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
                     <span className={`text-[11px] font-semibold uppercase tracking-wider ${isToday ? "text-tape" : "text-muted"}`}>{DAY_SHORT[i]}</span>
                     <span className="font-display text-3xl font-extrabold tabular-nums leading-none text-ink md:text-xl">{dayOfMonth(d)}</span>
                     <span className="mt-1 h-5 text-base leading-5 md:mt-0 md:ml-auto" title={wx ? `${WX_LABEL[wx.kind]}${wx.hi != null ? `, high ${wx.hi}°` : ""}` : undefined}>
-                      <span aria-hidden>{wx ? WX_EMOJI[wx.kind] : ""}</span>
+                      <span aria-hidden className={!wx && wetLater(d) ? "opacity-50" : ""}>{wx ? WX_EMOJI[wx.kind] : wetLater(d) ? "🌦️" : ""}</span>
                       {wx && <span className="sr-only">{WX_LABEL[wx.kind]}</span>}
                     </span>
                     {wx?.hi != null && <span className="text-[11px] tabular-nums text-muted md:hidden">{wx.hi}°</span>}
@@ -254,7 +260,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
                   {/* That day's jobs */}
                   <div className="flex min-w-0 flex-col gap-2">
                     {list.map((j) => (
-                      <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={isOwner} wx={jobWx.get(j.id)} />
+                      <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={isOwner} wx={jobWx.get(j.id)} outlook={jobLater.get(j.id)} />
                     ))}
                     {!list.length && (
                       <div className="flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-dashed border-line px-4">
@@ -280,7 +286,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
 
         {crewHours && <CrewHours rows={crewHours.rows} offDays={crewHours.offDays} whoHref={(id) => href({ who: id })} />}
 
-        {view === "month" && <Month date={date} today={today} from={from} jobs={jobs} href={href} dayWx={dayWx} />}
+        {view === "month" && <Month date={date} today={today} from={from} jobs={jobs} href={href} dayWx={dayWx} wetLater={wetLater} />}
 
         {view === "today" &&
           (isOwner && !who ? (
@@ -290,7 +296,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
               <WorkingToday jobs={jobs} crew={workers} />
               <div className="grid gap-3 md:grid-cols-2">
                 {jobs.map((j) => (
-                  <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner wx={jobWx.get(j.id)} />
+                  <JobCard key={j.id} job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner wx={jobWx.get(j.id)} outlook={jobLater.get(j.id)} />
                 ))}
               </div>
               {!jobs.length && <p className="text-[15px] text-muted">No jobs on this day.</p>}
@@ -301,7 +307,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
           ) : (
             <>
               {setup && <SetupChecklist items={setup} />}
-              <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} meet={meet} checklist={checklist} />
+              <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} jobLater={jobLater} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} meet={meet} checklist={checklist} />
               {hours && <MyHours {...hours} />}
               {crewHome && <CrewShortcuts />}
             </>
@@ -437,6 +443,7 @@ function Month({
   jobs,
   href,
   dayWx,
+  wetLater,
 }: {
   date: string;
   today: string;
@@ -444,6 +451,7 @@ function Month({
   jobs: Job[];
   href: (p: Partial<{ view: View; date: string }>) => string;
   dayWx: (d: string) => JobWx | null;
+  wetLater: (d: string) => boolean;
 }) {
   const month = date.slice(0, 7);
   const last = addDays(mondayOf(lastOfMonth(date)), 6);
@@ -486,7 +494,7 @@ function Month({
               </span>
               {/* Fixed spot: weather, top-right. Orange dot = weather at a job site, not Stockton. */}
               <span className="absolute right-0.5 top-1 flex h-4 w-4 items-center justify-center text-[11px] leading-none sm:text-[13px] md:right-1 md:text-base" aria-hidden>
-                {wx ? WX_EMOJI[wx.kind] : ""}
+                {wx ? WX_EMOJI[wx.kind] : wetLater(d) ? <span className="opacity-50">🌦️</span> : ""}
                 {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
               </span>
               {/* Fixed spot: start times, middle (red = that job still needs crew). Phones show 2, computers 3. */}
@@ -523,7 +531,7 @@ function Month({
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-warn" /> Weather at a job site
         </span>
-        <span>Weather shows for the next 7 days. Tap a day to open its week.</span>
+        <span>Weather: the forecast for the next 7 days; a faded 🌦️ on days 8–14 means NOAA&apos;s outlook leans wetter than usual (rough). Tap a day to open its week.</span>
       </div>
     </div>
   );
@@ -554,6 +562,7 @@ function CrewToday({
   today,
   isDoubleBooked,
   jobWx,
+  jobLater,
   senderName,
   clock,
   cover,
@@ -566,6 +575,7 @@ function CrewToday({
   today: string;
   isDoubleBooked: (j: Job) => boolean;
   jobWx: Map<string, JobWx>;
+  jobLater: Map<string, JobOutlook>;
   senderName?: string;
   clock?: { open: TimeEntry | null; weekHours: number } | null;
   cover?: { zachPhone: string; openByJob: Map<string, { id: string; reason: string }> } | null;
@@ -610,7 +620,7 @@ function CrewToday({
             {rest.map((j) => (
               <div key={j.id} className="flex flex-col gap-1">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted">{fmtDayLong(j.job_date)}</span>
-                <JobCard job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={false} wx={jobWx.get(j.id)} />
+                <JobCard job={j} names={names} doubleBooked={isDoubleBooked(j)} isOwner={false} wx={jobWx.get(j.id)} outlook={jobLater.get(j.id)} />
               </div>
             ))}
           </div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { fmtHours } from "@/lib/dates";
 import { STATUS, cityOf, jobCrew, needsTruck, openSpots, timeSpan, type Job } from "@/lib/jobs";
-import { WX_EMOJI, WX_WATCH, wxChip, type JobWx } from "@/lib/weather-kinds";
+import { WX_EMOJI, WX_WATCH, outlookWet, wxChip, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 
 export function JobCard({
   job,
@@ -10,14 +10,18 @@ export function JobCard({
   doubleBooked,
   isOwner,
   wx,
+  outlook,
 }: {
   job: Job;
   names: Map<string, string>;
   doubleBooked: boolean;
   isOwner: boolean;
   wx?: JobWx | null;
+  /** Days 8-14: NOAA's rough outlook (shown quietly). */
+  outlook?: JobOutlook | null;
 }) {
   const wxWatch = wx && WX_WATCH.includes(wx.kind) && job.status !== "canceled" ? wx : null;
+  const wetLater = !wx && outlookWet(outlook) && job.status !== "canceled" ? outlook! : null;
   const st = STATUS[job.status];
   const crew = jobCrew(job);
   const hrs = Number(job.est_hours) || 0;
@@ -84,7 +88,7 @@ export function JobCard({
       )}
 
       {/* Row 5: flags */}
-      {(short > 0 && crew.length > 0) || doubleBooked || wxWatch ? (
+      {(short > 0 && crew.length > 0) || doubleBooked || wxWatch || wetLater ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {short > 0 && crew.length > 0 && !canceled && (
             <span className="rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">Need {short} more</span>
@@ -92,6 +96,11 @@ export function JobCard({
           {doubleBooked && (
             <span className="inline-flex items-center gap-1 rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">
               <Icon name="alert" className="h-3.5 w-3.5" /> Double-booked
+            </span>
+          )}
+          {wetLater && (
+            <span className="rounded-full border border-line bg-bg px-2.5 py-0.5 text-xs font-medium text-muted" title="NOAA 8-14 day outlook: leaning wetter than usual">
+              🌦️ Rain possible{wetLater.where ? ` in ${wetLater.where}` : ""} · outlook
             </span>
           )}
           {wxWatch && (

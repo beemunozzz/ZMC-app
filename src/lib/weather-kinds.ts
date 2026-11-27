@@ -124,3 +124,22 @@ export function periodsToDays(periods: Period[]): Record<string, DayWx> {
   return days;
 }
 
+
+/**
+ * NOAA's 8-14 day outlook (rough): is it leaning wetter/drier and warmer/cooler than usual?
+ * Only used for days past the 7-day forecast. `prob` is the chance in percent (e.g. 40).
+ */
+export type Lean = { cat: "Above" | "Below" | "Normal"; prob: number };
+export type Outlook = { start: string; end: string; rain: Lean | null; temp: Lean | null };
+/** A job's outlook: the wettest of its stops, and where. */
+export type JobOutlook = Outlook & { where?: string };
+
+/** Worth a hint on the calendar: leaning wetter than usual. */
+export const outlookWet = (o: Pick<Outlook, "rain"> | null | undefined) => o?.rain?.cat === "Above";
+
+export function outlookText(o: Outlook) {
+  const parts: string[] = [];
+  if (o.rain && o.rain.cat !== "Normal") parts.push(`${o.rain.cat === "Above" ? "wetter" : "drier"} than usual (${o.rain.prob}% chance)`);
+  if (o.temp && o.temp.cat !== "Normal") parts.push(`${o.temp.cat === "Above" ? "warmer" : "cooler"} than usual (${o.temp.prob}% chance)`);
+  return parts.length ? parts.join(", ") : "about normal";
+}

@@ -11,14 +11,14 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { roleLabel, requireMember } from "@/lib/crew";
-import { fmtDayLong, fmtHours } from "@/lib/dates";
-import { WeatherNote } from "@/components/WeatherNote";
+import { fmtDayLong, fmtHours, todayISO } from "@/lib/dates";
+import { OutlookNote, WeatherNote } from "@/components/WeatherNote";
 import { MeetUp } from "@/components/MeetUp";
 import { loadMeet } from "@/lib/meet";
 import { loadChecklist } from "@/lib/checklist-server";
 import { LoadChecklist } from "@/components/LoadChecklist";
 import { money } from "@/lib/pricing";
-import { jobForecast, stocktonForecast } from "@/lib/weather";
+import { jobForecast, jobOutlook, stocktonForecast, stocktonOutlook } from "@/lib/weather";
 import { getPrices } from "@/lib/settings";
 import { bookingText, reminderText } from "@/lib/texts";
 import { OnMyWay, TextLink } from "@/components/TextButtons";
@@ -60,6 +60,8 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   // Zach: who could swap in (free that day, fewest hours first).
   const candidates = isOwner && isLive(job) ? await swapCandidates(supabase, job) : null;
   const wx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
+  // Days 8-14: NOAA's rough outlook until the real forecast is available.
+  const later = !wx && isLive(job) && job.job_date >= todayISO() ? await jobOutlook(job, await stocktonOutlook()) : null;
 
   // Texting: the owner can send all three; the job's crew lead can send "On my way".
   const isLead = job.lead_id === me.id;
@@ -184,6 +186,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
         {meet && <MeetUp {...meet} />}
         {checklist && <LoadChecklist jobId={job.id} items={checklist} canTick={isOwner || people.includes(me.id)} />}
         <WeatherNote wx={wx} />
+        <OutlookNote o={later} />
 
         {isOwner &&
           covers.map((c) => (

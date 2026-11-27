@@ -1,4 +1,4 @@
-import { WX_EMOJI, WX_LABEL, WX_TIP, WX_WATCH, type JobWx } from "@/lib/weather-kinds";
+import { WX_EMOJI, WX_LABEL, WX_TIP, WX_WATCH, outlookText, outlookWet, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 
 /** Weather for one job: the worst of its stops (and where), each stop on its own line, and a crew tip. */
 export function WeatherNote({ wx }: { wx?: JobWx | null }) {
@@ -41,6 +41,23 @@ export function WeatherNote({ wx }: { wx?: JobWx | null }) {
           {tip}
         </p>
       ))}
+    </div>
+  );
+}
+
+/** Days 8-14: NOAA's rough outlook, in grey. The real forecast replaces it 7 days before the move. */
+export function OutlookNote({ o }: { o?: JobOutlook | null }) {
+  if (!o) return null;
+  return (
+    <div className="rounded-xl bg-bg px-3 py-2.5 text-sm text-ink">
+      <p className="font-semibold">
+        <span aria-hidden>{outlookWet(o) ? "🌦️" : "🗓️"}</span> 8–14 day outlook <span className="font-normal text-muted">(rough)</span>
+      </p>
+      <p>
+        {o.where ? `Around ${o.where}: ` : ""}
+        {outlookText(o).replace(/^./, (c) => c.toUpperCase())}.
+      </p>
+      <p className="mt-0.5 text-xs text-muted">The real forecast shows up 7 days before the move.</p>
     </div>
   );
 }

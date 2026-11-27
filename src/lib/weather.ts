@@ -1,6 +1,6 @@
 // Weather from the free National Weather Service (api.weather.gov). Server only.
 import { cacheLife } from "next/cache";
-import { periodsToDays, worse, type DayWx, type JobWx, type Wx, type WxStop } from "./weather-kinds";
+import { periodsToDays, worse, type DayWx, type JobOutlook, type JobWx, type Lean, type Outlook, type Wx, type WxStop } from "./weather-kinds";
 
 const UA = "ZMC Hub (zmcmove.com)";
 export const STOCKTON = { lat: 37.9577, lon: -121.2908 };
@@ -110,4 +110,66 @@ export async function jobsForecast(
     jobs.filter((j) => dates.has(j.job_date)).map(async (j) => [j.id, await jobForecast(j, stockton)] as const),
   );
   return new Map(list.filter((x): x is readonly [string, JobWx] => !!x[1]));
+}
+
+// ---- NOAA's 8-14 day outlook (rough), for days past the 7-day forecast ----
+const CPC = "https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/cpc_8_14_day_outlk/MapServer";
+const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** Strongest lean at a spot on one outlook layer (0 = temperature, 1 = rain). Null = no strong signal ("equal chances"). */
+async function leanAt(layer: 0 | 1, lat: number, lon: number) {
+  const url =
+    `${CPC}/${layer}/query?geometry=${lon.toFixed(2)},${lat.toFixed(2)}&geometryType=esriGeometryPoint&inSR=4326` +
+    "&spatialRel=esriSpatialRelIntersects&outFields=cat,prob,start_date,end_date&returnGeometry=false&f=json";
+  const data = await getJSON(url);
+  const rows = ((data?.features ?? []) as { attributes: { cat: string; prob: number; start_date: number; end_date: number } }[]).map((f) => f.attributes);
+  const best = rows.sort((a, b) => (b.prob ?? 0) - (a.prob ?? 0))[0];
+  if (!best) return { lean: null as Lean | null, start: null as string | null, end: null as string | null };
+  const cat = best.cat === "Above" || best.cat === "Below" ? best.cat : "Normal";
+  return { lean: { cat, prob: Math.round(best.prob ?? 0) } as Lean, start: isoDay(best.start_date), end: isoDay(best.end_date) };
+}
+
+/** The 8-14 day outlook at a spot. Saved for a few hours (NOAA updates it once a day). */
+export async function outlookAt(lat: number, lon: number): Promise<Outlook | null> {
+  "use cache";
+  cacheLife("hours");
+  const [temp, rain] = await Promise.all([leanAt(0, lat, lon), leanAt(1, lat, lon)]);
+  const start = rain.start ?? temp.start;
+  const end = rain.end ?? temp.end;
+  if (!start || !end) return null;
+  return { start, end, rain: rain.lean, temp: temp.lean };
+}
+
+/** Stockton's outlook (for the month view). Null if NOAA can't be reached. */
+export async function stocktonOutlook() {
+  return withTimeout(outlookAt(STOCKTON.lat, STOCKTON.lon), 4000);
+}
+
+/** A job's outlook: wettest of the pickup and drop-off. Only for jobs inside the outlook's dates. */
+export async function jobOutlook(job: { job_date: string; pickup_address: string; dropoff_address: string }, window: Outlook | null): Promise<JobOutlook | null> {
+  if (!window || job.job_date < window.start || job.job_date > window.end) return null;
+  const stops = await Promise.all(
+    [job.pickup_address, job.dropoff_address]
+      .filter((a) => a.trim().length > 5)
+      .map(async (a) => {
+        const at = await withTimeout(geocode(a), 3000);
+        const o = at ? await withTimeout(outlookAt(at.lat, at.lon), 4000) : null;
+        return o ? { o, place: cityName(a) } : null;
+      }),
+  );
+  const found = stops.filter((s): s is { o: Outlook; place: string } => !!s);
+  if (!found.length) return window;
+  const score = (o: Outlook) => (o.rain?.cat === "Above" ? 100 + o.rain.prob : o.rain?.cat === "Normal" ? 50 : 0);
+  const best = found.sort((a, b) => score(b.o) - score(a.o))[0];
+  const differs = found.some((s) => s.o.rain?.cat !== best.o.rain?.cat);
+  return { ...best.o, where: differs ? best.place : undefined };
+}
+
+/** Outlooks for jobs past the 7-day forecast (days 8-14). */
+export async function jobsOutlook(jobs: { id: string; job_date: string; pickup_address: string; dropoff_address: string }[], forecastDates: Set<string>) {
+  const later = jobs.filter((j) => !forecastDates.has(j.job_date));
+  if (!later.length) return new Map<string, JobOutlook>();
+  const window = await stocktonOutlook();
+  const list = await Promise.all(later.map(async (j) => [j.id, await jobOutlook(j, window)] as const));
+  return new Map(list.filter((x): x is readonly [string, JobOutlook] => !!x[1]));
 }
