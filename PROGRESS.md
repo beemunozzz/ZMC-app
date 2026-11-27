@@ -125,6 +125,8 @@
 
 - Nov 27: **Weather warnings stand out.** Rain, snow, heat and wind now sit in a small orange circle with the same soft shine as the red bubbles (`bg-warn-fill`: light #E07B22, dark #EE8A3A; `src/components/WxIcon.tsx`), on the month view, the week view's day headers and Zach's home strip. The small orange dot (weather at a job site, not Stockton) stays, with a ring so it shows on the circle. The month legend now lists both: "Rain, snow, heat or wind" and "Weather at a job site". "Need N more" tags are solid red too.
 
+- Nov 27: **Hours colors** (full-time crew, scheduled job hours; `hoursBand` in `src/lib/hours-alert.ts`): 🟢 Full 32+, 🟠 Light 20–32, 🔴 Low under 20. Used in Crew hours this week (bar, label and a legend), the job page's Swap list and Find work's "Swap in for" list. Part-time, on-call and owners aren't colored. "Low on hours" chip (under 20) is red. Light and Low names link to Find work. The Wednesday alert still uses 16 hours or fewer.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
