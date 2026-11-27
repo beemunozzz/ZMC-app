@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { TruckReserved } from "@/components/TruckReserved";
+import { CrewSwap } from "@/components/CrewSwap";
+import { swapCandidates } from "@/lib/swap";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { RouteLine } from "@/components/RouteLine";
@@ -55,6 +57,8 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   const hrs = Number(job.est_hours) || 0;
   const short = openSpots(job);
   const clashes = conflicts(job, (sameDay ?? []) as Job[]);
+  // Zach: who could swap in (free that day, fewest hours first).
+  const candidates = isOwner && isLive(job) ? await swapCandidates(supabase, job) : null;
   const wx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
 
   // Texting: the owner can send all three; the job's crew lead can send "On my way".
@@ -216,40 +220,50 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
           {isOwner && job.quote_id && row("Quote", <Link href={`/quotes/${job.quote_id}`} className="font-semibold text-primary">View the quote</Link>)}
         </dl>
 
-        <section className="rounded-2xl border border-line bg-card p-4">
-          <h2 className="font-display text-lg font-extrabold uppercase text-ink">
-            Crew <span className="tabular-nums text-muted">({people.length} of {job.movers_needed})</span>
-          </h2>
-          {people.length ? (
-            <ul className="mt-2 flex flex-col gap-2">
-              {people.map((pid) => {
-                const c = crewById.get(pid);
-                return (
-                  <li key={pid} className="flex items-center justify-between gap-3 text-[15px]">
-                    <span className="min-w-0 break-words text-ink">
-                      {pid === job.lead_id ? (
-                        <b className="inline-flex items-center gap-1">
-                          <Icon name="star" filled className="h-4 w-4 text-tape" /> {c?.full_name ?? "Removed"}
-                        </b>
-                      ) : (
-                        (c?.full_name ?? "Removed")
+        {isOwner && isLive(job) && candidates ? (
+          <CrewSwap
+            jobId={job.id}
+            members={people.map((pid) => ({ id: pid, name: crewById.get(pid)?.full_name ?? "Removed", phone: crewById.get(pid)?.phone ?? null, isLead: pid === job.lead_id }))}
+            candidates={candidates}
+            short={short}
+            needed={job.movers_needed}
+          />
+        ) : (
+          <section className="rounded-2xl border border-line bg-card p-4">
+            <h2 className="font-display text-lg font-extrabold uppercase text-ink">
+              Crew <span className="tabular-nums text-muted">({people.length} of {job.movers_needed})</span>
+            </h2>
+            {people.length ? (
+              <ul className="mt-2 flex flex-col gap-2">
+                {people.map((pid) => {
+                  const c = crewById.get(pid);
+                  return (
+                    <li key={pid} className="flex items-center justify-between gap-3 text-[15px]">
+                      <span className="min-w-0 break-words text-ink">
+                        {pid === job.lead_id ? (
+                          <b className="inline-flex items-center gap-1">
+                            <Icon name="star" filled className="h-4 w-4 text-tape" /> {c?.full_name ?? "Removed"}
+                          </b>
+                        ) : (
+                          (c?.full_name ?? "Removed")
+                        )}
+                        {pid === job.lead_id && <span className="text-muted"> · crew lead</span>}
+                      </span>
+                      {c?.phone && (
+                        <a href={telUrl(c.phone)} className="shrink-0 text-sm font-semibold text-primary">
+                          {c.phone}
+                        </a>
                       )}
-                      {pid === job.lead_id && <span className="text-muted"> · crew lead</span>}
-                    </span>
-                    {c?.phone && (
-                      <a href={telUrl(c.phone)} className="shrink-0 text-sm font-semibold text-primary">
-                        {c.phone}
-                      </a>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="mt-1 text-sm text-muted">Nobody assigned yet.</p>
-          )}
-          {short > 0 && people.length > 0 && <p className="mt-2 text-sm font-medium text-warn">Need {short} more.</p>}
-        </section>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="mt-1 text-sm text-muted">Nobody assigned yet.</p>
+            )}
+            {short > 0 && people.length > 0 && <p className="mt-2 text-sm font-medium text-warn">Need {short} more.</p>}
+          </section>
+        )}
 
         {canText && prices && (
           <section className="flex flex-col gap-2 rounded-2xl border border-line bg-card p-4">

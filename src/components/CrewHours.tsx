@@ -42,7 +42,7 @@ export function CrewHours({ rows, offDays, whoHref }: { rows: ReturnType<typeof 
             const pct = Math.min(100, (r.hours / FULL_WEEK_HOURS) * 100);
             return (
               <li key={r.id}>
-                <Link href={whoHref(r.id)} className="press block rounded-lg">
+                <Link href={low ? `/find-work/${r.id}` : whoHref(r.id)} className="press block rounded-lg">
                   <div className="flex items-baseline justify-between gap-2 text-sm">
                     <span className="min-w-0 truncate font-semibold text-ink">{r.full_name}</span>
                     <span className={`shrink-0 tabular-nums ${low ? "font-semibold text-warn" : "text-ink"}`}>
@@ -55,6 +55,7 @@ export function CrewHours({ rows, offDays, whoHref }: { rows: ReturnType<typeof 
                   <p className="mt-0.5 text-[11px] tabular-nums text-muted">
                     {r.jobs} job{r.jobs === 1 ? "" : "s"}
                     {off ? ` · off ${off} day${off === 1 ? "" : "s"}` : ""}
+                    {low ? <span className="font-semibold text-primary"> · Find work ›</span> : null}
                   </p>
                 </Link>
               </li>

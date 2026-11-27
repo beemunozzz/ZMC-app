@@ -353,8 +353,8 @@ async function Home() {
                       {fmtHours(r.hours)} hrs scheduled · {r.jobs} job{r.jobs === 1 ? "" : "s"}
                     </span>
                   </p>
-                  <Link href={`/schedule?view=week&who=${r.id}`} className="press flex h-11 shrink-0 items-center rounded-xl border border-line px-3 text-sm font-semibold text-primary">
-                    Schedule
+                  <Link href={`/find-work/${r.id}`} className="press flex h-11 shrink-0 items-center rounded-xl border border-line px-3 text-sm font-semibold text-primary">
+                    Find work
                   </Link>
                   <form action={ackLowHours}>
                     <input type="hidden" name="crew_id" value={r.id} />
