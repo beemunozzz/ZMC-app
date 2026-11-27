@@ -52,7 +52,7 @@ async function FindWork({ params }: { params: Promise<{ id: string }> }) {
       open: openSpots(j),
       needed: j.movers_needed,
       note: a.kind === "free" ? "" : a.text,
-      swappable: (j.crew_ids ?? []).map((c) => ({ id: c, name: names.get(c) ?? "Someone" })),
+      swappable: (j.crew_ids ?? []).map((c) => ({ id: c, name: names.get(c) ?? "Someone", hours: weekHoursOf(c, avail.jobs, week) })).sort((a, b) => b.hours - a.hours),
       hasLead: !!j.lead_id,
     }))
     .sort((a, b) => Number(b.open > 0) - Number(a.open > 0));

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { swapCrew } from "@/app/jobs/swap-actions";
+import { ALERT_HOURS } from "@/lib/hours-alert";
+
+const hrs = (n: number) => String(Math.round(n * 100) / 100);
 
 export type WorkItem = {
   id: string;
@@ -15,7 +18,8 @@ export type WorkItem = {
   open: number;
   needed: number;
   note: string;
-  swappable: { id: string; name: string }[];
+  /** Movers on the job (most hours first): swapping out someone with plenty of hours is the fair pick. */
+  swappable: { id: string; name: string; hours: number }[];
   hasLead: boolean;
 };
 
@@ -66,28 +70,47 @@ export function WorkList({ personId, first, items }: { personId: string; first: 
           {done[it.id] ? (
             <p className="rounded-xl bg-ok/12 px-3 py-2 text-sm font-semibold text-ok">✓ {done[it.id]}</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2">
               {it.open > 0 && (
                 <button
                   type="button"
                   disabled={busy === it.id}
                   onClick={() => run(it.id, null, `${first} added`)}
-                  className="press h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50 dark:text-navy"
+                  className="press h-11 self-start rounded-xl bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50 dark:text-navy"
                 >
-                  Add {first}
+                  Add {first} · +{hrs(it.hours)} hrs
                 </button>
               )}
-              {it.swappable.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  disabled={busy === it.id}
-                  onClick={() => run(it.id, m.id, `${first} swapped in for ${m.name}`)}
-                  className="press h-11 rounded-xl border border-line px-3 text-sm font-semibold text-ink disabled:opacity-50"
-                >
-                  Swap in for {m.name.split(" ")[0]}
-                </button>
-              ))}
+              {it.swappable.length > 0 && (
+                <div className="rounded-xl bg-bg px-3 py-1">
+                  <p className="pt-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{it.open > 0 ? "Or swap in for" : "Swap in for"}</p>
+                  <ul className="divide-y divide-line">
+                    {it.swappable.map((m) => {
+                      const low = m.hours <= ALERT_HOURS;
+                      const after = m.hours - it.hours;
+                      return (
+                        <li key={m.id} className="flex items-center gap-3 py-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[15px] font-semibold text-ink">{m.name}</p>
+                            <p className={`text-xs tabular-nums ${low ? "font-semibold text-warn" : "text-muted"}`}>
+                              {hrs(m.hours)} hrs this week · {hrs(Math.max(0, after))} after the swap
+                              {low ? " · already low" : ""}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={busy === it.id}
+                            onClick={() => run(it.id, m.id, `${first} swapped in for ${m.name}`)}
+                            className="press h-10 shrink-0 rounded-xl border border-line bg-card px-3 text-sm font-semibold text-ink disabled:opacity-50"
+                          >
+                            Swap
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
               {!it.open && !it.swappable.length && <p className="text-sm text-muted">Only the lead is on this job. Open it to change the lead.</p>}
             </div>
           )}
