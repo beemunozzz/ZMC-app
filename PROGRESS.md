@@ -121,6 +121,8 @@
 - Ideas saved for later (Brandon, Nov 27): traffic-aware drive times by time of day with Google (Routes API with a departure time) once Zach's Google Maps account is set up; quotes then compare start times ("Start at 9 AM: about $X · at 12 PM: about $Y, afternoon traffic") and can suggest the cheaper start time to the customer; learn load and unload times by house type, beds, stories, stairs and apartment from real jobs (crew lead taps Arrived → Loaded, leaving → Arrived at drop-off → Done), with a starting table Zach fills in, so quotes predict hours and when each drive happens.
 - Decisions: this cloud session now uses a personal environment "ZMC-app" that can also reach NOAA, the weather service and the Census address lookup (for testing weather; the live app on Vercel isn't limited). Node needs NODE_USE_ENV_PROXY=1 to use the proxy in local tests.
 
+- Nov 27: **Dark mode red.** New color `bad-fill` (light #B3261E, dark #D63A31) for filled red shapes: month job bars, count bubbles, red buttons (Find cover, Terminate, Clock out…). The soft dark-mode red (#F2B8B5) stays for red text only, so solid shapes no longer look pink.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
