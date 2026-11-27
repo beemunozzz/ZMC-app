@@ -27,7 +27,7 @@ import {
   todayISO,
 } from "@/lib/dates";
 import { JOB_COLUMNS, conflicts, isLive, jobCrew, needsTruck, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
-import { jobsForecast, jobsOutlook, stocktonForecast, stocktonOutlook } from "@/lib/weather";
+import { jobsForecast, jobsOutlook, stocktonForecast, stocktonOutlook, stocktonTemps } from "@/lib/weather";
 import { WX_LABEL, outlookWet, worse, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
@@ -113,6 +113,8 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   // Weather: Stockton for every day, plus each job's own cities (next 7 days).
   const stockton = await stocktonForecast();
   const jobWx = await jobsForecast(jobs.filter((j) => j.status !== "canceled"), stockton);
+  // Stockton's low and high during working hours (7 AM to 8 PM), for the week and month views.
+  const temps: Record<string, { lo: number; hi: number }> = view === "today" ? {} : await stocktonTemps();
   // Days 8-14: NOAA's rough outlook (a faded 🌦️ when it leans wetter than usual).
   const later = view === "today" ? null : await stocktonOutlook();
   const jobLater = await jobsOutlook(jobs.filter((j) => j.status !== "canceled" && j.job_date >= today), new Set(Object.keys(stockton)));
@@ -251,13 +253,25 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
                   >
                     <span className={`text-[11px] font-semibold uppercase tracking-wider ${isToday ? "text-tape" : "text-muted"}`}>{DAY_SHORT[i]}</span>
                     <span className="font-display text-3xl font-extrabold tabular-nums leading-none text-ink md:text-xl">{dayOfMonth(d)}</span>
-                    <span className="mt-1 flex h-6 items-center md:mt-0 md:ml-auto" title={wx ? `${WX_LABEL[wx.kind]}${wx.hi != null ? `, high ${wx.hi}°` : ""}` : undefined}>
+                    <span className="mt-1 flex h-6 items-center gap-1.5 md:mt-0 md:ml-auto" title={wx ? `${WX_LABEL[wx.kind]}${temps[d] ? `, ${temps[d].lo}° to ${temps[d].hi}° (7 AM to 8 PM)` : ""}` : undefined}>
+                      {temps[d] && (
+                        <span className="hidden whitespace-nowrap text-[11px] font-medium tabular-nums text-muted md:inline">
+                          L{temps[d].lo}° H{temps[d].hi}°
+                        </span>
+                      )}
                       <span aria-hidden>
                         <WxIcon wx={wx} wetLater={wetLater(d)} size="md" />
                       </span>
                       {wx && <span className="sr-only">{WX_LABEL[wx.kind]}</span>}
                     </span>
-                    {wx?.hi != null && <span className="text-[11px] tabular-nums text-muted md:hidden">{wx.hi}°</span>}
+                    {temps[d] ? (
+                      <span className="text-center text-[10px] font-medium leading-tight tabular-nums text-muted md:hidden">
+                        L{temps[d].lo}°
+                        <br />H{temps[d].hi}°
+                      </span>
+                    ) : (
+                      wx?.hi != null && <span className="text-[11px] tabular-nums text-muted md:hidden">{wx.hi}°</span>
+                    )}
                   </div>
 
                   {/* That day's jobs */}
@@ -289,7 +303,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
 
         {crewHours && <CrewHours rows={crewHours.rows} offDays={crewHours.offDays} whoHref={(id) => href({ who: id })} />}
 
-        {view === "month" && <Month date={date} today={today} from={from} jobs={jobs} href={href} dayWx={dayWx} wetLater={wetLater} />}
+        {view === "month" && <Month date={date} today={today} from={from} jobs={jobs} href={href} dayWx={dayWx} wetLater={wetLater} temps={temps} />}
 
         {view === "today" &&
           (isOwner && !who ? (
@@ -460,6 +474,7 @@ function Month({
   href,
   dayWx,
   wetLater,
+  temps,
 }: {
   date: string;
   today: string;
@@ -468,6 +483,7 @@ function Month({
   href: (p: Partial<{ view: View; date: string }>) => string;
   dayWx: (d: string) => JobWx | null;
   wetLater: (d: string) => boolean;
+  temps: Record<string, { lo: number; hi: number }>;
 }) {
   const month = date.slice(0, 7);
   const last = addDays(mondayOf(lastOfMonth(date)), 6);
@@ -498,7 +514,7 @@ function Month({
               href={href({ view: "week", date: d })}
               aria-label={`${fmtDayLong(d)}: ${list.length} job${list.length === 1 ? "" : "s"}${short ? ", needs crew" : ""}${wxText ? ". " + wxText : ""}`}
               title={wxText || undefined}
-              className={`press relative h-[8rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
+              className={`press relative h-[8.5rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
                 inMonth ? "border-line" : "border-transparent bg-transparent opacity-40"
               }`}
             >
@@ -511,13 +527,16 @@ function Month({
                 {dayOfMonth(d)}
               </span>
               {/* Fixed spot: weather, top-right. Orange circle = rain, snow, heat or wind; orange dot = at a job site, not Stockton. */}
-              <span className="absolute right-0.5 top-0.5 md:right-1 md:top-1" aria-hidden>
+              <span className="absolute right-0.5 top-0.5 flex flex-col items-end md:right-1 md:top-1 md:flex-row md:items-center md:gap-1" aria-hidden>
+                {/* Computers: low and high, left of the icon. Phones: just the high, under it. */}
+                {temps[d] && <span className="hidden whitespace-nowrap text-[10px] font-medium tabular-nums text-muted md:inline">L{temps[d].lo}° H{temps[d].hi}°</span>}
                 <WxIcon wx={wx} wetLater={wetLater(d)} />
+                {temps[d] && <span className="text-[9px] font-semibold leading-[10px] tabular-nums text-muted md:hidden">{temps[d].hi}°</span>}
               </span>
               {/* Fixed spot: one bar per job under the date, lined up on the left, earliest first (red = still needs crew).
                   Phones: time range on top, last name under it (2 jobs). Computers: one line each (3 jobs). The count has the total. */}
               {list.length > 0 && (
-                <span className="absolute inset-x-0.5 top-[1.4rem] flex flex-col gap-0.5 md:inset-x-1 md:top-7">
+                <span className="absolute inset-x-0.5 top-[1.95rem] flex flex-col gap-0.5 md:inset-x-1 md:top-7">
                   {list.slice(0, 3).map((j, i) => (
                     <span
                       key={j.id}
@@ -558,7 +577,7 @@ function Month({
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-warn-fill" /> Weather at a job site
         </span>
-        <span>Weather: the forecast for the next 7 days; a faded 🌦️ on days 8–14 means NOAA&apos;s outlook leans wetter than usual (rough). Tap a day to open its week.</span>
+        <span>Weather: the forecast for the next 7 days, with Stockton's high (computers: low and high) from 7 AM to 8 PM; a faded 🌦️ on days 8–14 means NOAA&apos;s outlook leans wetter than usual (rough). Tap a day to open its week.</span>
       </div>
     </div>
   );

@@ -206,3 +206,8 @@ export async function jobTemps(job: { job_date: string; pickup_address: string }
   const temps = await withTimeout(workTempsAt(spot.lat, spot.lon), 4000);
   return temps?.[job.job_date] ?? null;
 }
+
+/** Stockton's working-hours low and high by date (for the week and month views). Empty if the weather service is down. */
+export async function stocktonTemps() {
+  return (await withTimeout(workTempsAt(STOCKTON.lat, STOCKTON.lon), 4000)) ?? {};
+}
