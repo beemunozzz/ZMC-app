@@ -1,18 +1,19 @@
 // Quote follow-ups: when to nudge a customer who hasn't signed, and the text to send. Safe on the server and the phone.
-import { addDays, fmtDayLong } from "./dates";
+import { addDays, fmtDayLong, todayISO } from "./dates";
 import type { Quote } from "./quotes";
 
 type Q = Pick<Quote, "status" | "sent_at" | "accepted_at" | "followups" | "last_followup_at" | "valid_until" | "customer_name" | "move_date" | "share_token">;
 
 export type FollowUp = { kind: "first" | "second" | "expiring"; label: string };
 
-const daysSince = (ts: string, today: string) => Math.floor((Date.parse(today + "T12:00:00Z") - Date.parse(ts.slice(0, 10) + "T12:00:00Z")) / 86_400_000);
+/** Whole days between a moment and today, both counted in Stockton time. */
+const daysSince = (ts: string, today: string) => Math.round((Date.parse(today + "T12:00:00Z") - Date.parse(todayISO(new Date(ts)) + "T12:00:00Z")) / 86_400_000);
 
 /** Is a follow-up due on this quote today? First after 1 day, second 3 days after that, and before the estimate expires. */
 export function followUpDue(q: Q, today: string): FollowUp | null {
   if (!(q.status === "quoted" || q.status === "follow_up") || !q.sent_at || q.accepted_at) return null;
   if (q.valid_until && q.valid_until >= today && q.valid_until <= addDays(today, 2)) {
-    const lastTouch = q.last_followup_at?.slice(0, 10);
+    const lastTouch = q.last_followup_at ? todayISO(new Date(q.last_followup_at)) : undefined;
     if (!lastTouch || lastTouch < addDays(q.valid_until, -2)) return { kind: "expiring", label: `Expires ${q.valid_until === today ? "today" : fmtDayLong(q.valid_until).split(",")[0]}` };
   }
   const touched = q.last_followup_at ?? q.sent_at;
