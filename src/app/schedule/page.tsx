@@ -471,7 +471,9 @@ function Month({
       </div>
       <div className="grid grid-cols-7 gap-1">
         {days.map((d) => {
-          const list = jobs.filter((j) => j.job_date === d && j.status !== "canceled");
+          const list = jobs
+            .filter((j) => j.job_date === d && j.status !== "canceled")
+            .sort((a, b) => (minutes(a.start_time) ?? 9999) - (minutes(b.start_time) ?? 9999));
           const short = list.some((j) => isLive(j) && openSpots(j) > 0);
           const inMonth = d.slice(0, 7) === month;
           const isToday = d === today;
