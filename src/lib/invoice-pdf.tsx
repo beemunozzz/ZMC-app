@@ -4,7 +4,7 @@ import { Document, Image, Page, Text, View, renderToBuffer } from "@react-pdf/re
 import { payLines, type InvoiceRow } from "./customer-invoice";
 import { fmtDayLong, fmtTime } from "./dates";
 import { PAY_LABEL } from "./invoices";
-import { C, Li, Truck, money0, registerFonts, s, shortDate, travel, usd } from "./quote-pdf";
+import { C, Li, Truck, money0, oneLine, registerFonts, s, shortDate, travel, usd } from "./quote-pdf";
 
 const tsDate = (ts: string) =>
   new Date(ts).toLocaleDateString("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", year: "numeric" });
@@ -89,12 +89,12 @@ function InvoiceDoc({ r }: { r: InvoiceRow }) {
               <View style={{ flex: 1, marginLeft: 6 }}>
                 <Text style={[s.label, { marginBottom: 0 }]}>Pickup</Text>
                 <Text style={{ fontWeight: 600, fontSize: 10.5 }}>{v.pickup_address || "—"}</Text>
-                {v.pickup_house ? <Text style={[s.muted, { fontSize: 8.5 }]}>{v.pickup_house}</Text> : null}
+                {v.pickup_house ? <Text style={[s.muted, { fontSize: 8 }]}>{oneLine(v.pickup_house)}</Text> : null}
                 {v.dropoff_address ? (
                   <>
                     <Text style={[s.label, { marginBottom: 0, marginTop: 5 }]}>Drop-off</Text>
                     <Text style={{ fontWeight: 600, fontSize: 10.5 }}>{v.dropoff_address}</Text>
-                    {v.dropoff_house ? <Text style={[s.muted, { fontSize: 8.5 }]}>{v.dropoff_house}</Text> : null}
+                    {v.dropoff_house ? <Text style={[s.muted, { fontSize: 8 }]}>{oneLine(v.dropoff_house)}</Text> : null}
                   </>
                 ) : null}
               </View>

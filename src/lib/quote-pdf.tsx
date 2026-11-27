@@ -22,11 +22,11 @@ export function registerFonts() {
 export const C = { ink: "#15202B", muted: "#5B6672", line: "#E2DBD0", paper: "#F3F0EA", blue: "#1F4E8C", tape: "#D9A25B", navy: "#142B4A", pale: "#EAF1FA", paleLine: "#C9D6E8" };
 
 export const s = StyleSheet.create({
-  page: { fontFamily: "Archivo", fontSize: 9.5, color: C.ink, paddingTop: 30, paddingBottom: 24, paddingHorizontal: 40, lineHeight: 1.3 },
+  page: { fontFamily: "Archivo", fontSize: 9.5, color: C.ink, paddingTop: 24, paddingBottom: 18, paddingHorizontal: 40, lineHeight: 1.3 },
   display: { fontFamily: "Narrow", fontWeight: 700, textTransform: "uppercase", lineHeight: 1.15 },
   muted: { color: C.muted },
   row: { flexDirection: "row" },
-  head: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 8, borderBottomWidth: 3, borderBottomColor: C.ink, marginBottom: 8 },
+  head: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 7, borderBottomWidth: 3, borderBottomColor: C.ink, marginBottom: 7 },
   logo: { fontFamily: "Logo", fontWeight: 700, fontSize: 30, letterSpacing: 1.2, lineHeight: 1 },
   tape: { width: 44, height: 4, borderRadius: 2, backgroundColor: C.tape, marginTop: 6, marginBottom: 6 },
   card: { flex: 1, borderWidth: 1, borderColor: C.line, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
@@ -35,7 +35,7 @@ export const s = StyleSheet.create({
   li: { flexDirection: "row", marginBottom: 1 },
   bullet: { width: 4.5, height: 4.5, borderRadius: 2.25, backgroundColor: C.tape, marginTop: 4, marginRight: 6 },
   ring: { width: 4.5, height: 4.5, borderRadius: 2.25, borderWidth: 1, borderColor: C.muted, marginTop: 4, marginRight: 6 },
-  tr: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: C.line },
+  tr: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3.5, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: C.line },
   amt: { fontWeight: 600 },
   small: { fontSize: 8, color: C.muted, marginTop: 1 },
 });
@@ -43,6 +43,12 @@ export const s = StyleSheet.create({
 export const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 export const money0 = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: n % 1 ? 2 : 0 });
 export const shortDate = (iso: string) => new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" });
+/** House details on one line in the PDF's half-width "Where" card (cut at a "·" with "…" when too long). */
+export function oneLine(s: string, max = 64) {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max);
+  return cut.slice(0, Math.max(cut.lastIndexOf(" · "), 20)) + " …";
+}
 export const travel = (m: number) => (m < 60 ? `${m} minutes` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`);
 
 export function Li({ children, no }: { children: React.ReactNode; no?: boolean }) {
@@ -137,12 +143,12 @@ function Estimate({ v, signed }: { v: CustomerView; signed: SignedInfo }) {
               <View style={{ flex: 1, marginLeft: 6 }}>
                 <Text style={[s.label, { marginBottom: 0 }]}>Pickup</Text>
                 <Text style={{ fontWeight: 600, fontSize: 10.5 }}>{v.pickup_address || "To be confirmed"}</Text>
-                {v.pickup_house ? <Text style={[s.muted, { fontSize: 8.5 }]}>{v.pickup_house}</Text> : null}
+                {v.pickup_house ? <Text style={[s.muted, { fontSize: 8 }]}>{oneLine(v.pickup_house)}</Text> : null}
                 {v.dropoff_address ? (
                   <>
                     <Text style={[s.label, { marginBottom: 0, marginTop: 5 }]}>Drop-off</Text>
                     <Text style={{ fontWeight: 600, fontSize: 10.5 }}>{v.dropoff_address}</Text>
-                    {v.dropoff_house ? <Text style={[s.muted, { fontSize: 8.5 }]}>{v.dropoff_house}</Text> : null}
+                    {v.dropoff_house ? <Text style={[s.muted, { fontSize: 8 }]}>{oneLine(v.dropoff_house)}</Text> : null}
                   </>
                 ) : null}
               </View>
