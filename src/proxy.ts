@@ -8,7 +8,7 @@ export async function proxy(request: NextRequest) {
   // The calendar link and the nightly reminder timer have their own keys and no login.
   if (request.nextUrl.pathname.startsWith("/api/cal/") || request.nextUrl.pathname.startsWith("/api/cron/")) return NextResponse.next();
   // A customer's quote link: no login, the long code in the link is the key.
-  if (request.nextUrl.pathname.startsWith("/q/")) return NextResponse.next();
+  if (request.nextUrl.pathname.startsWith("/q/") || request.nextUrl.pathname.startsWith("/i/")) return NextResponse.next();
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {

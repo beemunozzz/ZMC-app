@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/crew";
-import type { PayMethod } from "@/lib/invoices";
+import { saveInvoiceView } from "@/lib/customer-invoice";
+import { INVOICE_COLUMNS, type Invoice, type PayMethod } from "@/lib/invoices";
 import { priceInvoice } from "@/lib/pricing";
 import { getPrices } from "@/lib/settings";
 
@@ -134,10 +135,18 @@ export async function ownerEditHours(_: InvoiceFormState, form: FormData): Promi
   if (hours == null || Number.isNaN(hours) || hours <= 0 || hours > 24) return { error: "Enter the hours (more than 0)." };
   if (!(movers >= 1 && movers <= 12)) return { error: "Movers should be between 1 and 12." };
 
-  const { data: inv } = await supabase.from("invoices").select("truck, miles_out, miles_between, miles_back, nte").eq("id", id).maybeSingle();
+  const { data: inv } = await supabase.from("invoices").select("job_id, truck, miles_out, miles_between, miles_back, nte").eq("id", id).maybeSingle();
   if (!inv) return { error: "Invoice not found." };
-  const prices = await getPrices(supabase);
-  const p = priceInvoice({ movers, est_hours: hours, miles_out: inv.miles_out, miles_between: inv.miles_between, miles_back: inv.miles_back, truck: inv.truck }, prices);
+  const [prices, { data: job }] = await Promise.all([
+    getPrices(supabase),
+    supabase.from("jobs").select("drive_min, drive_back_min, flat_price, rate_override, truck_rate").eq("id", inv.job_id).maybeSingle(),
+  ]);
+  // Same rate as the job (adjusted truck rate, travel time, flat price), not just the standard rate.
+  const p = priceInvoice(
+    { movers, est_hours: hours, miles_out: inv.miles_out, miles_between: inv.miles_between, miles_back: inv.miles_back, truck: inv.truck, drive_out_min: job?.drive_min, drive_back_min: job?.drive_back_min, rate_override: job?.rate_override, truck_rate: job?.truck_rate },
+    prices,
+    job?.flat_price != null ? Number(job.flat_price) : null,
+  );
   if (p.total > Number(inv.nte)) return { error: `That makes the total ${p.total.toFixed(2)}, over the not-to-exceed price of ${Number(inv.nte).toFixed(2)}.` };
 
   const { error } = await supabase
@@ -145,6 +154,9 @@ export async function ownerEditHours(_: InvoiceFormState, form: FormData): Promi
     .update({ hours: p.hours, movers: p.movers, labor: p.labor, trip: p.trip, truck_charge: p.truck, total: p.total })
     .eq("id", id);
   if (error) return { error: `Couldn't save: ${error.message}` };
+  // If the customer already has a link, update their copy too.
+  const { data: fresh } = await supabase.from("invoices").select(INVOICE_COLUMNS).eq("id", id).maybeSingle();
+  if (fresh?.share_token) await saveInvoiceView(supabase, fresh as Invoice);
   revalidatePath(`/invoices/${id}`);
   return {};
 }

@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // The quote PDF maker runs on the server and needs its font files.
   serverExternalPackages: ["@react-pdf/renderer"],
-  outputFileTracingIncludes: { "/q/[token]/pdf": ["./src/assets/fonts/**"] },
+  outputFileTracingIncludes: { "/q/[token]/pdf": ["./src/assets/fonts/**"], "/i/[token]/pdf": ["./src/assets/fonts/**"] },
   partialPrefetching: true,
   turbopack: {
     rules: {

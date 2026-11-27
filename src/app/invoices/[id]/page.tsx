@@ -5,15 +5,15 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
-import { TextLink } from "@/components/TextButtons";
 import { roleLabel, requireMember } from "@/lib/crew";
 import { fmtDayLong } from "@/lib/dates";
-import { INVOICE_COLUMNS, PAY_LABEL, PAY_METHODS, payLink, receiptText, type Invoice, type PayMethod } from "@/lib/invoices";
+import { INVOICE_COLUMNS, PAY_LABEL, PAY_METHODS, payLink, type Invoice, type PayMethod } from "@/lib/invoices";
 import { money, type Prices } from "@/lib/pricing";
 import { getPrices } from "@/lib/settings";
 import { changeMethod, markPaid } from "../actions";
 import { CopyButton } from "./CopyButton";
 import { EditHours } from "./EditHours";
+import { SendInvoice } from "./SendInvoice";
 
 export default function InvoicePage({ params, searchParams }: PageProps<"/invoices/[id]">) {
   return (
@@ -247,7 +247,7 @@ async function InvoiceView({ params, searchParams }: Pick<PageProps<"/invoices/[
 
         {isOwner && <EditHours id={inv.id} hours={Number(inv.hours)} movers={inv.movers} />}
 
-        <TextLink phone={inv.customer_phone} body={receiptText(inv, jobDate, prices)} label="Text the customer a receipt" />
+        <SendInvoice invoiceId={inv.id} phone={inv.customer_phone} sentAt={inv.sent_at ?? null} />
 
         {paid && isOwner && (
           <form action={markPaid} className="pb-4">

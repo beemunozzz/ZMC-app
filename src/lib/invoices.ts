@@ -44,10 +44,13 @@ export type Invoice = {
   payment_method: PayMethod;
   paid_at: string | null;
   created_at: string;
+  /** When the customer's invoice link was last made, and its private code. */
+  sent_at?: string | null;
+  share_token?: string | null;
 };
 
 export const INVOICE_COLUMNS =
-  "id, job_id, customer_name, customer_phone, hours, movers, truck, miles_out, miles_between, miles_back, labor, trip, truck_charge, total, nte, signature, signed_name, signed_at, hours_verified_at, verified_hours, verified_movers, owner_edited_at, payment_method, paid_at, created_at";
+  "id, job_id, customer_name, customer_phone, hours, movers, truck, miles_out, miles_between, miles_back, labor, trip, truck_charge, total, nte, signature, signed_name, signed_at, hours_verified_at, verified_hours, verified_movers, owner_edited_at, payment_method, paid_at, created_at, sent_at, share_token";
 
 const amount = (n: number) => (Math.round(n * 100) / 100).toString();
 

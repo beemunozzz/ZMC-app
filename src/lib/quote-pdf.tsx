@@ -7,7 +7,7 @@ import { fmtDayLong, fmtTime } from "./dates";
 
 const fonts = path.join(process.cwd(), "src/assets/fonts");
 let registered = false;
-function registerFonts() {
+export function registerFonts() {
   if (registered) return;
   Font.register({
     family: "Archivo",
@@ -19,9 +19,9 @@ function registerFonts() {
   registered = true;
 }
 
-const C = { ink: "#15202B", muted: "#5B6672", line: "#E2DBD0", paper: "#F3F0EA", blue: "#1F4E8C", tape: "#D9A25B", navy: "#142B4A", pale: "#EAF1FA", paleLine: "#C9D6E8" };
+export const C = { ink: "#15202B", muted: "#5B6672", line: "#E2DBD0", paper: "#F3F0EA", blue: "#1F4E8C", tape: "#D9A25B", navy: "#142B4A", pale: "#EAF1FA", paleLine: "#C9D6E8" };
 
-const s = StyleSheet.create({
+export const s = StyleSheet.create({
   page: { fontFamily: "Archivo", fontSize: 9.5, color: C.ink, paddingTop: 30, paddingBottom: 24, paddingHorizontal: 40, lineHeight: 1.3 },
   display: { fontFamily: "Narrow", fontWeight: 700, textTransform: "uppercase", lineHeight: 1.15 },
   muted: { color: C.muted },
@@ -40,12 +40,12 @@ const s = StyleSheet.create({
   small: { fontSize: 8, color: C.muted, marginTop: 1 },
 });
 
-const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-const money0 = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: n % 1 ? 2 : 0 });
-const shortDate = (iso: string) => new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" });
-const travel = (m: number) => (m < 60 ? `${m} minutes` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`);
+export const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+export const money0 = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: n % 1 ? 2 : 0 });
+export const shortDate = (iso: string) => new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" });
+export const travel = (m: number) => (m < 60 ? `${m} minutes` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`);
 
-function Li({ children, no }: { children: React.ReactNode; no?: boolean }) {
+export function Li({ children, no }: { children: React.ReactNode; no?: boolean }) {
   return (
     <View style={s.li} wrap={false}>
       <View style={no ? s.ring : s.bullet} />
@@ -54,7 +54,7 @@ function Li({ children, no }: { children: React.ReactNode; no?: boolean }) {
   );
 }
 
-function Truck() {
+export function Truck() {
   return (
     <Svg width={44} height={22} viewBox="0 0 64 32">
       <Path fill={C.ink} d="M2 5.5A1.5 1.5 0 0 1 3.5 4h35A1.5 1.5 0 0 1 40 5.5V24H2z" />
