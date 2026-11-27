@@ -60,3 +60,27 @@ export function CrewShortcuts() {
     </nav>
   );
 }
+
+/** Top of a new crew member's Home: who we are, what the app does, and the setup walkthrough. Shown until setup is done. */
+export function WelcomeCard({ name, items }: { name: string; items: SetupItem[] }) {
+  const done = items.filter((i) => i.done).length;
+  if (done === items.length) return null;
+  const first = name.trim().split(/\s+/)[0] || "there";
+  return (
+    <section className="hero flex flex-col gap-3 rounded-3xl px-5 py-5">
+      <p className="font-logo text-2xl font-bold text-ink">ZMC.</p>
+      <h1 className="font-display text-2xl font-extrabold uppercase leading-tight text-ink">Welcome to ZMC Hub, {first}!</h1>
+      <p className="text-[15px] text-ink">
+        This is the crew app for Zachery&apos;s Moving Co. You&apos;ll see your jobs 2 to 3 weeks ahead, the moment Zach books them: start time,
+        addresses, who you&apos;re working with, the truck and the weather. Request time off, set your regular schedule, and get a heads-up the night
+        before each job.
+      </p>
+      <Link
+        href="/welcome"
+        className="press flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-white dark:text-navy"
+      >
+        {done ? "Finish setting up" : "Walk me through setup (3 min)"}
+      </Link>
+    </section>
+  );
+}

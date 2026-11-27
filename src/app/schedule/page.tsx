@@ -34,7 +34,7 @@ import { jobWxOrSaved, loadSavedDays, mergeDays, mergeTemps, saveWeather } from 
 import { WX_LABEL, outlookWet, worse, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
-import { CrewShortcuts, SetupChecklist } from "@/components/CrewSetup";
+import { CrewShortcuts, SetupChecklist, WelcomeCard } from "@/components/CrewSetup";
 import { setupFor, type SetupItem } from "@/lib/setup";
 import { loadMeet } from "@/lib/meet";
 import { loadChecklist } from "@/lib/checklist-server";
@@ -336,6 +336,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
           ) : (
             <>
               {crewHome && <Birthdays supabase={supabase} meId={me.id} />}
+              {setup && <WelcomeCard name={who ? (names.get(who) ?? "") : me.full_name} items={setup} />}
               {setup && <SetupChecklist items={setup} />}
               <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} jobLater={jobLater} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} meet={meet} checklist={checklist} />
               {hours && <MyHours {...hours} />}

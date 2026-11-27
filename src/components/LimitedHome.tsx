@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { roleLabel, type CrewMember } from "@/lib/crew-types";
 import { telUrl } from "@/lib/jobs";
 import type { SetupItem } from "@/lib/setup";
-import { CrewShortcuts, SetupChecklist } from "./CrewSetup";
+import { CrewShortcuts, SetupChecklist, WelcomeCard } from "./CrewSetup";
 
 /** Home screen for crew on call (between jobs) or on a leave of absence: no schedule, no jobs. */
 export function LimitedHome({ me, kind, phone, setup }: { me: CrewMember; kind: "on_call" | "leave"; phone: string; setup: SetupItem[] }) {
@@ -31,6 +31,7 @@ export function LimitedHome({ me, kind, phone, setup }: { me: CrewMember; kind: 
             </>
           )}
         </section>
+        <WelcomeCard name={me.full_name} items={setup} />
         <SetupChecklist items={setup} />
         <a href={telUrl(phone)} className="press flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-white dark:text-navy">
           Call Zach · {phone}
