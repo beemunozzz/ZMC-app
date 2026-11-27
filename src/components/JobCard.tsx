@@ -49,14 +49,14 @@ export function JobCard({
       <p className="mt-1 text-xs tabular-nums text-muted">
         {hrs ? `${fmtHours(hrs)} hrs · ` : ""}
         {crew.length} of {job.movers_needed} crew
-        {hrs && crew.length ? ` · ${fmtHours(hrs * crew.length)} crew-hrs` : ""}
+        {hrs && crew.length ? <span className="md:hidden">{` · ${fmtHours(hrs * crew.length)} crew-hrs`}</span> : ""}
       </p>
 
-      {/* Row 2: who and where */}
+      {/* Row 3: who and where */}
       <p className={`mt-2 break-words text-base font-semibold text-ink ${canceled ? "line-through" : ""}`}>{job.customer_name}</p>
       {route && <p className="break-words text-sm text-muted">{route}</p>}
 
-      {/* Row 3: crew */}
+      {/* Row 4: crew */}
       {crew.length ? (
         <div className="mt-2 space-y-0.5 text-sm text-ink">
           <p className="break-words">
@@ -79,7 +79,7 @@ export function JobCard({
         )
       )}
 
-      {/* Row 4: flags */}
+      {/* Row 5: flags */}
       {(short > 0 && crew.length > 0) || doubleBooked || wxWatch ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {short > 0 && crew.length > 0 && !canceled && (
