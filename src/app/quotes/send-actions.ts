@@ -54,5 +54,13 @@ export async function sendQuoteLink(quoteId: string): Promise<SendResult> {
 
 function messageFor(name: string, url: string) {
   const first = niceName(name).split(/\s+/)[0] || "there";
-  return `Hi ${first}, here's your moving estimate from Zachery's Moving Co.:\n${url}\n\nYou can review it, save a copy, and sign to book your move right from that page. Questions? Call or text (209) 326-5601.`;
+  return [
+    `Hi ${first}, here's your moving estimate from Zachery's Moving Co.:`,
+    url,
+    "",
+    "Review it and sign to book your move right from that page.",
+    "Once you sign, you can save a copy as a PDF.",
+    "",
+    "Questions? Call or text (209) 326-5601.",
+  ].join("\n");
 }
