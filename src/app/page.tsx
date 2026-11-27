@@ -323,7 +323,7 @@ async function Home() {
                     </p>
                     <div className="flex shrink-0 gap-2">
                       {j && (
-                        <Link href={`/jobs/${j.id}/edit`} className="press flex h-11 items-center rounded-xl bg-bad px-4 font-semibold text-white dark:text-navy">
+                        <Link href={`/jobs/${j.id}/edit`} className="press flex h-11 items-center rounded-xl bg-bad-fill px-4 font-semibold text-white">
                           Find cover
                         </Link>
                       )}
@@ -476,7 +476,7 @@ async function Home() {
               {attention.slice(0, 12).map((a) => (
                 <li key={a.key}>
                   <Link href={a.href} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-bg">
-                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${a.tone === "bad" ? "bg-bad" : "bg-warn"}`} aria-hidden />
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${a.tone === "bad" ? "bg-bad-fill" : "bg-warn"}`} aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-medium text-ink">{a.text}</span>
                       <span className="block truncate text-xs tabular-nums text-muted">{a.sub}</span>
@@ -557,7 +557,7 @@ async function Home() {
                   </span>
                   <span
                     className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold tabular-nums ${
-                      !list.length ? "text-muted" : short ? "bg-bad text-white dark:text-navy" : "bg-primary text-white dark:text-navy"
+                      !list.length ? "text-muted" : short ? "bg-bad-fill text-white" : "bg-primary text-white dark:text-navy"
                     }`}
                   >
                     {list.length || "–"}

@@ -520,7 +520,7 @@ function Month({
                     <span
                       key={j.id}
                       className={`${i === 2 ? "hidden md:block" : "block"} overflow-hidden rounded px-[3px] md:truncate text-[9.5px] font-semibold leading-[12px] tabular-nums md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
-                        isLive(j) && openSpots(j) > 0 ? "bg-bad text-white dark:text-navy" : "bg-primary/10 text-primary"
+                        isLive(j) && openSpots(j) > 0 ? "bg-bad-fill text-white" : "bg-primary/10 text-primary"
                       }`}
                     >
                       <span className="block tracking-tight md:inline">{shortSpan(j).split("–").map((part, k) => (k ? <Fragment key={k}>–<wbr />{part}</Fragment> : part))}</span>
@@ -533,7 +533,7 @@ function Month({
               {list.length > 0 && (
                 <span
                   className={`absolute bottom-1 left-1/2 flex h-5 min-w-5 -translate-x-1/2 items-center justify-center rounded-full px-1.5 text-[11px] font-bold tabular-nums ${
-                    short ? "bg-bad text-white dark:text-navy" : "bg-primary text-white dark:text-navy"
+                    short ? "bg-bad-fill text-white" : "bg-primary text-white dark:text-navy"
                   }`}
                 >
                   {list.length}
@@ -548,7 +548,7 @@ function Month({
           <span className="h-3 w-3 rounded-full bg-primary" /> Jobs that day
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-bad" /> A job still needs crew
+          <span className="h-3 w-3 rounded-full bg-bad-fill" /> A job still needs crew
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-warn" /> Weather at a job site

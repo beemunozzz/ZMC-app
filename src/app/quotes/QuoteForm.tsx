@@ -667,7 +667,7 @@ export function QuoteForm({
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-bad/10 p-3">
               <span className="text-sm font-medium text-bad">Delete this quote? A job booked from it stays on the schedule.</span>
               <div className="flex gap-2">
-                <button className="press h-11 rounded-xl bg-bad px-4 text-sm font-semibold text-white dark:text-navy">Yes, delete</button>
+                <button className="press h-11 rounded-xl bg-bad-fill px-4 text-sm font-semibold text-white">Yes, delete</button>
                 <button type="button" onClick={() => setConfirmDelete(false)} className="press h-11 rounded-xl border border-line px-4 text-sm font-semibold text-ink">
                   Keep it
                 </button>

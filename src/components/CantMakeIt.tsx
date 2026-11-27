@@ -68,7 +68,7 @@ export function CantMakeIt({
       </label>
       {state.error && <p className="text-sm text-bad">{state.error}</p>}
       <div className="flex gap-2">
-        <button disabled={pending} className="press h-12 flex-1 rounded-xl bg-bad font-semibold text-white disabled:opacity-60 dark:text-navy">
+        <button disabled={pending} className="press h-12 flex-1 rounded-xl bg-bad-fill font-semibold text-white disabled:opacity-60">
           {pending ? "Sending…" : "Tell Zach I can't make it"}
         </button>
         <button type="button" onClick={() => setShow(false)} className="press h-12 rounded-xl border border-line px-4 font-semibold text-ink">

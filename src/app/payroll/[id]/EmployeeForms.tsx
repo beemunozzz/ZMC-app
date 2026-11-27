@@ -150,7 +150,7 @@ export function TerminateBox({ id, name, upcoming, today }: { id: string; name: 
   if (state.ok) return <Msg s={state} />;
   if (step === "button") {
     return (
-      <button type="button" onClick={() => setStep("confirm")} className="press h-12 rounded-xl bg-bad font-semibold text-white dark:text-navy">
+      <button type="button" onClick={() => setStep("confirm")} className="press h-12 rounded-xl bg-bad-fill font-semibold text-white">
         Terminate employee
       </button>
     );
@@ -181,7 +181,7 @@ export function TerminateBox({ id, name, upcoming, today }: { id: string; name: 
       </div>
       <Msg s={state} />
       <div className="flex gap-2">
-        <button disabled={pending} className="press h-12 flex-1 rounded-xl bg-bad font-semibold text-white disabled:opacity-60 dark:text-navy">
+        <button disabled={pending} className="press h-12 flex-1 rounded-xl bg-bad-fill font-semibold text-white disabled:opacity-60">
           {pending ? "Terminating…" : "Yes, terminate"}
         </button>
         <button type="button" onClick={() => setStep("button")} className="press h-12 rounded-xl border border-line px-5 font-semibold text-ink">

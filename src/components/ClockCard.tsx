@@ -40,7 +40,7 @@ export function ClockCard({
           <input type="hidden" name="entry_id" value={open.id} />
           <button
             disabled={outPending}
-            className="press flex min-h-16 w-full flex-col items-center justify-center rounded-xl bg-bad px-4 py-2 text-white disabled:opacity-60 dark:text-navy"
+            className="press flex min-h-16 w-full flex-col items-center justify-center rounded-xl bg-bad-fill px-4 py-2 text-white disabled:opacity-60"
           >
             <span className="text-xl font-bold">{outPending ? "Clocking out…" : "Clock out"}</span>
             <span className="text-sm tabular-nums opacity-90">

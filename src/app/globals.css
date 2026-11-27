@@ -13,6 +13,7 @@
   --ok: #2f6b45;
   --warn: #a4541a;
   --bad: #b3261e;
+  --bad-fill: #b3261e; /* solid red shapes (bubbles, bars, buttons) */
 }
 
 /* Dark mode: follows the phone's setting, unless someone picks Light or Dark in My settings. */
@@ -29,6 +30,8 @@
     --ok: #8fd3a6;
     --warn: #f0b27a;
     --bad: #f2b8b5;
+  --bad-fill: #d63a31;
+    --bad-fill: #d63a31; /* dark mode: a real red for filled shapes; the soft red above is for text */
   }
 }
 :root[data-theme="dark"] {
@@ -69,6 +72,7 @@
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
+  --color-bad-fill: var(--bad-fill);
   --font-sans: var(--font-archivo);
   --font-display: var(--font-archivo);
 }
