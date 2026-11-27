@@ -436,6 +436,9 @@ function shortTime(t: string | null) {
   return `${h % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "a" : "p"}`;
 }
 
+/** "Lopez" from "Maria Lopez" (or "Example: Maria Lopez"). */
+const lastName = (n: string) => n.replace(/^example:\s*/i, "").trim().split(/\s+/).pop() ?? "";
+
 function Month({
   date,
   today,
@@ -497,12 +500,19 @@ function Month({
                 {wx ? WX_EMOJI[wx.kind] : wetLater(d) ? <span className="opacity-50">🌦️</span> : ""}
                 {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
               </span>
-              {/* Fixed spot: start times, middle (red = that job still needs crew). Phones show 2, computers 3. */}
+              {/* Fixed spot: one bar per job under the date, lined up on the left (red = still needs crew).
+                  Phones show 2 (time only), computers 3 (time and last name). The count below has the total. */}
               {list.length > 0 && (
-                <span className="absolute inset-x-0 top-6 flex flex-col items-center text-[10px] font-semibold leading-[13px] tabular-nums md:top-8 md:text-xs md:leading-4">
+                <span className="absolute inset-x-0.5 top-[1.4rem] flex flex-col gap-0.5 md:inset-x-1 md:top-7">
                   {list.slice(0, 3).map((j, i) => (
-                    <span key={j.id} className={`${i === 2 ? "hidden md:block" : ""} ${isLive(j) && openSpots(j) > 0 ? "text-bad" : "text-ink"}`}>
+                    <span
+                      key={j.id}
+                      className={`${i === 2 ? "hidden md:block" : "block"} truncate rounded px-1 text-[10px] font-semibold leading-[14px] tabular-nums md:text-[11px] md:leading-4 ${
+                        isLive(j) && openSpots(j) > 0 ? "bg-bad/12 text-bad" : "bg-primary/10 text-primary"
+                      }`}
+                    >
                       {shortTime(j.start_time)}
+                      <span className="hidden font-medium md:inline"> {lastName(j.customer_name)}</span>
                     </span>
                   ))}
                 </span>
