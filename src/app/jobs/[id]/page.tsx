@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { TruckReserved } from "@/components/TruckReserved";
 import { CrewSwap } from "@/components/CrewSwap";
+import { JobSteps } from "@/components/JobSteps";
 import { swapCandidates } from "@/lib/swap";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -208,6 +209,13 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
           </p>
         )}
 
+        {(isOwner || isLead) && job.status !== "canceled" && job.job_date <= todayISO() && (
+          <JobSteps
+            jobId={job.id}
+            hasDropoff={!!job.dropoff_address.trim()}
+            times={{ arrived_at: job.arrived_at, loaded_at: job.loaded_at, at_dropoff_at: job.at_dropoff_at, done_at: job.done_at }}
+          />
+        )}
         {meet && <MeetUp {...meet} />}
         {checklist && <LoadChecklist jobId={job.id} items={checklist} canTick={isOwner || people.includes(me.id)} />}
         <WeatherNote wx={wx} past={job.job_date < todayISO()} />
