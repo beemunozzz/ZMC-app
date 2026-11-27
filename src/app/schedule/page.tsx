@@ -520,7 +520,7 @@ function Month({
                     <span
                       key={j.id}
                       className={`${i === 2 ? "hidden md:block" : "block"} overflow-hidden rounded px-[3px] md:truncate text-[9.5px] font-semibold leading-[12px] tabular-nums md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
-                        isLive(j) && openSpots(j) > 0 ? "bg-bad/12 text-bad" : "bg-primary/10 text-primary"
+                        isLive(j) && openSpots(j) > 0 ? "bg-bad text-white dark:text-navy" : "bg-primary/10 text-primary"
                       }`}
                     >
                       <span className="block tracking-tight md:inline">{shortSpan(j).split("–").map((part, k) => (k ? <Fragment key={k}>–<wbr />{part}</Fragment> : part))}</span>
