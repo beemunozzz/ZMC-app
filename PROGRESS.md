@@ -127,6 +127,8 @@
 
 - Nov 27: **Hours colors** (full-time crew, scheduled job hours; `hoursBand` in `src/lib/hours-alert.ts`): 🟢 Full 32+, 🟠 Light 20–32, 🔴 Low under 20. Used in Crew hours this week (bar, label and a legend), the job page's Swap list and Find work's "Swap in for" list. Part-time, on-call and owners aren't colored. "Low on hours" chip (under 20) is red. Light and Low names link to Find work. The Wednesday alert still uses 16 hours or fewer.
 
+- Nov 27: **Job header weather.** Next to the date: the day's weather and the low and high during working hours (7 AM to 8 PM) at the pickup city, from the weather service's free hourly forecast (`workTempsAt`, `jobTemps` in `src/lib/weather.ts`), e.g. "Friday, November 27 · ☀️ Partly Sunny · L 44° H 61°". About 6 days ahead; further out it shows just the date (and the 8–14 day outlook note below). Tested with live data.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
