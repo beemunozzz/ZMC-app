@@ -5,19 +5,34 @@ import { useRouter } from "next/navigation";
 import { SignaturePad } from "@/components/SignaturePad";
 import { acceptQuote, type AcceptState } from "./actions";
 
-/** "Save as PDF": the phone's own Save/Print, which uses the page's one-page print layout. */
-export function SaveButton({ big }: { big?: boolean }) {
+/** Downloads the estimate as a ready-made one-page PDF (made on our server, the same on every phone). */
+export function SaveButton({ token, big }: { token: string; big?: boolean }) {
   return (
-    <button
-      type="button"
-      onClick={() => window.print()}
+    <a
+      href={`/q/${token}/pdf`}
+      target="_blank"
+      rel="noreferrer"
       className={`press inline-flex items-center justify-center gap-2 rounded-xl font-semibold ${
         big ? "h-12 bg-[#1f4e8c] px-6 text-base text-white" : "h-10 border border-[#d5cdbf] bg-white px-4 text-sm text-[#15202b] shadow-sm"
       }`}
     >
       {big ? "Save your signed estimate (PDF)" : "Save as PDF"}
-    </button>
+    </a>
   );
+}
+
+/** After booking, bring the thank-you card into view (the customer is at the bottom of the page anyway). */
+export function ScrollIntoViewOnce({ id }: { id: string }) {
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("zmc-just-booked") !== "1") return;
+      sessionStorage.removeItem("zmc-just-booked");
+    } catch {
+      return;
+    }
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [id]);
+  return null;
 }
 
 const today = () =>
@@ -33,7 +48,13 @@ export function AcceptForm({ token, defaultName, nte }: { token: string; default
   const router = useRouter();
   // After booking, reload the page so it shows the signed estimate and the "Save" button.
   useEffect(() => {
-    if (state.done) router.refresh();
+    if (!state.done) return;
+    try {
+      sessionStorage.setItem("zmc-just-booked", "1");
+    } catch {
+      /* fine without it */
+    }
+    router.refresh();
   }, [state.done, router]);
 
   if (state.done) {
@@ -41,7 +62,7 @@ export function AcceptForm({ token, defaultName, nte }: { token: string; default
       <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-5 text-center shadow-sm">
         <p className="text-2xl font-bold text-[#2f7a4f]">✓ Thank you, you&apos;re booked!</p>
         <p className="text-[15px] text-[#3a4652]">We&apos;ve got your signed estimate and your move is on our schedule.</p>
-        <SaveButton big />
+        <SaveButton token={token} big />
       </div>
     );
   }
