@@ -129,6 +129,8 @@
 
 - Nov 27: **Job header weather.** Next to the date: the day's weather and the low and high during working hours (7 AM to 8 PM) at the pickup city, from the weather service's free hourly forecast (`workTempsAt`, `jobTemps` in `src/lib/weather.ts`), e.g. "Friday, November 27 · ☀️ Partly Sunny · L 44° H 61°". About 6 days ahead; further out it shows just the date (and the 8–14 day outlook note below). Tested with live data.
 
+- Nov 27: **Temperatures on the calendar** (Stockton, 7 AM to 8 PM, from the hourly forecast; `stocktonTemps`): month view on phones shows the high under the weather icon (always the same spot); on computers "L49° H62°" left of the icon. Week view: "L49° H62°" next to the day's weather on computers, stacked under it on phones. About 6 days ahead.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
