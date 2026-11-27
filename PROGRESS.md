@@ -123,6 +123,8 @@
 
 - Nov 27: **Dark mode red.** Dark mode uses one red, #EC5B52 (a little lighter than first tried), for red text, chips ("No crew", "open spots", "Need 1 more") and filled shapes (month job bars, count bubbles, red buttons; `bg-bad-fill`). The old soft #F2B8B5 looked pink. Light mode is unchanged (#B3261E).
 
+- Nov 27: **Weather warnings stand out.** Rain, snow, heat and wind now sit in a small orange circle with the same soft shine as the red bubbles (`bg-warn-fill`: light #E07B22, dark #EE8A3A; `src/components/WxIcon.tsx`), on the month view, the week view's day headers and Zach's home strip. The small orange dot (weather at a job site, not Stockton) stays, with a ring so it shows on the circle. The month legend now lists both: "Rain, snow, heat or wind" and "Weather at a job site". "Need N more" tags are solid red too.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
