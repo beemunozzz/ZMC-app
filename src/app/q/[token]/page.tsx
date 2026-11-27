@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
+import { after, connection } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import type { CustomerView } from "@/lib/customer-quote";
 import { fmtDayLong, fmtTime, todayISO } from "@/lib/dates";
@@ -64,12 +65,15 @@ async function CustomerQuote({
   const { data } = await db.rpc("public_quote", { p_token: token });
   const row = ((data ?? []) as Row[])[0];
   if (!row?.view) notFound();
+  // Count the customer opening their estimate (not Zach or the crew checking it while signed in to the app).
+  const signedIn = (await cookies()).getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+  if (!signedIn && !row.accepted_at) after(async () => void (await db.rpc("log_quote_view", { p_token: token })));
   const v = row.view;
   const today = todayISO();
   const accepted = !!row.accepted_at;
   const expired = !accepted && !!row.valid_until && today > row.valid_until;
   const pastDate = !accepted && (!v.move_date || v.move_date < today);
-  const closed = !accepted && row.status === "declined";
+  const closed = !accepted && (row.status === "declined" || row.status === "lost");
   const flat = v.pricing === "flat" && v.flat_price != null;
   const ourTruck = v.truck === "ours";
   const crewLine = `${v.movers} movers${ourTruck ? " + our 26' box truck" : ""}`;

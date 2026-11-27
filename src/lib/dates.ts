@@ -85,3 +85,6 @@ export function fmtTime(t: string | null | undefined) {
 
 /** Hours like 2.5 -> "2.5", 3 -> "3" */
 export const fmtHours = (h: number) => (Math.round(h * 10) / 10).toString();
+
+/** The current time in milliseconds (server pages: "how long ago" labels). */
+export const nowMs = () => Date.now();

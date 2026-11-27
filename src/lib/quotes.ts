@@ -3,7 +3,14 @@ import { fmtDayLong, fmtTime } from "./dates";
 import type { House, Truck } from "./jobs";
 import { REFER_ITEMS, money, priceQuote, type Prices } from "./pricing";
 
-export type QuoteStatus = "new" | "quoted" | "booked" | "declined";
+/** Lead stages: new -> contacted -> quoted -> follow_up -> booked / lost. "declined" is the old word for lost. */
+export type QuoteStatus = "new" | "contacted" | "quoted" | "follow_up" | "booked" | "lost" | "declined";
+export const OPEN_STAGES: QuoteStatus[] = ["new", "contacted", "quoted", "follow_up"];
+export const isOpen = (s: QuoteStatus) => OPEN_STAGES.includes(s);
+export const isLost = (s: QuoteStatus) => s === "lost" || s === "declined";
+
+/** Why a lead didn't book (so Zach can see if he's losing on price, speed or dates). */
+export const LOST_REASONS = ["Price too high", "Date not available", "Went with another company", "No reply / just shopping", "Moving themselves", "Other"];
 
 export type Quote = {
   id: string;
@@ -48,16 +55,33 @@ export type Quote = {
   sent_at: string | null;
   accepted_at: string | null;
   customer_signed_name: string | null;
+  /** Leads board and follow-ups. */
+  contacted_at: string | null;
+  lost_reason: string;
+  view_count: number;
+  last_viewed_at: string | null;
+  followups: number;
+  last_followup_at: string | null;
+  valid_until: string | null;
+  /** Referrals: a customer's name, and/or a partner (realtor, apartment manager...). */
+  referred_by: string;
+  partner_id: string | null;
+  referral_thanked_at: string | null;
+  email: string;
+  source: string;
 };
 
 export const QUOTE_COLUMNS =
-  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost, rate_override, truck_rate, share_token, sent_at, accepted_at, customer_signed_name";
+  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost, rate_override, truck_rate, share_token, sent_at, accepted_at, customer_signed_name, contacted_at, lost_reason, view_count, last_viewed_at, followups, last_followup_at, valid_until, referred_by, partner_id, referral_thanked_at, email, source";
 
 export const QUOTE_STATUS: Record<QuoteStatus, { label: string; cls: string }> = {
   new: { label: "New", cls: "bg-warn/12 text-warn" },
+  contacted: { label: "Contacted", cls: "bg-tape/20 text-ink" },
   quoted: { label: "Quoted", cls: "bg-primary/10 text-primary" },
+  follow_up: { label: "Follow up", cls: "bg-warn/12 text-warn" },
   booked: { label: "Booked", cls: "bg-ok/12 text-ok" },
-  declined: { label: "Declined", cls: "bg-line text-muted" },
+  lost: { label: "Lost", cls: "bg-line text-muted" },
+  declined: { label: "Lost", cls: "bg-line text-muted" },
 };
 
 export const HEARD_FROM = [

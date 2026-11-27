@@ -10,7 +10,7 @@ import { hourChoices, hoursLabel, moverChoices } from "@/lib/choices";
 import { estimateTrip } from "./estimate-actions";
 import { TruckCostPanel, toChoices, type TruckForm } from "./TruckCostPanel";
 import { SendToCustomer } from "./SendToCustomer";
-import { HEARD_FROM, QUOTE_STATUS, quoteText, type Quote, type QuoteStatus } from "@/lib/quotes";
+import { HEARD_FROM, LOST_REASONS, QUOTE_STATUS, quoteText, type Quote, type QuoteStatus } from "@/lib/quotes";
 import { deleteQuote, saveQuote, type QuoteFormState } from "./actions";
 
 const input =
@@ -30,12 +30,15 @@ export function QuoteForm({
   prices,
   costs,
   crewRate,
+  partners,
 }: {
   quote?: Quote;
   prices: Prices;
   costs: OwnerCosts;
   /** Owner only: the crew's average hourly pay, for the estimated job profit. */
   crewRate?: { rate: number; count: number } | null;
+  /** Referral partners (realtors, apartment managers...) for the "Referral partner" choice. */
+  partners?: { id: string; name: string; kind: string }[];
 }) {
   const [state, action, pending] = useActionState<QuoteFormState, FormData>(saveQuote, {});
   const [v, setV] = useState({
@@ -206,7 +209,23 @@ export function QuoteForm({
                 ))}
               </select>
             </label>
+            <label className={label}>
+              Referred by (a past customer)
+              <input name="referred_by" defaultValue={quote?.referred_by ?? ""} placeholder="Their name" autoComplete="off" className={input} />
+            </label>
+            <label className={label}>
+              Referral partner
+              <select name="partner_id" defaultValue={quote?.partner_id ?? ""} className={input}>
+                <option value="">None</option>
+                {(partners ?? []).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} · {p.kind}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+          <input type="hidden" name="contacted_at" value={quote?.contacted_at ?? ""} />
         </section>
 
         <section className={section}>
@@ -605,13 +624,26 @@ export function QuoteForm({
           <label className={label}>
             Status
             <select name="status" value={v.status} onChange={set("status")} className={input}>
-              {Object.entries(QUOTE_STATUS).map(([k, s]) => (
-                <option key={k} value={k}>
-                  {s.label}
-                </option>
-              ))}
+              {Object.entries(QUOTE_STATUS)
+                .filter(([k]) => k !== "declined" || v.status === "declined")
+                .map(([k, s]) => (
+                  <option key={k} value={k}>
+                    {s.label}
+                  </option>
+                ))}
             </select>
           </label>
+          {(v.status === "lost" || v.status === "declined") && (
+            <label className={label}>
+              Why didn&apos;t they book?
+              <select name="lost_reason" defaultValue={quote?.lost_reason || ""} className={input}>
+                <option value="">Choose one</option>
+                {LOST_REASONS.map((r) => (
+                  <option key={r}>{r}</option>
+                ))}
+              </select>
+            </label>
+          )}
         </section>
 
         {state.error && (

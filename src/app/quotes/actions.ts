@@ -11,7 +11,7 @@ import { truckCost, type TruckChoices } from "@/lib/truck-cost";
 
 export type QuoteFormState = { error?: string; ok?: string };
 
-const STATUSES: QuoteStatus[] = ["new", "quoted", "booked", "declined"];
+const STATUSES: QuoteStatus[] = ["new", "contacted", "quoted", "follow_up", "booked", "lost", "declined"];
 
 const text = (form: FormData, key: string, max = 500) => String(form.get(key) ?? "").trim().slice(0, max);
 function numOrNull(form: FormData, key: string) {
@@ -39,7 +39,7 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
   const move_date = text(form, "move_date", 10) || null;
   const job_type = text(form, "job_type", 40);
   const truck = text(form, "truck", 10) === "theirs" ? "theirs" : "ours";
-  let status = text(form, "status", 10) as QuoteStatus;
+  let status = text(form, "status", 12) as QuoteStatus;
   const movers = Math.round(Number(text(form, "movers", 3) || 2));
   const est_hours = numOrNull(form, "est_hours");
   const miles_out = numOrNull(form, "miles_out");
@@ -127,6 +127,11 @@ export async function saveQuote(_: QuoteFormState, form: FormData): Promise<Quot
     truck_cost: { ...tc, rate_mode: ["standard", "atCost", "manual"].includes(text(form, "rate_mode", 10)) ? text(form, "rate_mode", 10) : "standard" },
     rate_override: rate_override || null,
     truck_rate: truck === "ours" ? truck_rate || null : null,
+    lost_reason: status === "lost" || status === "declined" ? text(form, "lost_reason", 60) : "",
+    referred_by: text(form, "referred_by", 120),
+    partner_id: /^[0-9a-f-]{36}$/i.test(text(form, "partner_id", 40)) ? text(form, "partner_id", 40) : null,
+    // The first reply to the customer: anything past "New" counts.
+    ...(status !== "new" ? { contacted_at: text(form, "contacted_at", 40) || new Date().toISOString() } : {}),
   };
 
   let quoteId = id;

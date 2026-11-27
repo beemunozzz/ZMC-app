@@ -9,11 +9,14 @@ import { PageLoading } from "@/components/PageLoading";
 import { WeatherNote } from "@/components/WeatherNote";
 import { WxIcon } from "@/components/WxIcon";
 import { roleLabel, requireMember } from "@/lib/crew";
-import { DAY_SHORT, ZMC_TZ, addDays, minutes as minutesOf, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
+import { DAY_SHORT, ZMC_TZ, addDays, nowMs, minutes as minutesOf, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
 import { visibleToCrew } from "@/lib/jobs";
 import { JOB_COLUMNS, cityOf, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
 import { money } from "@/lib/pricing";
-import type { QuoteStatus } from "@/lib/quotes";
+import { isOpen, type Quote } from "@/lib/quotes";
+import { followUpDue, followUpText } from "@/lib/followups";
+import { siteUrl } from "@/lib/site-url";
+import { FollowUpButton } from "@/app/quotes/FollowUpButton";
 import { jobsForecast, stocktonForecast, stocktonTemps } from "@/lib/weather";
 import { loadSavedDays, saveWeather } from "@/lib/weather-saved";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
@@ -65,13 +68,13 @@ async function Home() {
   const [{ data: jobRows }, { data: crewRows }, { data: quoteRows }, stockton] = await Promise.all([
     supabase.from("jobs").select(JOB_COLUMNS).gte("job_date", from).lte("job_date", horizon > weekEnd ? horizon : weekEnd).order("job_date").order("start_time", { nullsFirst: false }),
     supabase.from("crew_members").select("id, full_name, email, user_id, employment, role, is_dev").eq("active", true).order("full_name"),
-    supabase.from("quotes").select("id, customer_name, status, created_at, quote_total, move_date").order("created_at", { ascending: false }).limit(300),
+    supabase.from("quotes").select("id, customer_name, customer_phone, status, created_at, quote_total, move_date, contacted_at, sent_at, accepted_at, followups, last_followup_at, valid_until, share_token, view_count, last_viewed_at").order("created_at", { ascending: false }).limit(300),
     stocktonForecast(),
   ]);
   const jobs = (jobRows ?? []) as Job[];
   const crew = crewRows ?? [];
   const names = new Map(crew.map((c) => [c.id as string, c.full_name as string]));
-  const quotes = (quoteRows ?? []) as { id: string; customer_name: string; status: QuoteStatus; created_at: string; quote_total: number | null; move_date: string | null }[];
+  const quotes = (quoteRows ?? []) as Pick<Quote, "id" | "customer_name" | "customer_phone" | "status" | "created_at" | "quote_total" | "move_date" | "contacted_at" | "sent_at" | "accepted_at" | "followups" | "last_followup_at" | "valid_until" | "share_token" | "view_count" | "last_viewed_at">[];
 
   const upcoming = jobs.filter((j) => j.job_date >= today && j.job_date <= horizon && isLive(j));
   const jobWx = await jobsForecast(upcoming, stockton);
@@ -202,11 +205,22 @@ async function Home() {
       sub: d === today ? "Today" : fmtDay(d),
       href: x.jobs.length === 1 ? `/jobs/${x.jobs[0].id}` : `/schedule?view=today&date=${d}`,
     });
-  const newQuotes = quotes.filter((q) => q.status === "new");
-  for (const q of newQuotes.slice(0, 5))
-    attention.push({ key: `q${q.id}`, tone: "warn", text: `Quote waiting on a reply: ${q.customer_name}`, sub: q.move_date ? `Move ${fmtDay(q.move_date)}` : "No move date yet", href: `/quotes/${q.id}` });
+  // New leads nobody has replied to yet: red after 15 minutes (the first mover to answer usually wins).
+  const nowAt = nowMs();
+  const newQuotes = quotes.filter((q) => q.status === "new" && !q.contacted_at);
+  for (const q of newQuotes.slice(0, 5)) {
+    const mins = Math.round((nowAt - Date.parse(q.created_at)) / 60000);
+    const wait = mins < 60 ? `${mins} min` : mins < 2880 ? `${Math.round(mins / 60)} h` : `${Math.round(mins / 1440)} days`;
+    attention.push({ key: `q${q.id}`, tone: mins >= 15 ? "bad" : "warn", text: `New lead, no reply yet (${wait}): ${q.customer_name}`, sub: q.move_date ? `Move ${fmtDay(q.move_date)}` : "Tap to call or text", href: "/quotes" });
+  }
   if (newQuotes.length > 5)
-    attention.push({ key: "qmore", tone: "warn", text: `${newQuotes.length - 5} more quotes waiting`, sub: "Open Quotes", href: "/quotes" });
+    attention.push({ key: "qmore", tone: "bad", text: `${newQuotes.length - 5} more new leads waiting`, sub: "Open Leads", href: "/quotes" });
+  // Quotes that need a follow-up text today.
+  const site = await siteUrl();
+  const followUps = quotes
+    .map((q) => ({ q, due: followUpDue(q, today) }))
+    .filter((x): x is { q: typeof x.q; due: NonNullable<typeof x.due> } => !!x.due && !!x.q.share_token)
+    .slice(0, 8);
   attention.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === "bad" ? -1 : 1));
 
   // ---- This week ----
@@ -216,7 +230,7 @@ async function Home() {
   const weekStartUtc = new Date(`${weekStart}T08:00:00Z`).toISOString(); // Monday, about midnight in Stockton
   const weekQuotes = quotes.filter((q) => q.created_at >= weekStartUtc);
   const weekBooked = weekQuotes.filter((q) => q.status === "booked").length;
-  const openQuoteValue = quotes.filter((q) => q.status === "new" || q.status === "quoted").reduce((s, q) => s + (Number(q.quote_total) || 0), 0);
+  const openQuoteValue = quotes.filter((q) => isOpen(q.status)).reduce((s, q) => s + (Number(q.quote_total) || 0), 0);
 
   // ---- Greeting ----
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: ZMC_TZ, hour: "numeric", hourCycle: "h23" }).format(new Date()));
@@ -472,6 +486,29 @@ async function Home() {
               ))}
             </ul>
             <p className="text-xs text-muted">No takes them off that job (it will show as needing crew). They keep their login but only see their home screen.</p>
+          </section>
+        )}
+
+        {/* Quote follow-ups due today */}
+        {followUps.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-2xl border-2 border-warn/40 bg-card p-4">
+            <h2 className={h2}>Follow-ups</h2>
+            <ul className="divide-y divide-line">
+              {followUps.map(({ q, due }) => (
+                <li key={q.id} className="flex items-center gap-3 py-3">
+                  <Link href={`/quotes/${q.id}`} className="min-w-0 flex-1 text-[15px] text-ink">
+                    <b>{q.customer_name}</b>
+                    <span className="block text-xs tabular-nums text-muted">
+                      {due.label}
+                      {q.quote_total != null ? ` · ${money(Number(q.quote_total))}` : ""}
+                      {q.view_count > 0 ? ` · opened ${q.view_count}×` : " · not opened yet"}
+                    </span>
+                  </Link>
+                  <FollowUpButton id={q.id} phone={q.customer_phone} text={followUpText(q, due.kind, `${site}/q/${q.share_token}`, prices.business_phone)} label="Text" small />
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted">Text opens Messages with the follow-up written for you. 1 day after the estimate, again 3 days later, and before it expires.</p>
           </section>
         )}
 
