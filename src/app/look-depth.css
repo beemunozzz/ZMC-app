@@ -63,9 +63,10 @@
   background-image: linear-gradient(180deg, color-mix(in srgb, var(--ok) 100%, white 14%), var(--ok));
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.25) inset, 0 6px 16px -6px color-mix(in srgb, var(--ok) 60%, transparent);
 }
-:root[data-look="depth"] .bg-bad {
-  background-image: linear-gradient(180deg, color-mix(in srgb, var(--bad) 100%, white 12%), var(--bad));
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 6px 16px -6px color-mix(in srgb, var(--bad) 60%, transparent);
+:root[data-look="depth"] .bg-bad,
+:root[data-look="depth"] .bg-bad-fill {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--bad-fill) 100%, white 12%), var(--bad-fill));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 6px 16px -6px color-mix(in srgb, var(--bad-fill) 60%, transparent);
 }
 
 /* Text boxes sit slightly into the card. */
