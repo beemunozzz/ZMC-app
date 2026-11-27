@@ -28,7 +28,7 @@ export async function savePrices(_: SettingsState, form: FormData): Promise<Sett
       continue;
     }
     if (k === "cancellation_policy") {
-      row.cancellation_policy = raw.replace(/\s+/g, " ").slice(0, 240);
+      row.cancellation_policy = raw.replace(/\s+/g, " ").slice(0, 120);
       continue;
     }
     if (k === "expect_url") {

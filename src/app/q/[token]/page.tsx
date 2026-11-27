@@ -364,10 +364,9 @@ async function CustomerQuote({
                 recommend a specialist.
               </li>
               <li>
-                Changes to the date or the size of the move can change the
-                estimate.
+                {v.cancellation_policy ||
+                  "Changes to the date or the size of the move can change the estimate."}
               </li>
-              {v.cancellation_policy && <li>{v.cancellation_policy}</li>}
             </ul>
           </div>
         </div>

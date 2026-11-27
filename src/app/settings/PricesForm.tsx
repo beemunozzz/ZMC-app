@@ -156,13 +156,13 @@ export function PricesForm({ prices }: { prices: Prices }) {
           <textarea
             name="cancellation_policy"
             rows={2}
-            maxLength={240}
+            maxLength={120}
             value={v.cancellation_policy}
             onChange={(e) => setV((o) => ({ ...o, cancellation_policy: e.target.value }))}
             placeholder="Free to reschedule or cancel up to 48 hours before your move."
             className="rounded-xl border border-line bg-bg p-3 text-base text-ink outline-none focus:border-primary"
           />
-          <span className="text-xs font-normal text-muted">One short sentence. Leave blank to leave it off.</span>
+          <span className="text-xs font-normal text-muted">One short sentence (up to 120 letters), so the estimate stays one page. Leave blank to leave it off.</span>
         </label>
       </section>
 
