@@ -43,10 +43,15 @@ export type Quote = {
   rate_override: number | null;
   /** Truck at cost: the truck's share per hour (null = standard all-inclusive rate). */
   truck_rate: number | null;
+  /** The customer's private link (made by "Send to customer"), and what happened to it. */
+  share_token: string | null;
+  sent_at: string | null;
+  accepted_at: string | null;
+  customer_signed_name: string | null;
 };
 
 export const QUOTE_COLUMNS =
-  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost, rate_override, truck_rate";
+  "id, status, customer_name, customer_phone, heard_from, move_date, start_time, job_type, pickup_address, pickup_house, dropoff_address, dropoff_house, size, heavy_items, notes, truck, movers, est_hours, miles_out, miles_between, miles_back, quote_total, nte, job_id, created_at, drive_out_min, drive_back_min, pricing, flat_price, truck_cost, rate_override, truck_rate, share_token, sent_at, accepted_at, customer_signed_name";
 
 export const QUOTE_STATUS: Record<QuoteStatus, { label: string; cls: string }> = {
   new: { label: "New", cls: "bg-warn/12 text-warn" },

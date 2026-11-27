@@ -1,0 +1,88 @@
+/* The customer's estimate: the approved "first design". Paper-white in light and dark mode (it's a document).
+   On phones it stacks into one column; when printed or saved as PDF it's one Letter page. */
+.qwrap { background: #e9e5de; min-height: 100vh; padding: 16px 12px 40px; }
+.qdoc {
+  --ink: #15202b; --muted: #5b6672; --line: #e2dbd0; --paper: #f3f0ea; --blue: #1f4e8c; --tape: #d9a25b; --navy: #142b4a;
+  font-family: var(--font-archivo), system-ui, sans-serif; font-stretch: 100%; color: var(--ink); background: #fff;
+  font-size: 14px; line-height: 1.4; max-width: 8.5in; margin: 0 auto; padding: 28px 22px 22px; border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 12px 32px -12px rgb(0 0 0 / 0.18);
+  display: flex; flex-direction: column; gap: 12px; font-variant-numeric: tabular-nums;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.qdoc * { box-sizing: border-box; }
+.qdoc .display { font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; word-spacing: 0.06em; }
+.qdoc .muted { color: var(--muted); }
+
+.qdoc .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; padding-bottom: 12px; border-bottom: 3px solid var(--ink); }
+.qdoc .brand { display: flex; align-items: center; gap: 12px; }
+.qdoc .logo { font-family: Georgia, var(--font-gelasio), serif; font-weight: 700; font-size: 38px; letter-spacing: 0.04em; line-height: 1; }
+.qdoc .brand svg { width: 58px; height: 29px; }
+.qdoc .tape { width: 56px; height: 5px; border-radius: 3px; background: var(--tape); margin: 8px 0; }
+.qdoc .co { font-size: 12.5px; }
+.qdoc .co b { font-size: 14px; }
+.qdoc .doc { text-align: right; margin-left: auto; }
+.qdoc .doc h1 { font-size: 32px; line-height: 1; color: var(--blue); margin: 0; }
+.qdoc .doc dl { margin: 8px 0 0; display: grid; grid-template-columns: auto auto; gap: 1px 12px; font-size: 12.5px; justify-content: end; }
+.qdoc .doc dt { color: var(--muted); text-align: right; }
+.qdoc .doc dd { margin: 0; font-weight: 600; text-align: right; }
+
+.qdoc .grid2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.qdoc .card { border: 1px solid var(--line); border-radius: 10px; padding: 11px 15px; }
+.qdoc .label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+.qdoc .big { font-size: 17px; font-weight: 700; }
+
+.qdoc .route { display: grid; grid-template-columns: 18px 1fr; column-gap: 10px; }
+.qdoc .dot { width: 13px; height: 13px; border-radius: 50%; border: 3px solid var(--tape); margin-top: 4px; }
+.qdoc .dot.fill { background: var(--tape); }
+.qdoc .rail { width: 2px; background: var(--tape); margin: 3px auto; opacity: 0.6; height: 30px; }
+.qdoc .stop { padding-bottom: 8px; }
+.qdoc .stop .tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); }
+.qdoc .stop .addr { font-weight: 600; font-size: 15px; }
+
+.qdoc .price { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.qdoc .band { background: var(--navy); color: #fff; padding: 13px 17px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.qdoc .band .display { font-size: 20px; color: #fff; }
+.qdoc .band .sub { font-size: 12.5px; color: #c9d6e8; }
+.qdoc .band .rate { text-align: right; white-space: nowrap; }
+.qdoc .band .rate b { font-stretch: 62%; font-weight: 800; font-size: 34px; color: var(--tape); line-height: 1; }
+.qdoc table { width: 100%; border-collapse: collapse; }
+.qdoc td { padding: 9px 17px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.qdoc td.amt { text-align: right; white-space: nowrap; font-weight: 600; }
+.qdoc td small { display: block; color: var(--muted); font-size: 11.5px; }
+.qdoc tr.total td { background: var(--paper); border-bottom: none; padding-top: 10px; padding-bottom: 10px; }
+.qdoc tr.total .display { font-size: 20px; }
+.qdoc tr.total .amt { font-size: 28px; font-stretch: 62%; font-weight: 800; }
+.qdoc .nte { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 17px; background: #eaf1fa; border-top: 1px solid #c9d6e8; }
+.qdoc .nte .display { font-size: 17px; color: var(--blue); }
+.qdoc .nte .v { font-stretch: 62%; font-weight: 800; font-size: 28px; color: var(--blue); white-space: nowrap; }
+
+.qdoc h2 { font-size: 16px; margin: 0 0 5px; }
+.qdoc ul { list-style: none; display: grid; gap: 3px; margin: 0; padding: 0; }
+.qdoc li { padding-left: 14px; position: relative; font-size: 13px; }
+.qdoc li::before { content: ""; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--tape); }
+.qdoc li.no::before { background: none; border: 1.5px solid var(--muted); width: 5px; height: 5px; }
+
+.qdoc .cta { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--paper); border-radius: 10px; padding: 11px 17px; }
+.qdoc .cta b { font-size: 15px; }
+.qdoc .sigline { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-top: 12px; align-items: end; }
+.qdoc .sigline > div { border-top: 1px solid var(--ink); padding-top: 4px; font-size: 11.5px; color: var(--muted); }
+.qdoc .sigline img { display: block; height: 52px; max-width: 100%; object-fit: contain; object-position: left bottom; }
+.qdoc .sigline .val { color: var(--ink); font-size: 14px; font-weight: 600; }
+.qdoc .foot { font-size: 10.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
+
+@media (min-width: 640px) {
+  .qdoc { padding: 40px 48px 32px; }
+  .qdoc .grid2 { grid-template-columns: 1fr 1fr; }
+}
+
+/* Save as PDF / print: exactly one Letter page, no buttons. */
+@media print {
+  @page { size: Letter; margin: 0; }
+  html, body { background: #fff !important; }
+  .qwrap { background: #fff; padding: 0; min-height: 0; }
+  .qdoc { box-shadow: none; border-radius: 0; width: 8.5in; height: 11in; max-width: none; padding: 0.45in 0.6in 0.4in; gap: 9pt; font-size: 10.5pt; }
+  .qdoc > * { flex-shrink: 0; }
+  .qdoc .grid2 { grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .qdoc .foot { margin-top: auto; }
+  .no-print { display: none !important; }
+}

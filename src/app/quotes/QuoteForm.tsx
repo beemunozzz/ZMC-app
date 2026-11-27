@@ -8,6 +8,7 @@ import { REFER_ITEMS, roundTo5, flatRate, fmtDuration, money, parseDrive, priceQ
 import { truckCost, type OwnerCosts } from "@/lib/truck-cost";
 import { estimateTrip } from "./estimate-actions";
 import { TruckCostPanel, toChoices, type TruckForm } from "./TruckCostPanel";
+import { SendToCustomer } from "./SendToCustomer";
 import { HEARD_FROM, QUOTE_STATUS, quoteText, type Quote, type QuoteStatus } from "@/lib/quotes";
 import { deleteQuote, saveQuote, type QuoteFormState } from "./actions";
 
@@ -608,6 +609,16 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
           )}
         </div>
       </form>
+
+      {quote && (
+        <SendToCustomer
+          quoteId={quote.id}
+          phone={quote.customer_phone}
+          sentAt={quote.sent_at}
+          acceptedAt={quote.accepted_at}
+          signedName={quote.customer_signed_name}
+        />
+      )}
 
       {quote && (
         <form action={deleteQuote} className="pb-6">

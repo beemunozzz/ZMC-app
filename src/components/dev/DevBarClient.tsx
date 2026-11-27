@@ -19,7 +19,7 @@ export function DevBarClient({ people, current }: { people: DevPerson[]; current
   const views: View[] = ["me", "owner", "lead", "mover", "on_call"];
 
   return (
-    <div className={`border-b text-xs ${current ? "border-tape/50 bg-tape/20" : "border-line bg-card"}`}>
+    <div className={`border-b text-xs print:hidden ${current ? "border-tape/50 bg-tape/20" : "border-line bg-card"}`}>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1.5 px-4 py-1.5">
         <span className="font-semibold uppercase tracking-wider text-muted">View as</span>
         <div className="flex rounded-lg bg-bg p-0.5" role="group" aria-label="View as">
