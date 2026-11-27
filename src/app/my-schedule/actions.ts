@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/crew";
 import { notify } from "@/lib/push";
 import { WEEKDAYS, WEEKDAY_LABEL, WEEKLY_COLUMNS, cleanWeek, currentOf, weekChanges, type Week, type WeeklySchedule } from "@/lib/regular";
@@ -59,6 +60,9 @@ export async function saveWeek(_: WeekState, form: FormData): Promise<WeekState>
       tag: `week-${me.id}`,
     });
   refresh();
+  // The welcome walkthrough moves on to its next step.
+  const next = t(form, "next", 80);
+  if (next.startsWith("/welcome")) redirect(next);
   return {
     at: Date.now(),
     ok:

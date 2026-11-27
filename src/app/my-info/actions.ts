@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/crew";
-import { SHIRT_SIZES } from "@/lib/setup";
+import { redirect } from "next/navigation";
+import { SHIRT_SIZES, SHOE_SIZES } from "@/lib/setup";
 
 export type InfoState = { error?: string; ok?: string };
 const t = (f: FormData, k: string, max = 200) => String(f.get(k) ?? "").trim().slice(0, max);
@@ -13,6 +14,10 @@ export async function saveMyInfo(_: InfoState, form: FormData): Promise<InfoStat
   if (!me) return { error: "Your account isn't active." };
   const lic = t(form, "has_license", 5);
   const shirt = t(form, "shirt_size", 5);
+  const shoe = t(form, "shoe_size", 5);
+  const dob = t(form, "birth_date", 10);
+  const dobOk = /^\d{4}-\d{2}-\d{2}$/.test(dob) && dob > "1930-01-01" && dob < new Date().toISOString().slice(0, 10);
+  if (dob && !dobOk) return { error: "Check your date of birth." };
   const row = {
     crew_id: me.id,
     address: t(form, "address", 200),
@@ -21,6 +26,8 @@ export async function saveMyInfo(_: InfoState, form: FormData): Promise<InfoStat
     emergency_phone: t(form, "emergency_phone", 30),
     has_license: lic === "yes" ? true : lic === "no" ? false : null,
     shirt_size: SHIRT_SIZES.includes(shirt) ? shirt : "",
+    shoe_size: SHOE_SIZES.includes(shoe) ? shoe : "",
+    birth_date: dobOk ? dob : null,
     updated_at: new Date().toISOString(),
   };
   const [{ error }, { error: phoneErr }] = await Promise.all([
@@ -32,5 +39,8 @@ export async function saveMyInfo(_: InfoState, form: FormData): Promise<InfoStat
   revalidatePath("/schedule");
   revalidatePath("/");
   revalidatePath("/payroll");
+  // The welcome walkthrough moves on to its next step.
+  const next = t(form, "next", 80);
+  if (next.startsWith("/welcome")) redirect(next);
   return { ok: "Saved." };
 }

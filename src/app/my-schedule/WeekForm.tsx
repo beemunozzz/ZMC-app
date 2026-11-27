@@ -11,7 +11,7 @@ const CHOICES: [DayRule["k"], string][] = [
   ["off", "Off"],
 ];
 
-export function WeekForm({ start, isFirst, onCancel }: { start: Week; isFirst: boolean; onCancel?: () => void }) {
+export function WeekForm({ start, isFirst, onCancel, next }: { start: Week; isFirst: boolean; onCancel?: () => void; next?: string }) {
   const [state, action, pending] = useActionState<WeekState, FormData>(saveWeek, {});
   const [kinds, setKinds] = useState<Record<Weekday, DayRule["k"]>>(
     Object.fromEntries(WEEKDAYS.map((d) => [d, start[d].k])) as Record<Weekday, DayRule["k"]>,
@@ -23,6 +23,7 @@ export function WeekForm({ start, isFirst, onCancel }: { start: Week; isFirst: b
 
   return (
     <form action={action} className="flex flex-col gap-3">
+      {next && <input type="hidden" name="next" value={next} />}
       <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
         {WEEKDAYS.map((d) => {
           const r = start[d];
@@ -78,7 +79,7 @@ export function WeekForm({ start, isFirst, onCancel }: { start: Week; isFirst: b
           </button>
         )}
         <button disabled={pending} className="press h-12 rounded-xl bg-primary font-semibold text-white disabled:opacity-60 dark:text-navy">
-          {pending ? "Saving…" : isFirst ? "Save my schedule" : "Send to Zach"}
+          {pending ? "Saving…" : next ? "Save and continue" : isFirst ? "Save my schedule" : "Send to Zach"}
         </button>
       </div>
     </form>

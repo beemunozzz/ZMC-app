@@ -23,7 +23,7 @@ async function MyInfo() {
     <div className="flex flex-1 flex-col">
       <AppHeader title="My info" isOwner={me.role === "owner"} name={me.full_name} roleLabel={roleLabel(me)} />
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-4">
-        <InfoForm phone={me.phone ?? ""} profile={(data ?? null) as Profile | null} />
+        <InfoForm phone={me.phone ?? ""} profile={(data ?? null) as Profile | null} name={me.full_name} email={me.email ?? null} />
       </main>
     </div>
   );

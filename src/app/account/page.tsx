@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallApp } from "@/components/InstallApp";
 import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
@@ -33,7 +34,16 @@ async function Account() {
           <ThemePicker />
           <p className="text-xs text-muted">Saved on this phone. Each person picks their own.</p>
         </section>
+        <details id="home-screen" className="scroll-mt-20 rounded-2xl border border-line bg-card p-4">
+          <summary className="cursor-pointer font-display text-lg font-extrabold uppercase text-ink">Add to home screen</summary>
+          <div className="mt-3">
+            <InstallApp />
+          </div>
+        </details>
         <nav className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
+          <Link href="/my-info" className={row}>
+            My info <span className="text-muted">›</span>
+          </Link>
           <Link href="/notifications" className={row}>
             Notifications <span className="text-muted">›</span>
           </Link>

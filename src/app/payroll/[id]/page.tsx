@@ -191,6 +191,8 @@ async function Employee({ params }: Pick<PageProps<"/payroll/[id]">, "params">) 
                       ["Emergency", [profile.emergency_name, profile.emergency_relation && `(${profile.emergency_relation})`, profile.emergency_phone].filter(Boolean).join(" ")],
                       ["License", profile.has_license == null ? "" : profile.has_license ? "Has a driver's license" : "No driver's license"],
                       ["Shirt", profile.shirt_size],
+                      ["Shoes", profile.shoe_size],
+                      ["Birthday", profile.birth_date ? new Date(profile.birth_date + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "long", day: "numeric", year: "numeric" }) : ""],
                     ] as const
                   ).map(([k, v]) => (
                     <div key={k} className="flex gap-2">

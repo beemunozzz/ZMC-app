@@ -8,6 +8,7 @@ import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { WeatherNote } from "@/components/WeatherNote";
 import { WxIcon } from "@/components/WxIcon";
+import { Birthdays } from "@/components/Birthdays";
 import { roleLabel, requireMember } from "@/lib/crew";
 import { DAY_SHORT, ZMC_TZ, addDays, nowMs, minutes as minutesOf, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
 import { visibleToCrew } from "@/lib/jobs";
@@ -49,6 +50,11 @@ async function Home() {
   const { supabase, me, previewing } = await requireMember();
   if (!me) return <NotActive />;
   if (me.role !== "owner") {
+    // First time in: the welcome walkthrough (new hire packet, schedule, home screen, notifications).
+    if (!previewing) {
+      const { data: prof } = await supabase.from("crew_profile").select("onboarded_at").eq("crew_id", me.id).maybeSingle();
+      if (!prof?.onboarded_at) redirect("/welcome");
+    }
     // On leave: home screen only. On call: home screen unless a job is in their window (day before to day after).
     if (me.employment === "leave") return <LimitedHome me={me} kind="leave" phone={(await getPrices(supabase)).business_phone} setup={await setupFor(supabase, me)} />;
     if (me.employment === "on_call") {
@@ -504,6 +510,8 @@ async function Home() {
             <p className="text-xs text-muted">No takes them off that job (it will show as needing crew). They keep their login but only see their home screen.</p>
           </section>
         )}
+
+        <Birthdays supabase={supabase} meId={me.id} />
 
         {/* Quote follow-ups due today */}
         {followUps.length > 0 && (

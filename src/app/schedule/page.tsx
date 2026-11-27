@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { CrewHours, lowHoursCount, weekHours, type CrewForHours } from "@/components/CrewHours";
 import { JobCard } from "@/components/JobCard";
 import { WxIcon } from "@/components/WxIcon";
+import { Birthdays } from "@/components/Birthdays";
 import { NextJob } from "@/components/NextJob";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
@@ -334,6 +335,7 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
             </section>
           ) : (
             <>
+              {crewHome && <Birthdays supabase={supabase} meId={me.id} />}
               {setup && <SetupChecklist items={setup} />}
               <CrewToday jobs={jobs} names={names} meId={who || me.id} today={today} isDoubleBooked={isDoubleBooked} jobWx={jobWx} jobLater={jobLater} senderName={who ? undefined : me.full_name} clock={clock} cover={cover} meet={meet} checklist={checklist} />
               {hours && <MyHours {...hours} />}

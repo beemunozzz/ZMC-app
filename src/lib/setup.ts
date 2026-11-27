@@ -10,13 +10,20 @@ export type Profile = {
   emergency_phone: string;
   has_license: boolean | null;
   shirt_size: string;
+  /** New hire packet (Nov 2026). */
+  birth_date: string | null;
+  shoe_size: string;
+  /** Finished the "Welcome to ZMC Hub" walkthrough. */
+  onboarded_at: string | null;
   updated_at: string;
 };
-export const PROFILE_COLUMNS = "crew_id, address, emergency_name, emergency_relation, emergency_phone, has_license, shirt_size, updated_at";
+export const PROFILE_COLUMNS = "crew_id, address, emergency_name, emergency_relation, emergency_phone, has_license, shirt_size, birth_date, shoe_size, onboarded_at, updated_at";
 
 export type SetupItem = { key: string; title: string; sub: string; href: string; done: boolean };
 
 export const SHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL", "4XL"];
+/** US men's shoe sizes (for work boots). */
+export const SHOE_SIZES = ["6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "11.5", "12", "12.5", "13", "14", "15", "16"];
 
 function items(phone: string | null, p: Profile | undefined, hasSchedule: boolean, hasPush: boolean): SetupItem[] {
   return [
@@ -29,17 +36,17 @@ function items(phone: string | null, p: Profile | undefined, hasSchedule: boolea
     },
     {
       key: "contact",
-      title: "Contact and emergency contact",
-      sub: "Your phone, address, and who to call in an emergency",
+      title: "About you and emergency contact",
+      sub: "Your phone, address, birthday, and who to call in an emergency",
       href: "/my-info",
-      done: !!(phone?.trim() && p?.address.trim() && p.emergency_name.trim() && p.emergency_phone.trim()),
+      done: !!(phone?.trim() && p?.address.trim() && p.birth_date && p.emergency_name.trim() && p.emergency_phone.trim()),
     },
     {
       key: "extra",
-      title: "Driver's license and shirt size",
-      sub: "So Zach knows who can drive and what shirts to order",
+      title: "Driver's license, shirt and shoe size",
+      sub: "So Zach knows who can drive and what shirts and boots to order",
       href: "/my-info#extra",
-      done: !!(p && p.has_license !== null && p.shirt_size),
+      done: !!(p && p.has_license !== null && p.shirt_size && p.shoe_size),
     },
     {
       key: "push",
