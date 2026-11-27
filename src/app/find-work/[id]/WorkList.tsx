@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { swapCrew } from "@/app/jobs/swap-actions";
-import { ALERT_HOURS } from "@/lib/hours-alert";
+import { BAND_TEXT, hoursBand } from "@/lib/hours-alert";
 
 const hrs = (n: number) => String(Math.round(n * 100) / 100);
 
@@ -86,13 +86,14 @@ export function WorkList({ personId, first, items }: { personId: string; first: 
                   <p className="pt-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{it.open > 0 ? "Or swap in for" : "Swap in for"}</p>
                   <ul className="divide-y divide-line">
                     {it.swappable.map((m) => {
-                      const low = m.hours <= ALERT_HOURS;
+                      const band = hoursBand(m.hours);
+                      const low = band === "low";
                       const after = m.hours - it.hours;
                       return (
                         <li key={m.id} className="flex items-center gap-3 py-2">
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-[15px] font-semibold text-ink">{m.name}</p>
-                            <p className={`text-xs tabular-nums ${low ? "font-semibold text-warn" : "text-muted"}`}>
+                            <p className={`text-xs font-semibold tabular-nums ${BAND_TEXT[band]}`}>
                               {hrs(m.hours)} hrs this week · {hrs(Math.max(0, after))} after the swap
                               {low ? " · already low" : ""}
                             </p>

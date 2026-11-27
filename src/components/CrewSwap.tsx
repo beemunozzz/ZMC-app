@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { swapCrew } from "@/app/jobs/swap-actions";
 import { AVAIL_STYLE } from "@/lib/availability";
-import { ALERT_HOURS } from "@/lib/hours-alert";
+import { BAND_TEXT, hoursBand } from "@/lib/hours-alert";
 import type { Candidate } from "@/lib/swap";
 import { Icon } from "./Icon";
 
@@ -131,7 +131,6 @@ export function CrewSwap({ jobId, members, candidates, short, needed }: { jobId:
             <ul className="flex flex-col divide-y divide-line">
               {candidates.map((c) => {
                 const st = AVAIL_STYLE[c.avail.kind];
-                const low = c.weekHours <= ALERT_HOURS;
                 return (
                   <li key={c.id} className={`flex items-center gap-3 py-2 ${c.ok ? "" : "opacity-50"}`}>
                     <div className="min-w-0 flex-1">
@@ -143,7 +142,7 @@ export function CrewSwap({ jobId, members, candidates, short, needed }: { jobId:
                         <span className={st.cls}>
                           {st.icon} {c.avail.text}
                         </span>
-                        <span className={low ? "font-semibold text-warn" : "text-muted"}> · {hrs(c.weekHours)} hrs this week</span>
+                        <span className={c.fullTime ? `font-semibold ${BAND_TEXT[hoursBand(c.weekHours)]}` : "text-muted"}> · {hrs(c.weekHours)} hrs this week{c.fullTime ? "" : c.role === "owner" ? "" : " · on call / part-time"}</span>
                       </p>
                     </div>
                     <button

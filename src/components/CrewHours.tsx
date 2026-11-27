@@ -3,11 +3,9 @@
 import Link from "next/link";
 import type { Employment } from "@/lib/crew-types";
 import { fmtHours } from "@/lib/dates";
+import { BAND_BAR, BAND_LABEL, BAND_TEXT, FULL_WEEK_HOURS, GOOD_HOURS, LOW_HOURS, hoursBand } from "@/lib/hours-alert";
 import { jobCrew, type Job } from "@/lib/jobs";
 
-/** A full week for a full-time mover, and the point where Zach should look for more work for them. */
-export const FULL_WEEK_HOURS = 40;
-export const LOW_HOURS = 30;
 
 export type CrewForHours = { id: string; full_name: string; role: string; employment?: Employment | null };
 
@@ -31,31 +29,35 @@ export function CrewHours({ rows, offDays, whoHref }: { rows: ReturnType<typeof 
     <section id="crew-hours" className="flex scroll-mt-20 flex-col gap-3 rounded-2xl border border-line bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 className="font-display text-lg font-extrabold uppercase text-ink">Crew hours this week</h2>
-        <span className="text-xs text-muted">Scheduled job hours · low under {LOW_HOURS} of {FULL_WEEK_HOURS}</span>
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-ok" /> Full {GOOD_HOURS}+</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warn-fill" /> Light {LOW_HOURS}–{GOOD_HOURS}</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-bad-fill" /> Low under {LOW_HOURS}</span>
+        </span>
       </div>
 
       {full.length > 0 && (
         <ul className="grid gap-x-6 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-4">
           {full.map((r) => {
-            const low = r.hours < LOW_HOURS;
+            const band = hoursBand(r.hours);
             const off = offDays.get(r.id) ?? 0;
             const pct = Math.min(100, (r.hours / FULL_WEEK_HOURS) * 100);
             return (
               <li key={r.id}>
-                <Link href={low ? `/find-work/${r.id}` : whoHref(r.id)} className="press block rounded-lg">
+                <Link href={band !== "full" ? `/find-work/${r.id}` : whoHref(r.id)} className="press block rounded-lg">
                   <div className="flex items-baseline justify-between gap-2 text-sm">
                     <span className="min-w-0 truncate font-semibold text-ink">{r.full_name}</span>
-                    <span className={`shrink-0 tabular-nums ${low ? "font-semibold text-warn" : "text-ink"}`}>
-                      {fmtHours(r.hours)} hrs{low ? " · low" : ""}
+                    <span className={`shrink-0 font-semibold tabular-nums ${BAND_TEXT[band]}`}>
+                      {fmtHours(r.hours)} hrs · {BAND_LABEL[band].toLowerCase()}
                     </span>
                   </div>
                   <div className="mt-1 h-2 overflow-hidden rounded-full bg-line" aria-hidden>
-                    <div className={`h-full rounded-full ${low ? "bg-warn" : "bg-ok"}`} style={{ width: `${pct}%` }} />
+                    <div className={`h-full rounded-full ${BAND_BAR[band]}`} style={{ width: `${pct}%` }} />
                   </div>
                   <p className="mt-0.5 text-[11px] tabular-nums text-muted">
                     {r.jobs} job{r.jobs === 1 ? "" : "s"}
                     {off ? ` · off ${off} day${off === 1 ? "" : "s"}` : ""}
-                    {low ? <span className="font-semibold text-primary"> · Find work ›</span> : null}
+                    {band !== "full" ? <span className="font-semibold text-primary"> · Find work ›</span> : null}
                   </p>
                 </Link>
               </li>

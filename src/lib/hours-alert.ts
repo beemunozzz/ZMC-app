@@ -17,3 +17,16 @@ export const alertDay = (now = new Date()) => {
   const d = pacificWeekday(now);
   return d === 0 || d >= ALERT_FROM_WEEKDAY;
 };
+
+/** A full-time week, by scheduled job hours (Brandon, Nov 27): green 32+, orange 20 to 32, red under 20. */
+export const FULL_WEEK_HOURS = 40;
+export const GOOD_HOURS = 32;
+export const LOW_HOURS = 20;
+
+export type HoursBand = "full" | "light" | "low";
+export const hoursBand = (h: number): HoursBand => (h >= GOOD_HOURS ? "full" : h >= LOW_HOURS ? "light" : "low");
+export const BAND_LABEL: Record<HoursBand, string> = { full: "Full", light: "Light", low: "Low" };
+/** Text color for an hours number. */
+export const BAND_TEXT: Record<HoursBand, string> = { full: "text-ok", light: "text-warn", low: "text-bad" };
+/** Bar color (filled). */
+export const BAND_BAR: Record<HoursBand, string> = { full: "bg-ok", light: "bg-warn-fill", low: "bg-bad-fill" };

@@ -9,6 +9,8 @@ export type Candidate = {
   id: string;
   name: string;
   role: string;
+  /** Full-time crew get the green/orange/red hours colors; part-time and on-call don't. */
+  fullTime: boolean;
   /** Scheduled job hours that week (Monday to Sunday). */
   weekHours: number;
   avail: Availability;
@@ -40,7 +42,7 @@ export async function swapCandidates(supabase: SupabaseClient, job: Job): Promis
     .filter((p) => !onJob.has(p.id))
     .map((p) => {
       const a = availabilityFor(p.id, job.job_date, job.start_time, Number(job.est_hours) || 2, avail.timeOff, avail.jobs, job.id, avail.regular);
-      return { id: p.id, name: p.full_name, role: p.role, weekHours: weekHoursOf(p.id, avail.jobs, week), avail: a, ok: a.kind !== "off" && a.kind !== "busy" };
+      return { id: p.id, name: p.full_name, role: p.role, fullTime: (p.employment ?? "full_time") === "full_time" && p.role !== "owner", weekHours: weekHoursOf(p.id, avail.jobs, week), avail: a, ok: a.kind !== "off" && a.kind !== "busy" };
     })
     .sort((a, b) => rank[a.avail.kind] - rank[b.avail.kind] || a.weekHours - b.weekHours || a.name.localeCompare(b.name));
 }

@@ -413,7 +413,7 @@ function Summary({ jobs, lowHours = 0 }: { jobs: Job[]; lowHours?: number }) {
         </span>
       )}
       {lowHours > 0 && (
-        <a href="#crew-hours" className={`${chip} border-warn/40 text-warn`}>
+        <a href="#crew-hours" className={`${chip} border-bad/40 text-bad`}>
           <Icon name="clock" className="h-3.5 w-3.5" /> Low on hours: <b>{lowHours}</b>
         </a>
       )}
