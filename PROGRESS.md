@@ -144,6 +144,12 @@
   - **8. Estimate accuracy:** the job page has a **Job timeline** for the crew lead and Zach on the day: Arrived → Loaded, leaving → At drop-off → Done (one tap each, undo the last), with minutes between steps. ☰ → **Estimate accuracy** compares estimated hours with real ones (timeline, or the invoice's hours), on target within 30 min, by job type, typical load and unload times by house size, and each job.
   - Fixed: estimate and invoice PDFs could run to 2 pages when both addresses had long house details on a long day with overtime; house details are now one line on the PDF (cut with "…") and spacing is a bit tighter. Checked one page for that worst case, signed and unsigned.
 
+- Nov 27 (setup step 0028 applied): **New hire packet and welcome.**
+  - **My info** is now a new hire packet: name and login email shown (name fixed by Zach), **date of birth**, cell phone, home address, emergency contact, driver's license, T-shirt size and **shoe size** (US 6–16, for work boots). No Social Security number. Zach sees birthday and shoe size on the employee's Payroll page. The "Get set up" checklist now counts birthday and shoe size.
+  - **Welcome walkthrough** (`/welcome`): the first time a crew member opens the app (not owners), they're sent through 5 steps: Welcome to ZMC Hub, [name]! → About you → Your regular schedule → Add to home screen → Notifications → "You're all set". Each step can be skipped; finishing marks `crew_profile.onboarded_at`, and they land on Home from then on.
+  - **Add to home screen** (`src/components/InstallApp.tsx`): Android shows an "Add to home screen" button when Chrome allows it, otherwise the ⋮ menu steps; iPhone shows the three Share → Add to Home Screen → Add steps with the Share icon drawn (Apple doesn't allow a button), and a Safari tip in other browsers; says "✓ on your home screen" when it already is. Always in ☰ → My settings → Add to home screen (My settings also links to My info).
+  - **Birthdays:** "🎂 Demetri's birthday is Sat, Nov 30" on Zach's Home and the crew's Home for the next 7 days ("Happy birthday!" for the person themselves). Month and day only, never the year or age (`upcoming_birthdays`).
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
