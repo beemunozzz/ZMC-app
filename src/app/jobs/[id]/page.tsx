@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { TruckReserved } from "@/components/TruckReserved";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { RouteLine } from "@/components/RouteLine";
@@ -23,7 +24,7 @@ import { ReminderLink } from "@/components/ReminderLink";
 import { CantMakeIt } from "@/components/CantMakeIt";
 import { COVER_COLUMNS, type CoverRequest } from "@/lib/availability";
 import { fmtDay } from "@/lib/dates";
-import { JOB_COLUMNS, STATUS, conflicts, isLive, jobCrew, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
+import { JOB_COLUMNS, STATUS, conflicts, isLive, jobCrew, needsTruck, openSpots, telUrl, timeSpan, type Job } from "@/lib/jobs";
 
 export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]">) {
   return (
@@ -149,12 +150,20 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
             {job.truck === "theirs" ? (
               <span className="shrink-0 rounded-full bg-bg px-3 py-1 text-sm font-semibold text-muted">Customer&apos;s truck</span>
             ) : (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-                <Icon name="truck" className="h-4 w-4" /> We bring our truck
+              <span
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
+                  needsTruck(job) ? "bg-warn/15 text-warn" : "bg-primary/10 text-primary"
+                }`}
+              >
+                <Icon name="truck" className="h-4 w-4" /> {needsTruck(job) ? "Our truck · not reserved" : job.truck_reserved_at ? "Our truck · reserved ✓" : "We bring our truck"}
               </span>
             )}
           </div>
         </section>
+
+        {job.truck !== "theirs" && isLive(job) && (isOwner || isLead || !job.truck_reserved_at) && (
+          <TruckReserved jobId={job.id} reservedAt={job.truck_reserved_at ?? null} canEdit={isOwner || isLead} />
+        )}
 
         {!people.length && job.status !== "canceled" && (
           <p className="rounded-xl bg-bad/10 px-4 py-3 text-sm text-bad">

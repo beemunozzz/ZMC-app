@@ -43,10 +43,12 @@ export type Job = {
   miles_out: number | null;
   /** Extra load-up checklist items for this job only (one per line). */
   load_extra: string;
+  /** Our truck only: when the rental (U-Haul) was booked. Null = not reserved yet. */
+  truck_reserved_at?: string | null;
 };
 
 export const JOB_COLUMNS =
-  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out, load_extra";
+  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out, load_extra, truck_reserved_at";
 
 export const JOB_TYPES = [
   "Full move",
@@ -114,6 +116,9 @@ export const jobCrew = (j: Pick<Job, "lead_id" | "crew_ids">) =>
   [j.lead_id, ...(j.crew_ids ?? [])].filter((x): x is string => !!x);
 
 export const isLive = (j: Pick<Job, "status">) => j.status !== "canceled" && j.status !== "done";
+
+/** We bring our truck on this upcoming job, and the rental isn't booked yet. */
+export const needsTruck = (j: Pick<Job, "status" | "truck" | "truck_reserved_at">) => isLive(j) && j.truck !== "theirs" && !j.truck_reserved_at;
 
 /** How many more people the job needs (0 if fully staffed). */
 export const openSpots = (j: Job) => Math.max(0, (j.movers_needed || 2) - jobCrew(j).length);

@@ -23,7 +23,7 @@ import {
   mondayOf,
   todayISO,
 } from "@/lib/dates";
-import { JOB_COLUMNS, conflicts, isLive, jobCrew, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
+import { JOB_COLUMNS, conflicts, isLive, jobCrew, needsTruck, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
 import { jobsForecast, stocktonForecast } from "@/lib/weather";
 import { WX_EMOJI, WX_LABEL, worse, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
@@ -360,6 +360,7 @@ function Summary({ jobs }: { jobs: Job[] }) {
   const hrs = live.reduce((s, j) => s + (Number(j.est_hours) || 0), 0);
   const noCrew = live.filter((j) => isLive(j) && !jobCrew(j).length).length;
   const open = live.filter(isLive).reduce((s, j) => s + openSpots(j), 0);
+  const trucks = live.filter(needsTruck).length;
   const chip = "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium tabular-nums";
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -370,6 +371,11 @@ function Summary({ jobs }: { jobs: Job[] }) {
       {noCrew > 0 && (
         <span className={`${chip} border-bad/40 text-bad`}>
           <Icon name="alert" className="h-3.5 w-3.5" /> No crew: <b>{noCrew}</b>
+        </span>
+      )}
+      {trucks > 0 && (
+        <span className={`${chip} border-warn/40 text-warn`}>
+          <Icon name="truck" className="h-3.5 w-3.5" /> Trucks to reserve: <b>{trucks}</b>
         </span>
       )}
       {live.length > 0 &&

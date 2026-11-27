@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { fmtHours } from "@/lib/dates";
-import { STATUS, cityOf, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
+import { STATUS, cityOf, jobCrew, needsTruck, openSpots, timeSpan, type Job } from "@/lib/jobs";
 import { WX_EMOJI, WX_LABEL, WX_WATCH, type JobWx } from "@/lib/weather-kinds";
 
 export function JobCard({
@@ -25,6 +25,8 @@ export function JobCard({
   const name = (id: string) => names.get(id) ?? "Removed";
   const route = [cityOf(job.pickup_address), cityOf(job.dropoff_address)].filter(Boolean).join(" → ");
   const canceled = job.status === "canceled";
+  // Only Zach sees the "reserve the truck" reminder on cards; crew just see whose truck it is.
+  const reserve = isOwner && needsTruck(job);
 
   return (
     <Link
@@ -41,8 +43,10 @@ export function JobCard({
         {job.truck === "theirs" ? (
           <span className="rounded-full bg-bg px-2 py-0.5 text-[11px] font-semibold text-muted">Their truck</span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-            <Icon name="truck" className="h-3 w-3" /> Our truck
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${reserve ? "bg-warn/15 text-warn" : "bg-primary/10 text-primary"}`}
+          >
+            <Icon name="truck" className="h-3 w-3" /> {reserve ? "Reserve truck" : job.truck_reserved_at ? "Our truck ✓" : "Our truck"}
           </span>
         )}
       </div>
