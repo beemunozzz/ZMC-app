@@ -14,6 +14,7 @@
   --warn: #a4541a;
   --bad: #b3261e;
   --bad-fill: #b3261e; /* solid red shapes (bubbles, bars, buttons) */
+  --warn-fill: #e07b22; /* solid orange shapes (weather warnings) */
 }
 
 /* Dark mode: follows the phone's setting, unless someone picks Light or Dark in My settings. */
@@ -31,6 +32,7 @@
     --warn: #f0b27a;
     --bad: #ec5b52; /* one red for text, chips and filled shapes (Brandon, Nov 27) */
     --bad-fill: #ec5b52;
+    --warn-fill: #ee8a3a;
   }
 }
 :root[data-theme="dark"] {
@@ -46,6 +48,7 @@
   --warn: #f0b27a;
   --bad: #ec5b52;
   --bad-fill: #ec5b52;
+  --warn-fill: #ee8a3a;
 }
 
 /* Tailwind's dark: styles follow the same rule. */
@@ -73,6 +76,7 @@
   --color-warn: var(--warn);
   --color-bad: var(--bad);
   --color-bad-fill: var(--bad-fill);
+  --color-warn-fill: var(--warn-fill);
   --font-sans: var(--font-archivo);
   --font-display: var(--font-archivo);
 }
@@ -174,6 +178,7 @@ p {
   --warn: #f0b27a;
   --bad: #ec5b52;
   --bad-fill: #ec5b52;
+  --warn-fill: #ee8a3a;
   color: var(--ink);
   background:
     radial-gradient(120% 90% at 100% 0%, rgb(31 78 140 / 0.55), transparent 60%),

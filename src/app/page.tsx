@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
 import { WeatherNote } from "@/components/WeatherNote";
+import { WxIcon } from "@/components/WxIcon";
 import { roleLabel, requireMember } from "@/lib/crew";
 import { DAY_SHORT, ZMC_TZ, addDays, minutes as minutesOf, dayOfMonth, fmtDay, fmtDayLong, fmtHours, mondayOf, todayISO } from "@/lib/dates";
 import { visibleToCrew } from "@/lib/jobs";
@@ -551,9 +552,8 @@ async function Home() {
                 >
                   <span className="text-[10px] font-semibold uppercase text-muted">{dow}</span>
                   <span className="text-sm font-semibold tabular-nums text-ink">{dayOfMonth(d)}</span>
-                  <span className="relative h-5 text-base leading-5" aria-hidden>
-                    {w ? WX_EMOJI[w.kind] : ""}
-                    {w?.atSite && <span className="absolute -bottom-0.5 -right-1 h-2 w-2 rounded-full bg-warn" />}
+                  <span className="flex h-6 items-center" aria-hidden>
+                    <WxIcon wx={w} size="md" />
                   </span>
                   <span
                     className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold tabular-nums ${

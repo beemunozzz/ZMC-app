@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { CrewHours, lowHoursCount, weekHours, type CrewForHours } from "@/components/CrewHours";
 import { JobCard } from "@/components/JobCard";
+import { WxIcon } from "@/components/WxIcon";
 import { NextJob } from "@/components/NextJob";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
@@ -27,7 +28,7 @@ import {
 } from "@/lib/dates";
 import { JOB_COLUMNS, conflicts, isLive, jobCrew, needsTruck, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
 import { jobsForecast, jobsOutlook, stocktonForecast, stocktonOutlook } from "@/lib/weather";
-import { WX_EMOJI, WX_LABEL, outlookWet, worse, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
+import { WX_LABEL, outlookWet, worse, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
 import { CrewShortcuts, SetupChecklist } from "@/components/CrewSetup";
@@ -250,8 +251,10 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
                   >
                     <span className={`text-[11px] font-semibold uppercase tracking-wider ${isToday ? "text-tape" : "text-muted"}`}>{DAY_SHORT[i]}</span>
                     <span className="font-display text-3xl font-extrabold tabular-nums leading-none text-ink md:text-xl">{dayOfMonth(d)}</span>
-                    <span className="mt-1 h-5 text-base leading-5 md:mt-0 md:ml-auto" title={wx ? `${WX_LABEL[wx.kind]}${wx.hi != null ? `, high ${wx.hi}°` : ""}` : undefined}>
-                      <span aria-hidden className={!wx && wetLater(d) ? "opacity-50" : ""}>{wx ? WX_EMOJI[wx.kind] : wetLater(d) ? "🌦️" : ""}</span>
+                    <span className="mt-1 flex h-6 items-center md:mt-0 md:ml-auto" title={wx ? `${WX_LABEL[wx.kind]}${wx.hi != null ? `, high ${wx.hi}°` : ""}` : undefined}>
+                      <span aria-hidden>
+                        <WxIcon wx={wx} wetLater={wetLater(d)} size="md" />
+                      </span>
                       {wx && <span className="sr-only">{WX_LABEL[wx.kind]}</span>}
                     </span>
                     {wx?.hi != null && <span className="text-[11px] tabular-nums text-muted md:hidden">{wx.hi}°</span>}
@@ -507,10 +510,9 @@ function Month({
               >
                 {dayOfMonth(d)}
               </span>
-              {/* Fixed spot: weather, top-right. Orange dot = weather at a job site, not Stockton. */}
-              <span className="absolute right-0.5 top-1 flex h-4 w-4 items-center justify-center text-[11px] leading-none sm:text-[13px] md:right-1 md:text-base" aria-hidden>
-                {wx ? WX_EMOJI[wx.kind] : wetLater(d) ? <span className="opacity-50">🌦️</span> : ""}
-                {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
+              {/* Fixed spot: weather, top-right. Orange circle = rain, snow, heat or wind; orange dot = at a job site, not Stockton. */}
+              <span className="absolute right-0.5 top-0.5 md:right-1 md:top-1" aria-hidden>
+                <WxIcon wx={wx} wetLater={wetLater(d)} />
               </span>
               {/* Fixed spot: one bar per job under the date, lined up on the left, earliest first (red = still needs crew).
                   Phones: time range on top, last name under it (2 jobs). Computers: one line each (3 jobs). The count has the total. */}
@@ -551,7 +553,10 @@ function Month({
           <span className="h-3 w-3 rounded-full bg-bad-fill" /> A job still needs crew
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-warn" /> Weather at a job site
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-warn-fill text-[9px] leading-none">🌧️</span> Rain, snow, heat or wind
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-warn-fill" /> Weather at a job site
         </span>
         <span>Weather: the forecast for the next 7 days; a faded 🌦️ on days 8–14 means NOAA&apos;s outlook leans wetter than usual (rough). Tap a day to open its week.</span>
       </div>
