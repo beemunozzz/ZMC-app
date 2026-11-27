@@ -70,7 +70,7 @@
 .qdoc .sigline .val { color: var(--ink); font-size: 14px; font-weight: 600; }
 .qdoc .foot { font-size: 10.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
 
-/* "Ready to book?" and the signature lines are for the saved PDF only: on screen, the Sign and book form does that job. */
+/* The signature and date lines are for the saved PDF only: on screen, the Sign and book form does that job. */
 .qdoc .print-only { display: none; }
 
 @media (min-width: 640px) {
@@ -91,6 +91,5 @@
   .qdoc .grid2 { grid-template-columns: 1fr 1fr; gap: 10pt; }
   .qdoc .foot { margin-top: auto; }
   .no-print { display: none !important; }
-  .qdoc .print-only { display: flex; }
   .qdoc .sigline.print-only { display: grid; }
 }

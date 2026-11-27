@@ -251,7 +251,7 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
           </div>
         </div>
 
-        <div className="cta print-only">
+        <div className="cta">
           <div>
             <b>{accepted ? "You're booked!" : "Ready to book?"}</b>
             <br />
