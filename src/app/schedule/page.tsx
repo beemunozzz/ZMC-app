@@ -530,7 +530,9 @@ function Month({
               <span className="absolute right-0.5 top-0.5 flex flex-col items-end md:right-1 md:top-1 md:flex-row md:items-center md:gap-1" aria-hidden>
                 {/* Computers: low and high, left of the icon. Phones: just the high, under it. */}
                 {temps[d] && <span className="hidden whitespace-nowrap text-[10px] font-medium tabular-nums text-muted md:inline">L{temps[d].lo}° H{temps[d].hi}°</span>}
-                <WxIcon wx={wx} wetLater={wetLater(d)} />
+                <span className="flex h-[18px] min-w-[18px] items-center justify-end md:h-6 md:min-w-6">
+                  <WxIcon wx={wx} wetLater={wetLater(d)} />
+                </span>
                 {temps[d] && <span className="text-[9px] font-semibold leading-[10px] tabular-nums text-muted md:hidden">{temps[d].hi}°</span>}
               </span>
               {/* Fixed spot: one bar per job under the date, lined up on the left, earliest first (red = still needs crew).
