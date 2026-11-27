@@ -29,3 +29,18 @@ export async function getClockInEnabled(supabase: SupabaseClient) {
   const { data } = await supabase.from("settings").select("clock_in_enabled").eq("id", 1).maybeSingle();
   return !!(data as { clock_in_enabled?: boolean } | null)?.clock_in_enabled;
 }
+
+/**
+ * OWNER ONLY: the average hourly pay of the active crew (leads and movers, not owners), for estimating
+ * crew pay on quotes. Null when no pay rates are set yet. Reads the owner-only crew_pay table.
+ */
+export async function getAvgCrewRate(supabase: SupabaseClient): Promise<{ rate: number; count: number } | null> {
+  const [{ data: pay }, { data: crew }] = await Promise.all([
+    supabase.from("crew_pay").select("crew_id, hourly_rate"),
+    supabase.from("crew_members").select("id, role, active"),
+  ]);
+  const paid = new Set((crew ?? []).filter((c) => c.active && c.role !== "owner").map((c) => c.id as string));
+  const rates = (pay ?? []).filter((p) => paid.has(p.crew_id as string) && Number(p.hourly_rate) > 0).map((p) => Number(p.hourly_rate));
+  if (!rates.length) return null;
+  return { rate: Math.round((rates.reduce((a, b) => a + b, 0) / rates.length) * 100) / 100, count: rates.length };
+}
