@@ -105,6 +105,8 @@
 
 - Nov 27 (setup step 0023 applied): **Truck reserved.** On our-truck jobs, a "Truck reserved" switch under the job's navy header (Zach or the job's lead; `set_truck_reserved`). Until it's on: the header tag reads "Our truck · not reserved" (orange), Zach's schedule cards show an orange "Reserve truck" tag (crew see just "Our truck"), and the schedule summary shows "Trucks to reserve: N". Once on: "Our truck ✓". Profit boxes stay on both quotes (estimate) and invoices (actual), Brandon's call.
 
+- Nov 27: **Crew hours this week** (owner's week schedule, under the days): each full-time crew member's scheduled job hours with a bar out of 40, orange "low" under 30, number of jobs, days off (approved all-day time off); part-time and on-call in one line underneath. Tap a name to see only their jobs. Summary chip "Low on hours: N" jumps to it. Hours are the jobs' estimated hours (no travel). 40/30 are placeholders in `src/components/CrewHours.tsx`; ask Zach what counts as a full week.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
