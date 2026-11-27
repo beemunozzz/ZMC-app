@@ -570,7 +570,7 @@ async function Home() {
         <nav aria-label="Go to" className="grid grid-cols-4 gap-2">
           <Tile href="/schedule" icon="calendar" label="Schedule" />
           <Tile href={`/jobs/new?date=${today}`} icon="plus" label="New job" primary />
-          <Tile href="/quotes" icon="chat" label="Quotes" badge={newQuotes.length ? String(newQuotes.length) : undefined} />
+          <Tile href="/quotes" icon="chat" label="Leads" badge={newQuotes.length ? String(newQuotes.length) : undefined} />
           <Tile href="/quotes/new" icon="plus" label="New quote" />
           <Tile href="/team" icon="people" label="Crew" />
           <Tile href="/settings" icon="tag" label="Prices" />

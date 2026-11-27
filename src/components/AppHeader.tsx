@@ -122,7 +122,7 @@ export function AppHeader({
               <>
                 <p className={section}>Business</p>
                 <Link href="/quotes" className={item} onClick={() => setOpen(false)}>
-                  Quotes
+                  Leads &amp; quotes
                 </Link>
                 <Link href="/invoices" className={item} onClick={() => setOpen(false)}>
                   Invoices
