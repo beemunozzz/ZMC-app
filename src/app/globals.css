@@ -29,9 +29,8 @@
     --navy: #0b131e;
     --ok: #8fd3a6;
     --warn: #f0b27a;
-    --bad: #f2b8b5;
-  --bad-fill: #d63a31;
-    --bad-fill: #d63a31; /* dark mode: a real red for filled shapes; the soft red above is for text */
+    --bad: #ec5b52; /* one red for text, chips and filled shapes (Brandon, Nov 27) */
+    --bad-fill: #ec5b52;
   }
 }
 :root[data-theme="dark"] {
@@ -45,7 +44,8 @@
   --navy: #0b131e;
   --ok: #8fd3a6;
   --warn: #f0b27a;
-  --bad: #f2b8b5;
+  --bad: #ec5b52;
+  --bad-fill: #ec5b52;
 }
 
 /* Tailwind's dark: styles follow the same rule. */
@@ -172,7 +172,8 @@ p {
   --primary: #8fb2e6;
   --ok: #8fd3a6;
   --warn: #f0b27a;
-  --bad: #f2b8b5;
+  --bad: #ec5b52;
+  --bad-fill: #ec5b52;
   color: var(--ink);
   background:
     radial-gradient(120% 90% at 100% 0%, rgb(31 78 140 / 0.55), transparent 60%),
