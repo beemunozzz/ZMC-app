@@ -195,4 +195,5 @@ These come from Brandon's feedback and the `zmc-app-design` skill.
 
 - `CLAUDE.md`: this handoff
 - `reference/zmc-hub-prototype.html`: the v1 prototype's code, for reference: screens, wording, pricing math. It only loads data inside Claude. To see it working, open the live v1: https://claude.ai/artifact/Q2dFwB5tcKQMYAj3x2nHGJ
+- Customer quote link: `src/app/q/[token]/` (public page, approved estimate design), `src/app/quotes/send-actions.ts`, `src/lib/customer-quote.ts` (the customer-safe snapshot: never put our costs in it).
 - `WEBSITE-HANDOFF.md`: handoff for a separate session about zmcmove.com (Squarespace). The "Get a free quote" page itself is built in this app at `/book`.

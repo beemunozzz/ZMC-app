@@ -149,6 +149,8 @@
 
 - Quotes (Nov 26): **Adjust rate** on the price line; materials and water ($25) are now **our expense** (not charged), shown in the owner-only **Our side** box with what's left for crew pay and profit. Truck at cost now follows the number of movers.
 
+- Built (setup step 0021): **Send to customer.** On a saved quote (with a move date and not-to-exceed), "Create customer link" freezes the customer's numbers and makes a private link (good for 14 days) plus a ready-to-send text (Copy / Text it / Open). The customer's page (`/q/...`) is the approved estimate design: **Save as PDF** (one Letter page), **sign with a finger + name + date**, tick "I accept", **Confirm and book**: the quote turns Booked, the job goes on the schedule with no crew yet, and Zach gets a notification (once notification keys are set up). Our costs and "Our side" are never on it.
+
 ## Waiting on Zach: photos, reviews, website booking (setup step 0017)
 The database step is written (`supabase/migrations/0017_photos_reviews_booking.sql`) but **not applied yet**. When Zach says go, tell Claude "go ahead" and approve the Supabase prompt within about a minute.
 

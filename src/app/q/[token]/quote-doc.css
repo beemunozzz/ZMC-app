@@ -80,7 +80,10 @@
   @page { size: Letter; margin: 0; }
   html, body { background: #fff !important; }
   .qwrap { background: #fff; padding: 0; min-height: 0; }
-  .qdoc { box-shadow: none; border-radius: 0; width: 8.5in; height: 11in; max-width: none; padding: 0.45in 0.6in 0.4in; gap: 9pt; font-size: 10.5pt; }
+  html, body { height: auto !important; min-height: 0 !important; }
+  .qdoc { box-shadow: none; border-radius: 0; width: 8.5in; height: 10.9in; max-width: none; padding: 0.4in 0.6in 0.3in; gap: 7pt; font-size: 10.5pt; overflow: hidden; }
+  .qdoc .card { padding: 7px 14px; }
+  .qdoc td { padding: 7px 17px; }
   .qdoc > * { flex-shrink: 0; }
   .qdoc .grid2 { grid-template-columns: 1fr 1fr; gap: 10pt; }
   .qdoc .foot { margin-top: auto; }
