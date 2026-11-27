@@ -96,6 +96,9 @@
   - Dashboard asks "Is [on-call person] still working tomorrow? Yes / No". No takes them off that job (it then needs crew); they keep their login.
   - Terminate: red button → "Are you sure?" with what will happen → turns off the account, blocks the login and signs out every phone, removes them from upcoming jobs, clocks them out. History is kept. Rehire undoes it.
 
+- Customer invoice link (Nov 27, setup step 0022 applied): invoice screen → **Send to customer** makes a private link (`/i/<code>`) with a ready message: Copy text, Text it, Email it (type the customer's email; opens the phone's Mail app), Open link. Same layout as the estimate: Billed to, Move date, Where, Your crew (hours verified), Your bill (hours × rate, overtime, travel), Total paid/due, NTE, How to pay (Zach's Zelle/Venmo/Cash App/Apple Cash from Prices), signature. Venmo and Cash App "Pay $X" buttons when unpaid. **Save your invoice (PDF)** is a one-page server PDF (`src/lib/invoice-pdf.tsx`), checked one page for paid, unpaid, overtime and old-price invoices. Paid status is live. Old invoices (pre-Dec prices) show the amounts without the rate breakdown. Fixed: Zach changing hours on an invoice now keeps the job's adjusted truck rate, travel and flat price (it used the standard rate before).
+  - Later: send emails automatically from the app (needs Resend, free plan; ask before signing up) and save the customer's email on quotes/jobs (part of step 0017).
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
