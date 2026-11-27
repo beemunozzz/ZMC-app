@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { Fragment, Suspense } from "react";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { CrewHours, lowHoursCount, weekHours, type CrewForHours } from "@/components/CrewHours";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/dates";
 import { JOB_COLUMNS, conflicts, isLive, jobCrew, needsTruck, openSpots, visibleToCrew, type Job } from "@/lib/jobs";
 import { jobsForecast, jobsOutlook, stocktonForecast, stocktonOutlook, stocktonTemps } from "@/lib/weather";
+import { jobWxOrSaved, loadSavedDays, mergeDays, mergeTemps, saveWeather } from "@/lib/weather-saved";
 import { WX_LABEL, outlookWet, worse, type JobOutlook, type JobWx } from "@/lib/weather-kinds";
 import { WeatherNote } from "@/components/WeatherNote";
 import { ClockCard } from "@/components/ClockCard";
@@ -54,7 +56,7 @@ export default function SchedulePage({ searchParams }: { searchParams: Promise<S
 
 async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
-  const { supabase, me } = await requireMember();
+  const { supabase, me, previewing } = await requireMember();
   if (!me) return <NotActive />;
 
   const isOwner = me.role === "owner";
@@ -111,10 +113,19 @@ async function Schedule({ searchParams }: { searchParams: Promise<Search> }) {
   };
 
   // Weather: Stockton for every day, plus each job's own cities (next 7 days).
-  const stockton = await stocktonForecast();
-  const jobWx = await jobsForecast(jobs.filter((j) => j.status !== "canceled"), stockton);
+  // Past days and jobs use the weather saved before the day passed (the forecast only covers upcoming days).
+  const [liveStockton, liveTemps, saved] = await Promise.all([stocktonForecast(), stocktonTemps(), loadSavedDays(supabase, from < today ? from : today, to)]);
+  const stockton = mergeDays(liveStockton, saved);
+  const liveJobWx = await jobsForecast(jobs.filter((j) => j.status !== "canceled"), liveStockton);
+  const jobWx = new Map<string, JobWx>();
+  for (const j of jobs) {
+    const w = jobWxOrSaved(liveJobWx.get(j.id), j.wx_saved);
+    if (w) jobWx.set(j.id, w);
+  }
   // Stockton's low and high during working hours (7 AM to 8 PM), for the week and month views.
-  const temps: Record<string, { lo: number; hi: number }> = view === "today" ? {} : await stocktonTemps();
+  const temps: Record<string, { lo: number; hi: number }> = view === "today" ? {} : mergeTemps(liveTemps, saved);
+  // Zach's screens keep today's and tomorrow's weather for later (after the page is sent).
+  if (isOwner && !previewing) after(() => saveWeather(supabase, today, { stockton: liveStockton, temps: liveTemps }, saved, allJobs, liveJobWx));
   // Days 8-14: NOAA's rough outlook (a faded 🌦️ when it leans wetter than usual).
   const later = view === "today" ? null : await stocktonOutlook();
   const jobLater = await jobsOutlook(jobs.filter((j) => j.status !== "canceled" && j.job_date >= today), new Set(Object.keys(stockton)));

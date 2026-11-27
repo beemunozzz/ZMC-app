@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { AppHeader } from "@/components/AppHeader";
 import { NotActive } from "@/components/NotActive";
 import { PageLoading } from "@/components/PageLoading";
@@ -13,7 +14,8 @@ import { visibleToCrew } from "@/lib/jobs";
 import { JOB_COLUMNS, cityOf, conflicts, isLive, jobCrew, openSpots, timeSpan, type Job } from "@/lib/jobs";
 import { money } from "@/lib/pricing";
 import type { QuoteStatus } from "@/lib/quotes";
-import { jobsForecast, stocktonForecast } from "@/lib/weather";
+import { jobsForecast, stocktonForecast, stocktonTemps } from "@/lib/weather";
+import { loadSavedDays, saveWeather } from "@/lib/weather-saved";
 import { getClockInEnabled, getPrices } from "@/lib/settings";
 import { TIME_COLUMNS, clockTime, type TimeEntry } from "@/lib/time";
 import { reminderText } from "@/lib/texts";
@@ -41,7 +43,7 @@ export default function HomePage() {
 type Attention = { key: string; tone: "bad" | "warn"; text: string; sub: string; href: string };
 
 async function Home() {
-  const { supabase, me } = await requireMember();
+  const { supabase, me, previewing } = await requireMember();
   if (!me) return <NotActive />;
   if (me.role !== "owner") {
     // On leave: home screen only. On call: home screen unless a job is in their window (day before to day after).
@@ -73,6 +75,12 @@ async function Home() {
 
   const upcoming = jobs.filter((j) => j.job_date >= today && j.job_date <= horizon && isLive(j));
   const jobWx = await jobsForecast(upcoming, stockton);
+  // Keep today's and tomorrow's weather for later, so past days still show it (after the page is sent).
+  if (!previewing)
+    after(async () => {
+      const [temps, saved] = await Promise.all([stocktonTemps(), loadSavedDays(supabase, today, addDays(today, 1))]);
+      await saveWeather(supabase, today, { stockton, temps }, saved, jobs, jobWx);
+    });
 
   // ---- Tomorrow's reminders ----
   const tomorrow = addDays(today, 1);

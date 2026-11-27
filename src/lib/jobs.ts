@@ -45,10 +45,12 @@ export type Job = {
   load_extra: string;
   /** Our truck only: when the rental (U-Haul) was booked. Null = not reserved yet. */
   truck_reserved_at?: string | null;
+  /** The last forecast for this job, kept after the day passes (src/lib/weather-saved.ts). */
+  wx_saved?: import("./weather-saved").SavedJobWx | null;
 };
 
 export const JOB_COLUMNS =
-  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out, load_extra, truck_reserved_at";
+  "id, job_date, start_time, est_hours, pickup_address, pickup_house, dropoff_address, dropoff_house, customer_name, customer_phone, job_type, truck, status, movers_needed, lead_id, crew_ids, heavy_items, notes, nte, quote_id, meet_at, drive_min, miles_out, load_extra, truck_reserved_at, wx_saved";
 
 export const JOB_TYPES = [
   "Full move",

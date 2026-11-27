@@ -5,6 +5,7 @@ import { CrewSwap } from "@/components/CrewSwap";
 import { swapCandidates } from "@/lib/swap";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { RouteLine } from "@/components/RouteLine";
 import { Avatars } from "@/components/Avatars";
 import { AppHeader } from "@/components/AppHeader";
@@ -20,6 +21,7 @@ import { LoadChecklist } from "@/components/LoadChecklist";
 import { money } from "@/lib/pricing";
 import { jobForecast, jobOutlook, jobTemps, stocktonForecast, stocktonOutlook } from "@/lib/weather";
 import { WX_EMOJI, WX_LABEL } from "@/lib/weather-kinds";
+import { jobWxOrSaved, saveJobsWx } from "@/lib/weather-saved";
 import { getPrices } from "@/lib/settings";
 import { bookingText, reminderText } from "@/lib/texts";
 import { OnMyWay, TextLink } from "@/components/TextButtons";
@@ -40,7 +42,7 @@ export default function JobPage({ params, searchParams }: PageProps<"/jobs/[id]"
 async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">, "params" | "searchParams">) {
   const { id } = await params;
   const sp = await searchParams;
-  const { supabase, me } = await requireMember();
+  const { supabase, me, previewing } = await requireMember();
   if (!me) return <NotActive />;
   const isOwner = me.role === "owner";
 
@@ -60,9 +62,14 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
   const clashes = conflicts(job, (sameDay ?? []) as Job[]);
   // Zach: who could swap in (free that day, fewest hours first).
   const candidates = isOwner && isLive(job) ? await swapCandidates(supabase, job) : null;
-  const wx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
+  // Weather: the live forecast while it covers the day, otherwise what was saved (past jobs keep theirs).
+  const liveWx = job.status === "canceled" ? null : await jobForecast(job, await stocktonForecast());
+  const wx = job.status === "canceled" ? null : (jobWxOrSaved(liveWx ?? undefined, job.wx_saved) ?? null);
   // Low and high during working hours (7 AM to 8 PM) at the pickup, for the header.
-  const temps = wx && isLive(job) ? await jobTemps(job) : null;
+  const liveTemps = liveWx && liveWx.hi != null ? await jobTemps(job) : null;
+  const saved = job.wx_saved?.temps ?? null;
+  const temps = liveTemps && saved && job.job_date === todayISO() ? { lo: Math.min(saved.lo, liveTemps.lo), hi: Math.max(saved.hi, liveTemps.hi) } : (liveTemps ?? saved);
+  if (isOwner && !previewing && liveWx) after(() => saveJobsWx(supabase, todayISO(), [job], new Map([[job.id, liveWx]]), new Map([[job.id, liveTemps]])));
   // Days 8-14: NOAA's rough outlook until the real forecast is available.
   const later = !wx && isLive(job) && job.job_date >= todayISO() ? await jobOutlook(job, await stocktonOutlook()) : null;
 
@@ -201,7 +208,7 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
 
         {meet && <MeetUp {...meet} />}
         {checklist && <LoadChecklist jobId={job.id} items={checklist} canTick={isOwner || people.includes(me.id)} />}
-        <WeatherNote wx={wx} />
+        <WeatherNote wx={wx} past={job.job_date < todayISO()} />
         <OutlookNote o={later} />
 
         {isOwner &&
