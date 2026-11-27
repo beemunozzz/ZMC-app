@@ -1,18 +1,21 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SignaturePad } from "@/components/SignaturePad";
 import { acceptQuote, type AcceptState } from "./actions";
 
 /** "Save as PDF": the phone's own Save/Print, which uses the page's one-page print layout. */
-export function SaveButton() {
+export function SaveButton({ big }: { big?: boolean }) {
   return (
     <button
       type="button"
       onClick={() => window.print()}
-      className="press inline-flex h-10 items-center gap-2 rounded-xl border border-[#d5cdbf] bg-white px-4 text-sm font-semibold text-[#15202b] shadow-sm"
+      className={`press inline-flex items-center justify-center gap-2 rounded-xl font-semibold ${
+        big ? "h-12 bg-[#1f4e8c] px-6 text-base text-white" : "h-10 border border-[#d5cdbf] bg-white px-4 text-sm text-[#15202b] shadow-sm"
+      }`}
     >
-      Save as PDF
+      {big ? "Save your signed estimate (PDF)" : "Save as PDF"}
     </button>
   );
 }
@@ -27,15 +30,18 @@ export function AcceptForm({ token, defaultName, nte }: { token: string; default
   const [agree, setAgree] = useState(false);
   const [name, setName] = useState(defaultName);
   const ready = signed && agree && !!name.trim();
+  const router = useRouter();
+  // After booking, reload the page so it shows the signed estimate and the "Save" button.
+  useEffect(() => {
+    if (state.done) router.refresh();
+  }, [state.done, router]);
 
   if (state.done) {
     return (
-      <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
-        <p className="text-2xl font-bold text-[#2f7a4f]">✓ You&apos;re booked!</p>
-        <p className="mt-1 text-[15px] text-[#3a4652]">
-          Thank you. We&apos;ve got your signed estimate and your move is on our schedule. We&apos;ll text you the day before.
-        </p>
-        <p className="mt-2 text-sm text-[#5b6672]">Tap &ldquo;Save as PDF&rdquo; at the top to keep a signed copy.</p>
+      <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-5 text-center shadow-sm">
+        <p className="text-2xl font-bold text-[#2f7a4f]">✓ Thank you, you&apos;re booked!</p>
+        <p className="text-[15px] text-[#3a4652]">We&apos;ve got your signed estimate and your move is on our schedule.</p>
+        <SaveButton big />
       </div>
     );
   }

@@ -54,7 +54,7 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
         <p className="text-sm font-medium text-[#3a4652]">
           {accepted ? "✓ Signed and booked" : expired ? "This estimate has expired" : "Your moving estimate"}
         </p>
-        <SaveButton />
+        {accepted && <SaveButton />}
       </div>
 
       <article className="qdoc">
@@ -264,19 +264,23 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
           </div>
         </div>
 
-        {/* Signature: printed form, or what the customer signed */}
+        {/* Signature lines (saved PDF only). Fixed height, so a signed copy is exactly as tall as an unsigned one. */}
         <div className="sigline print-only">
           <div>
-            {accepted && row.signature && (
-              // eslint-disable-next-line @next/next/no-img-element -- the signature is a small picture
-              <img src={row.signature} alt={`Signature of ${row.signed_name ?? "the customer"}`} />
-            )}
-            {accepted ? <span className="val">{row.signed_name}</span> : null}
-            <div>Customer signature (accepts this estimate and not-to-exceed price)</div>
+            <div className="sigspace">
+              {accepted && row.signature && (
+                // eslint-disable-next-line @next/next/no-img-element -- the signature is a small picture
+                <img src={row.signature} alt={`Signature of ${row.signed_name ?? "the customer"}`} />
+              )}
+            </div>
+            <div className="sigrule">
+              {accepted && row.signed_name ? <b>{row.signed_name}</b> : null}
+              {accepted && row.signed_name ? " · " : ""}Customer signature (accepts this estimate and not-to-exceed price)
+            </div>
           </div>
           <div>
-            {accepted && <span className="val">{signedDate}</span>}
-            <div>Date</div>
+            <div className="sigspace">{accepted && <span className="val">{signedDate}</span>}</div>
+            <div className="sigrule">Date</div>
           </div>
         </div>
 
@@ -293,15 +297,22 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
       {/* Sign and book (not printed) */}
       <div className="no-print mx-auto mt-4 max-w-[8.5in]">
         {accepted ? (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-lg font-bold text-[#2f7a4f]">✓ Signed and booked</p>
+          <div className="flex flex-col gap-3 rounded-2xl bg-white p-5 text-center shadow-sm">
+            <p className="text-2xl font-bold text-[#2f7a4f]">✓ Thank you, you&apos;re booked!</p>
             <p className="text-[15px] text-[#3a4652]">
-              Signed by {row.signed_name} on {signedDate}. Tap &ldquo;Save as PDF&rdquo; at the top for a signed copy.
+              Your move is booked for <b>{v.move_date ? `${fmtDayLong(v.move_date)}, ${v.move_date.slice(0, 4)}` : "your moving day"}</b>
+              {v.start_time ? (
+                <>
+                  {" "}
+                  at <b>{fmtTime(v.start_time)}</b>
+                </>
+              ) : null}
+              . Signed by {row.signed_name} on {signedDate}. We&apos;ll text you the day before.
             </p>
-            {row.signature && (
-              // eslint-disable-next-line @next/next/no-img-element -- the signature is a small picture
-              <img src={row.signature} alt={`Signature of ${row.signed_name ?? "the customer"}`} className="mt-2 h-16 max-w-full object-contain" />
-            )}
+            <div className="flex justify-center">
+              <SaveButton big />
+            </div>
+            <p className="text-xs text-[#5b6672]">Saves a one-page copy of your signed estimate.</p>
           </div>
         ) : closed || expired || pastDate ? (
           <p className="rounded-xl bg-white p-4 text-[15px] text-[#15202b] shadow-sm">
