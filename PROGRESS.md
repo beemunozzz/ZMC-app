@@ -115,6 +115,8 @@
 
 - Nov 27: **Colors.** Fog is no longer an orange warning (no orange chip or home alert; the job page still shows its tip in grey). New **snow/ice** weather (❄️, orange, with a tip). Orange stays for rain, snow, heat and wind. "Need N more" / open spots / Find work "Needs N" are **red** now (same as no crew). **Month view:** each day shows its jobs' start times ("8a", "1p", "7:30a") above the count bubble; a time is red when that job still needs crew; phones show 2, computers 3. Boxes are a little taller; still fixed spots (date top-left, weather top-right, count bottom).
 
+- Nov 27 (setup step 0025 applied): **Weather by stop.** Each job checks its pickup, its drop-off and, on moves 20+ miles apart (straight line, about 25 road miles), halfway along the drive (e.g. Altamont Pass). Schedule cards and Zach's home say where: "Rain in Livermore", "Windy on the drive". The job page lists each stop with its own weather and a tip for each kind of bad weather. **Night-before reminder** adds the weather line. **Weather heads-up:** the nightly timer checks the next 2 days and, when a job's weather turns bad or moves to another stop, notifies Zach and the job's lead once (not the lead for tomorrow's jobs; their reminder has it). It remembers what it told (`jobs.wx_kind`, `wx_where`). Needs the notification keys. Later: match by hour (NWS hourly forecast).
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.

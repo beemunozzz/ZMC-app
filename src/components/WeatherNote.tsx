@@ -4,7 +4,9 @@ import { WX_EMOJI, WX_LABEL, WX_TIP, WX_WATCH, type JobWx } from "@/lib/weather-
 export function WeatherNote({ wx }: { wx?: JobWx | null }) {
   if (!wx) return null;
   const watch = WX_WATCH.includes(wx.kind);
-  const tip = WX_TIP[wx.kind];
+  // One tip per kind of bad weather on the job (e.g. rain at the drop-off and wind on the drive).
+  const kinds = [wx.kind, ...(wx.stops ?? []).map((s) => s.wx.kind).filter((k) => WX_WATCH.includes(k))];
+  const tips = [...new Set(kinds)].map((k) => WX_TIP[k]).filter((x): x is string => !!x);
   const where = wx.where ? (wx.where === "the drive" ? " on the drive" : ` in ${wx.where}`) : "";
   return (
     <div className={`rounded-xl px-3 py-2.5 text-sm ${watch ? "bg-warn/12 text-warn" : "bg-bg text-ink"}`}>
@@ -34,7 +36,11 @@ export function WeatherNote({ wx }: { wx?: JobWx | null }) {
           })}
         </ul>
       )}
-      {tip && <p className="mt-1">{tip}</p>}
+      {tips.map((tip) => (
+        <p key={tip} className="mt-1">
+          {tip}
+        </p>
+      ))}
     </div>
   );
 }
