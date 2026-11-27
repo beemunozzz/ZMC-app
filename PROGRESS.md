@@ -286,6 +286,16 @@ Brandon's idea: when the crew runs into something hard (and figures it out), it 
 - PDF invoice and receipt to text or email.
 - ~~"Depth" look~~: approved and turned on for everyone (`src/app/look-depth.css`; switch off by removing data-look="depth" in `layout.tsx`).
 
+## Today (Brandon, Nov 27): "what do I need to do today"
+1. [ ] **Turn on phone notifications for the whole app (once, about 5 min).** Steps are the first item in the list below. Each crew member then turns on their own pop-ups (their Notifications page, or the last step of their welcome walkthrough). Don't paste the keys into the chat.
+2. [ ] **App icon with the new logo** (the home-screen icon on iPhone and Android; today's icon still has the old "ZMC" without the period). Either send Claude the logo picture you want, or ask Claude to make one from the "ZMC." Georgia logo on navy. Claude then swaps `public/icons/apple-touch-icon.png` (180×180), `icon-192.png` and `icon-512.png`. After it's live: delete the old icon from your home screen and add the app again so the new one shows.
+3. [ ] **Add Zach's payment details** (☰ → Prices → Getting paid: Zelle, Cash App, Venmo, Apple Cash) so they show on invoices and the customer's "How to pay".
+4. [ ] **Add Zach's Google review link** (☰ → Prices → Business → Google review link) so 4–5 star customers get it. Zach finds it in Google Business Profile → Ask for reviews.
+5. [ ] **Cancellation policy** (☰ → Prices → Business): one short sentence for the estimate, or leave blank.
+6. [ ] **Typical crew pay** (☰ → Prices → Our costs, now $20/hr) and each person's real pay rate (Payroll → Employees), so the job profit boxes are exact.
+7. [ ] **Try the welcome walkthrough** with one crew member (Demetri or Dylan): add their email on the Crew page, have them sign in, and watch the steps.
+8. [ ] Set up **Resend** (free) so "Forgot password" emails reach the crew (see below).
+
 ## To do later (Brandon's to-do list: "bring up my to-do list")
 - [ ] **Turn on phone notifications (one time, about 5 minutes):**
   1. Logged in as the owner, open the app → ☰ → My settings → Notifications.
@@ -293,7 +303,7 @@ Brandon's idea: when the crew runs into something hard (and figures it out), it 
   3. vercel.com → zmc-app → Settings → Environment Variables: add `VAPID_PUBLIC_KEY` (type Config) and `VAPID_PRIVATE_KEY` (type Secret), copying each value from the app. Keep the app page open until both are saved.
   4. The same box also makes a third key, `CRON_SECRET` (type Secret), for the night-before reminders. Add it too.
   5. Tell Claude "keys added" so it can republish the app.
-  6. Turn notifications on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → Turn on → Allow. Android or computer: ☰ → My settings → Notifications → Turn on → Allow. Then tap "Send me a test".
+  6. Turn your own pop-ups on: iPhone: Safari → Share → Add to Home Screen, open ZMC Hub from the home screen → ☰ → My settings → Notifications → flip the "Pop-up notifications" switch → Allow. Android or computer: ☰ → My settings → Notifications → flip the switch → Allow. Then tap "Send me a test". (What you'll see: the switch turns from grey to tappable once the keys are live.)
 - [x] Shop address added (Nov 26): 8410 Kelley Dr, Stockton. Meet times use it for jobs without a typed drive time.
 - [ ] Add Zach's payment details (☰ → Prices → Getting paid: Zelle, Cash App, Venmo, Apple Cash) so those show as choices on invoices.
 - [ ] Send Claude the ZMC logo files (black and white) for the app icon.
