@@ -36,6 +36,8 @@ export type CustomerView = {
   flat_price: number | null;
   refer: boolean;
   business_phone: string;
+  /** Zach's short cancellation policy (blank = not shown). */
+  cancellation_policy?: string;
 };
 
 const VALID_DAYS = 14;
@@ -80,5 +82,6 @@ export function buildCustomerView(q: Quote, s: Prices, today: string): CustomerV
     flat_price: flat,
     refer: REFER_ITEMS.test(q.heavy_items),
     business_phone: s.business_phone,
+    cancellation_policy: s.cancellation_policy || "",
   };
 }

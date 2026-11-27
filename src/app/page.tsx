@@ -215,6 +215,15 @@ async function Home() {
   }
   if (newQuotes.length > 5)
     attention.push({ key: "qmore", tone: "bad", text: `${newQuotes.length - 5} more new leads waiting`, sub: "Open Leads", href: "/quotes" });
+  // Confirmation texts: 7 days out and 2 days out, until the customer confirms.
+  for (const j of upcoming) {
+    if (j.status !== "booked" || !j.customer_phone) continue;
+    const daysOut = Math.round((Date.parse(j.job_date + "T12:00:00Z") - Date.parse(today + "T12:00:00Z")) / 86_400_000);
+    if (daysOut >= 1 && daysOut <= 2 && !j.confirm2_sent_at)
+      attention.push({ key: `c2${j.id}`, tone: "warn", text: `Send the 2-day confirmation: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}` });
+    else if (daysOut >= 3 && daysOut <= 7 && !j.confirm7_sent_at)
+      attention.push({ key: `c7${j.id}`, tone: "warn", text: `Send the 7-day confirmation: ${j.customer_name}`, sub: when(j), href: `/jobs/${j.id}` });
+  }
   // Unhappy customers (3 stars or fewer in the last 2 weeks) and referrals to thank.
   const { data: lowRows } = await supabase.from("invoices").select("id, customer_name, rating").lte("rating", 3).gte("rated_at", addDays(today, -14));
   for (const r of (lowRows ?? []) as { id: string; customer_name: string; rating: number }[])

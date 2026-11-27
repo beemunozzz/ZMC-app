@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/crew";
 import { notify } from "@/lib/push";
@@ -152,4 +153,24 @@ export async function markReminderSent(id: string) {
   const { supabase, me } = await requireMember();
   if (me?.role !== "owner" || !UUID.test(id)) return;
   await supabase.from("jobs").update({ reminder_sent_at: new Date().toISOString() }).eq("id", id);
+}
+
+/** Zach sent the 7-day or 2-day confirmation text. */
+export async function markConfirmSent(id: string, days: 7 | 2) {
+  const { supabase, me } = await requireMember();
+  if (me?.role !== "owner" || !UUID.test(id)) return;
+  await supabase.from("jobs").update(days === 7 ? { confirm7_sent_at: new Date().toISOString() } : { confirm2_sent_at: new Date().toISOString() }).eq("id", id);
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath("/");
+}
+
+/** The customer replied YES: the job is Confirmed. */
+export async function markCustomerConfirmed(form: FormData) {
+  const { supabase, me } = await requireMember();
+  const id = String(form.get("id") ?? "");
+  if (me?.role !== "owner" || !UUID.test(id)) return;
+  await supabase.from("jobs").update({ status: "confirmed" }).eq("id", id).eq("status", "booked");
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath("/schedule");
+  revalidatePath("/");
 }

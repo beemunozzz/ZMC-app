@@ -23,7 +23,9 @@ import { jobForecast, jobOutlook, jobTemps, stocktonForecast, stocktonOutlook } 
 import { WX_EMOJI, WX_LABEL } from "@/lib/weather-kinds";
 import { jobWxOrSaved, saveJobsWx } from "@/lib/weather-saved";
 import { getPrices } from "@/lib/settings";
-import { bookingText, reminderText } from "@/lib/texts";
+import { bookingText, confirmText, reminderText } from "@/lib/texts";
+import { ConfirmLink } from "@/components/ConfirmLink";
+import { markCustomerConfirmed } from "@/app/jobs/actions";
 import { OnMyWay, TextLink } from "@/components/TextButtons";
 import { ReminderLink } from "@/components/ReminderLink";
 import { CantMakeIt } from "@/components/CantMakeIt";
@@ -300,7 +302,17 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
               <div className="grid grid-cols-2 gap-2">
                 <TextLink phone={job.customer_phone} body={bookingText(job, prices)} label="Booking confirmation" />
                 <ReminderLink jobId={job.id} phone={job.customer_phone} body={reminderText(job, prices)} sent={reminderSent} />
+                <ConfirmLink jobId={job.id} phone={job.customer_phone} body={confirmText(job, prices, 7)} sent={!!job.confirm7_sent_at} days={7} />
+                <ConfirmLink jobId={job.id} phone={job.customer_phone} body={confirmText(job, prices, 2)} sent={!!job.confirm2_sent_at} days={2} />
               </div>
+            )}
+            {isOwner && job.status === "booked" && (job.confirm7_sent_at || job.confirm2_sent_at) && (
+              <form action={markCustomerConfirmed}>
+                <input type="hidden" name="id" value={job.id} />
+                <button className="press flex h-11 w-full items-center justify-center rounded-xl bg-ok font-semibold text-white dark:text-navy">
+                  ✓ Customer replied YES: mark Confirmed
+                </button>
+              </form>
             )}
           </section>
         )}

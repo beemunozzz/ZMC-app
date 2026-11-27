@@ -367,6 +367,7 @@ async function CustomerQuote({
                 Changes to the date or the size of the move can change the
                 estimate.
               </li>
+              {v.cancellation_policy && <li>{v.cancellation_policy}</li>}
             </ul>
           </div>
         </div>

@@ -39,6 +39,16 @@ export function reminderText(j: JobForText, s: TextSettings) {
   );
 }
 
+/** 7-day or 2-day confirmation: "Reply YES to confirm". */
+export function confirmText(j: JobForText, s: TextSettings, days: 7 | 2) {
+  const when = `${fmtDayLong(j.job_date)}${atTime(j)}`;
+  return (
+    `Hi ${firstName(j.customer_name)}, this is Zachery's Moving Co. ` +
+    (days === 7 ? `Your move is coming up next week: ${when}. ` : `Your move is in 2 days: ${when}. `) +
+    `Please reply YES to confirm, or let us know if anything has changed (date, time, addresses or what's moving). ${questions(s)}`
+  );
+}
+
 /** "On my way": arrival = now + drive minutes, rounded up to the next 5 minutes (Stockton time). */
 export function onMyWayText(customerName: string, senderName: string, driveMinutes: number, now: Date) {
   const nowMin = minutes(

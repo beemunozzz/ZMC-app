@@ -249,6 +249,7 @@ function Estimate({ v, signed }: { v: CustomerView; signed: SignedInfo }) {
             <Li>Please have boxes packed and taped before we arrive.</Li>
             <Li no>We don&apos;t move pianos or hot tubs. We&apos;re happy to recommend a specialist.</Li>
             <Li>Changes to the date or the size of the move can change the estimate.</Li>
+            {v.cancellation_policy ? <Li>{v.cancellation_policy}</Li> : null}
           </View>
         </View>
 
