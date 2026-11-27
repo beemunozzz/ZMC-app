@@ -3,11 +3,13 @@
 import { useActionState, useState } from "react";
 import { money, priceQuote, type Prices } from "@/lib/pricing";
 import { savePrices, type SettingsState } from "./actions";
+import { hourChoices, hoursLabel } from "@/lib/choices";
 
 const input =
   "h-12 w-full min-w-0 rounded-xl border border-line bg-bg px-3 text-base tabular-nums text-ink outline-none focus:border-primary";
 
-type Field = { key: keyof Prices; label: string; help?: string; prefix?: string; suffix?: string; step?: number };
+/** `hours` = show a dropdown of hour choices (from, to, step) instead of a type-in box. */
+type Field = { key: keyof Prices; label: string; help?: string; prefix?: string; suffix?: string; step?: number; hours?: [number, number, number] };
 
 const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   {
@@ -27,9 +29,9 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
     title: "Travel time (to and from the shop)",
     note: "Drive time from the shop to the first pickup plus from the last drop-off back to the shop.",
     fields: [
-      { key: "travel_free_hours", label: "No charge under", suffix: "hours total", step: 0.25 },
-      { key: "travel_mid_hours", label: "From there up to", suffix: "hours total…", step: 0.25 },
-      { key: "travel_mid_charge", label: "…add", suffix: "hours per mover", step: 0.25 },
+      { key: "travel_free_hours", label: "No charge under", suffix: "total", hours: [0.25, 4, 0.25] },
+      { key: "travel_mid_hours", label: "From there up to", suffix: "total…", hours: [0.25, 6, 0.25] },
+      { key: "travel_mid_charge", label: "…add", suffix: "per mover", hours: [0.25, 4, 0.25] },
       { key: "travel_long_share", label: "At or over that: charge this share of the travel time", suffix: "per mover (0.5 = half)", step: 0.05 },
     ],
   },
@@ -75,17 +77,32 @@ export function PricesForm({ prices }: { prices: Prices }) {
               {f.label}
               <div className="flex items-center gap-2">
                 <span className="w-3 shrink-0 text-muted">{f.prefix}</span>
-                <input
-                  name={f.key}
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step={f.step}
-                  required
-                  value={v[f.key]}
-                  onChange={(e) => setV((o) => ({ ...o, [f.key]: e.target.value }))}
-                  className={`${input} max-w-28`}
-                />
+                {f.hours ? (
+                  <select
+                    name={f.key}
+                    value={v[f.key]}
+                    onChange={(e) => setV((o) => ({ ...o, [f.key]: e.target.value }))}
+                    className={`${input} max-w-44`}
+                  >
+                    {hourChoices(f.hours[2], f.hours[0], f.hours[1], v[f.key]).map((h) => (
+                      <option key={h} value={String(h)}>
+                        {hoursLabel(h)}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    name={f.key}
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step={f.step}
+                    required
+                    value={v[f.key]}
+                    onChange={(e) => setV((o) => ({ ...o, [f.key]: e.target.value }))}
+                    className={`${input} max-w-28`}
+                  />
+                )}
                 {f.suffix && <span className="text-sm font-normal text-muted">{f.suffix}</span>}
               </div>
               {f.help && <span className="text-xs font-normal text-muted">{f.help}</span>}
