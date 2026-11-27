@@ -436,6 +436,16 @@ function shortTime(t: string | null) {
   return `${h % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""}${h < 12 ? "a" : "p"}`;
 }
 
+/** "8:30a–2p": start and rough end, short enough for a phone's month box. */
+function shortSpan(j: Pick<Job, "start_time" | "est_hours">) {
+  const s = minutes(j.start_time);
+  const h = Number(j.est_hours) || 0;
+  if (s == null || !h) return shortTime(j.start_time);
+  const end = s + h * 60;
+  const e = `${String(Math.floor(end / 60) % 24).padStart(2, "0")}:${String(Math.round(end % 60)).padStart(2, "0")}`;
+  return `${shortTime(j.start_time)}–${shortTime(e)}`;
+}
+
 /** "Lopez" from "Maria Lopez" (or "Example: Maria Lopez"). */
 const lastName = (n: string) => n.replace(/^example:\s*/i, "").trim().split(/\s+/).pop() ?? "";
 
@@ -485,7 +495,7 @@ function Month({
               href={href({ view: "week", date: d })}
               aria-label={`${fmtDayLong(d)}: ${list.length} job${list.length === 1 ? "" : "s"}${short ? ", needs crew" : ""}${wxText ? ". " + wxText : ""}`}
               title={wxText || undefined}
-              className={`press relative h-[5.25rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
+              className={`press relative h-[7.25rem] min-w-0 overflow-hidden rounded-lg border bg-card md:h-28 ${
                 inMonth ? "border-line" : "border-transparent bg-transparent opacity-40"
               }`}
             >
@@ -502,19 +512,19 @@ function Month({
                 {wx ? WX_EMOJI[wx.kind] : wetLater(d) ? <span className="opacity-50">🌦️</span> : ""}
                 {wx?.atSite && <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-warn ring-2 ring-card" />}
               </span>
-              {/* Fixed spot: one bar per job under the date, lined up on the left (red = still needs crew).
-                  Phones show 2 (time only), computers 3 (time and last name). The count below has the total. */}
+              {/* Fixed spot: one bar per job under the date, lined up on the left, earliest first (red = still needs crew).
+                  Phones: time range on top, last name under it (2 jobs). Computers: one line each (3 jobs). The count has the total. */}
               {list.length > 0 && (
                 <span className="absolute inset-x-0.5 top-[1.4rem] flex flex-col gap-0.5 md:inset-x-1 md:top-7">
                   {list.slice(0, 3).map((j, i) => (
                     <span
                       key={j.id}
-                      className={`${i === 2 ? "hidden md:block" : "block"} truncate rounded px-1 text-[10px] font-semibold leading-[14px] tabular-nums md:text-[11px] md:leading-4 ${
+                      className={`${i === 2 ? "hidden md:block" : "block"} truncate rounded px-[3px] text-[9.5px] font-semibold leading-[12px] tabular-nums md:px-1 md:py-0 md:text-[11px] md:leading-4 ${
                         isLive(j) && openSpots(j) > 0 ? "bg-bad/12 text-bad" : "bg-primary/10 text-primary"
                       }`}
                     >
-                      {shortTime(j.start_time)}
-                      <span className="hidden font-medium md:inline"> {lastName(j.customer_name)}</span>
+                      <span className="block truncate tracking-tight md:inline">{shortSpan(j)}</span>
+                      <span className="block truncate font-medium md:inline"><span className="hidden md:inline"> </span>{lastName(j.customer_name)}</span>
                     </span>
                   ))}
                 </span>
