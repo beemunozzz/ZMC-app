@@ -13,6 +13,7 @@ import { getPrices } from "@/lib/settings";
 import { changeMethod, markPaid } from "../actions";
 import { CopyButton } from "./CopyButton";
 import { EditHours } from "./EditHours";
+import { JobProfit } from "./JobProfit";
 import { SendInvoice } from "./SendInvoice";
 
 export default function InvoicePage({ params, searchParams }: PageProps<"/invoices/[id]">) {
@@ -244,6 +245,8 @@ async function InvoiceView({ params, searchParams }: Pick<PageProps<"/invoices/[
             <p className="mt-3 rounded-xl border border-dashed border-line px-3 py-2.5 text-sm text-muted">Customer did not sign.</p>
           )}
         </section>
+
+        {isOwner && <JobProfit supabase={supabase} inv={inv} prices={prices} />}
 
         {isOwner && <EditHours id={inv.id} hours={Number(inv.hours)} movers={inv.movers} />}
 

@@ -134,14 +134,26 @@ async function JobDetails({ params, searchParams }: Pick<PageProps<"/jobs/[id]">
             </p>
           </div>
           <RouteLine pickup={job.pickup_address} pickupHouse={job.pickup_house} dropoff={job.dropoff_address} dropoffHouse={job.dropoff_house} />
-          {people.length > 0 && (
-            <div className="flex items-center gap-3 border-t border-line pt-4">
-              <Avatars people={people.map((pid) => ({ id: pid, name: crewById.get(pid)?.full_name ?? "Removed" }))} leadId={job.lead_id} />
-              <span className="text-sm tabular-nums text-muted">
-                {people.length} of {job.movers_needed} crew
+          {/* Bottom row: crew on the left, who brings the truck on the right */}
+          <div className="flex items-center justify-between gap-3 border-t border-line pt-4">
+            {people.length > 0 ? (
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatars people={people.map((pid) => ({ id: pid, name: crewById.get(pid)?.full_name ?? "Removed" }))} leadId={job.lead_id} />
+                <span className="text-sm tabular-nums text-muted">
+                  {people.length} of {job.movers_needed} crew
+                </span>
+              </div>
+            ) : (
+              <span className="text-sm font-semibold text-bad">No crew yet</span>
+            )}
+            {job.truck === "theirs" ? (
+              <span className="shrink-0 rounded-full bg-bg px-3 py-1 text-sm font-semibold text-muted">Customer&apos;s truck</span>
+            ) : (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                <Icon name="truck" className="h-4 w-4" /> We bring our truck
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </section>
 
         {!people.length && job.status !== "canceled" && (

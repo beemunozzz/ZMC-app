@@ -29,16 +29,24 @@ export function JobCard({
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className={`press block rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40 ${
+      className={`press block rounded-2xl border bg-card p-4 transition-colors md:p-3 hover:border-primary/40 ${
         !crew.length && !canceled ? "border-bad/50" : "border-line"
       } ${canceled ? "opacity-60" : ""}`}
     >
-      {/* Row 1: time + status, always in the same spot */}
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-[15px] font-semibold tabular-nums text-ink">{timeSpan(job)}</span>
-        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
+      {/* Row 1: the time, on one line */}
+      <p className="truncate whitespace-nowrap text-[15px] font-semibold tabular-nums text-ink md:text-[13px]">{timeSpan(job)}</p>
+      {/* Row 2: status and who brings the truck, always in the same spots */}
+      <div className="mt-1 flex flex-wrap items-center gap-1">
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${st.cls}`}>{st.label}</span>
+        {job.truck === "theirs" ? (
+          <span className="rounded-full bg-bg px-2 py-0.5 text-[11px] font-semibold text-muted">Their truck</span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            <Icon name="truck" className="h-3 w-3" /> Our truck
+          </span>
+        )}
       </div>
-      <p className="mt-0.5 text-xs tabular-nums text-muted">
+      <p className="mt-1 text-xs tabular-nums text-muted">
         {hrs ? `${fmtHours(hrs)} hrs · ` : ""}
         {crew.length} of {job.movers_needed} crew
         {hrs && crew.length ? ` · ${fmtHours(hrs * crew.length)} crew-hrs` : ""}
@@ -72,7 +80,7 @@ export function JobCard({
       )}
 
       {/* Row 4: flags */}
-      {(short > 0 && crew.length > 0) || doubleBooked || wxWatch || job.truck === "theirs" ? (
+      {(short > 0 && crew.length > 0) || doubleBooked || wxWatch ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {short > 0 && crew.length > 0 && !canceled && (
             <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">Need {short} more</span>
@@ -86,9 +94,6 @@ export function JobCard({
             <span className="rounded-full bg-warn/12 px-2.5 py-0.5 text-xs font-semibold text-warn">
               {WX_EMOJI[wxWatch.kind]} {WX_LABEL[wxWatch.kind]}
             </span>
-          )}
-          {job.truck === "theirs" && (
-            <span className="rounded-full bg-bg px-2.5 py-0.5 text-xs font-medium text-muted">Their truck</span>
           )}
         </div>
       ) : null}
