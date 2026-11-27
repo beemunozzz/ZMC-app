@@ -8,6 +8,7 @@ import { JOB_TYPES, STATUS, type Job } from "@/lib/jobs";
 import { REFER_ITEMS } from "@/lib/pricing";
 import { AVAIL_STYLE, availabilityFor, type JobSlot, type TimeOff } from "@/lib/availability";
 import type { Week } from "@/lib/regular";
+import { hourChoices, hoursLabel, moverChoices } from "@/lib/choices";
 import { deleteJob, saveJob, type JobFormState } from "./actions";
 
 type CrewOption = { id: string; full_name: string; role: Role };
@@ -25,7 +26,7 @@ export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: Cr
   const [when, setWhen] = useState({
     date: job?.job_date ?? defaultDate,
     start: job?.start_time?.slice(0, 5) ?? "08:00",
-    hours: job?.est_hours != null ? String(job.est_hours) : "",
+    hours: job?.est_hours != null ? String(Number(job.est_hours)) : "",
   });
   const availOf = (id: string) => (avail ? availabilityFor(id, when.date, when.start, Number(when.hours) || 2, avail.timeOff, avail.jobs, job?.id, avail.regular) : null);
   const [state, action, pending] = useActionState<JobFormState, FormData>(saveJob, {});
@@ -135,23 +136,19 @@ export function JobForm({ job, crew, defaultDate, avail }: { job?: Job; crew: Cr
           <div className="grid grid-cols-2 gap-3">
             <label className={label}>
               Estimated hours
-              <input
-                name="est_hours"
-                type="number"
-                inputMode="decimal"
-                min={0}
-                max={24}
-                step={0.5}
-                value={when.hours}
-                onChange={(e) => setWhen((w) => ({ ...w, hours: e.target.value }))}
-                placeholder="e.g. 4"
-                className={input}
-              />
+              <select name="est_hours" value={when.hours} onChange={(e) => setWhen((w) => ({ ...w, hours: e.target.value }))} className={input}>
+                <option value="">Choose</option>
+                {hourChoices(0.5, 1, 16, when.hours).map((h) => (
+                  <option key={h} value={String(h)}>
+                    {hoursLabel(h)}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className={label}>
               Crew needed
               <select name="movers_needed" value={movers} onChange={(e) => setMovers(Number(e.target.value))} className={input}>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                {moverChoices(1, 10).map((n) => (
                   <option key={n} value={n}>
                     {n} {n === 1 ? "person" : "people"}
                   </option>

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { ownerEditHours, type InvoiceFormState } from "../actions";
+import { hourChoices, hoursLabel, moverChoices } from "@/lib/choices";
 
 const input = "h-12 w-full min-w-0 rounded-xl border border-line bg-bg px-3 text-base tabular-nums text-ink outline-none focus:border-primary";
 
@@ -29,12 +30,18 @@ export function EditHours({ id, hours, movers }: { id: string; hours: number; mo
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
           Hours
-          <input name="hours" type="number" inputMode="decimal" min={0} step={0.25} defaultValue={hours} className={input} />
+          <select name="hours" defaultValue={String(hours)} className={input}>
+            {hourChoices(0.25, 0.25, 16, hours).map((h) => (
+              <option key={h} value={String(h)}>
+                {hoursLabel(h)}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
           Movers
           <select name="movers" defaultValue={movers} className={input}>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            {moverChoices(1, 10).map((n) => (
               <option key={n} value={n}>
                 {n} movers
               </option>

@@ -87,7 +87,7 @@ async function NewInvoice({ params }: Pick<PageProps<"/jobs/[id]/invoice">, "par
           start={{
             jobId: job.id,
             customerName: job.customer_name,
-            hours: clockedHours != null ? String(clockedHours) : str(job.est_hours),
+            hours: clockedHours != null ? String(clockedHours) : job.est_hours != null ? String(Number(job.est_hours)) : "",
             hoursFrom: clockedHours != null ? "clock" : "estimate",
             movers: String(Math.max(prices.min_movers, jobCrew(job).length || job.movers_needed)),
             truck: job.truck,

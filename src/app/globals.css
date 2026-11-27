@@ -243,3 +243,21 @@ input[type="time"]::-webkit-datetime-edit {
   font-weight: 700;
   letter-spacing: 0.04em;
 }
+
+/* Number boxes (prices, rates, miles): type the number in. No tiny up/down arrows. */
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+
+/* Dropdowns: one clean down-arrow everywhere, instead of each phone's tiny double arrows. Tapping still
+   opens the phone's own list (the easiest to use with a thumb). */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237b8591' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.1rem 1.1rem;
+  padding-right: 2.4rem !important;
+  text-overflow: ellipsis;
+}

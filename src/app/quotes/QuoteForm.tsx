@@ -6,6 +6,7 @@ import { HouseFields } from "@/components/HouseFields";
 import { JOB_TYPES } from "@/lib/jobs";
 import { REFER_ITEMS, roundTo5, flatRate, fmtDuration, money, parseDrive, priceQuote, suggestedNte, type Prices } from "@/lib/pricing";
 import { truckCost, type OwnerCosts } from "@/lib/truck-cost";
+import { hourChoices, hoursLabel, moverChoices } from "@/lib/choices";
 import { estimateTrip } from "./estimate-actions";
 import { TruckCostPanel, toChoices, type TruckForm } from "./TruckCostPanel";
 import { SendToCustomer } from "./SendToCustomer";
@@ -30,7 +31,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
     start_time: quote?.start_time?.slice(0, 5) ?? "08:00",
     truck: quote?.truck ?? ("ours" as "ours" | "theirs"),
     movers: str(quote?.movers ?? prices.min_movers),
-    est_hours: str(quote?.est_hours),
+    est_hours: quote?.est_hours != null ? String(Number(quote.est_hours)) : "",
     miles_out: str(quote?.miles_out),
     miles_between: str(quote?.miles_between),
     miles_back: str(quote?.miles_back),
@@ -271,7 +272,7 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
             <label className={label}>
               Movers
               <select name="movers" value={v.movers} onChange={set("movers")} className={input}>
-                {[2, 3, 4, 5, 6].map((n) => (
+                {moverChoices(prices.min_movers, 10).map((n) => (
                   <option key={n} value={n}>
                     {n} movers
                   </option>
@@ -280,7 +281,14 @@ export function QuoteForm({ quote, prices, costs }: { quote?: Quote; prices: Pri
             </label>
             <label className={label}>
               Hours on the clock
-              <input name="est_hours" type="number" inputMode="decimal" min={0} step={0.5} value={v.est_hours} onChange={set("est_hours")} placeholder="e.g. 4" className={input} />
+              <select name="est_hours" value={v.est_hours} onChange={set("est_hours")} className={input}>
+                <option value="">Choose</option>
+                {hourChoices(0.5, 1, 16, v.est_hours).map((h) => (
+                  <option key={h} value={String(h)}>
+                    {hoursLabel(h)}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           {twoStory && Number(v.movers) < 3 && (

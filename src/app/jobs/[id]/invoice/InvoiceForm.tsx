@@ -6,6 +6,7 @@ import { SignaturePad } from "@/components/SignaturePad";
 import { PAY_METHODS, type PayMethod } from "@/lib/invoices";
 import { fmtDuration, money, priceInvoice, type Prices } from "@/lib/pricing";
 import { createInvoice, type InvoiceFormState } from "@/app/invoices/actions";
+import { hourChoices, hoursLabel, moverChoices } from "@/lib/choices";
 
 const input =
   "h-12 w-full min-w-0 rounded-xl border border-line bg-bg px-3 text-base tabular-nums text-ink outline-none focus:border-primary";
@@ -81,12 +82,19 @@ export function InvoiceForm({ start, prices, enabledMethods }: { start: InvoiceS
         <div className="grid grid-cols-2 gap-3">
           <label className={label}>
             Hours on the job
-            <input name="hours" type="number" inputMode="decimal" min={0} step={0.25} required value={v.hours} onChange={set("hours")} className={input} />
+            <select name="hours" required value={v.hours} onChange={set("hours")} className={input}>
+              <option value="">Choose</option>
+              {hourChoices(0.25, 0.25, 16, v.hours).map((h) => (
+                <option key={h} value={String(h)}>
+                  {hoursLabel(h)}
+                </option>
+              ))}
+            </select>
           </label>
           <label className={label}>
             Movers
             <select name="movers" value={v.movers} onChange={set("movers")} className={input}>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              {moverChoices(1, 10).map((n) => (
                 <option key={n} value={n}>
                   {n} movers
                 </option>
