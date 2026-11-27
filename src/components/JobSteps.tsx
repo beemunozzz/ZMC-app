@@ -65,7 +65,9 @@ export function JobSteps({ jobId, times, hasDropoff }: { jobId: string; times: P
                   type="button"
                   disabled={!isNext || pending}
                   onClick={() => tap(s, true)}
-                  className="press h-11 min-w-0 flex-1 rounded-xl bg-primary px-3 text-left font-semibold text-white disabled:bg-bg disabled:text-muted dark:text-navy"
+                  className={`press h-11 min-w-0 flex-1 rounded-xl px-3 text-left font-semibold ${
+                    isNext ? "bg-primary text-white dark:text-navy" : "border border-line bg-card text-muted"
+                  } disabled:cursor-default`}
                 >
                   {s.label}
                 </button>
