@@ -1,5 +1,6 @@
 // OWNER ONLY: what ZMC keeps from this job. Customer pays − crew pay − our truck − materials and water.
 // Crew pay rates come from the owner-only crew_pay table; never show this to crew or customers.
+import { Fragment } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Invoice } from "@/lib/invoices";
 import { money, type Prices } from "@/lib/pricing";
@@ -96,8 +97,9 @@ export async function JobProfit({ supabase, inv, prices }: { supabase: SupabaseC
       </div>
       {line("Customer pays", total)}
       {crew.length ? (
-        crew.map((c) =>
-          line(
+        crew.map((c) => (
+          <Fragment key={c.id}>
+            {line(
             <>− {c.name}</>,
             c.pay,
             c.rate == null ? (
@@ -107,8 +109,9 @@ export async function JobProfit({ supabase, inv, prices }: { supabase: SupabaseC
                 {money(c.rate)}/hr × {hrs(c.hours)} hrs {c.fromClock ? "(clocked)" : `(job ${hrs(Number(inv.hours))} + travel ${hrs(travel)})`}
               </>
             ),
-          ),
-        )
+            )}
+          </Fragment>
+        ))
       ) : (
         <p className="text-warn">No crew on this job, so crew pay isn&apos;t counted.</p>
       )}
