@@ -91,7 +91,7 @@ export function JobCard({
       {(short > 0 && crew.length > 0) || doubleBooked || wxWatch || wetLater ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {short > 0 && crew.length > 0 && !canceled && (
-            <span className="rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">Need {short} more</span>
+            <span className="rounded-full bg-bad-fill px-2.5 py-0.5 text-xs font-semibold text-white">Need {short} more</span>
           )}
           {doubleBooked && (
             <span className="inline-flex items-center gap-1 rounded-full bg-bad/10 px-2.5 py-0.5 text-xs font-semibold text-bad">
