@@ -251,7 +251,7 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
           </div>
         </div>
 
-        <div className="cta">
+        <div className="cta print-only">
           <div>
             <b>{accepted ? "You're booked!" : "Ready to book?"}</b>
             <br />
@@ -265,7 +265,7 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
         </div>
 
         {/* Signature: printed form, or what the customer signed */}
-        <div className="sigline">
+        <div className="sigline print-only">
           <div>
             {accepted && row.signature && (
               // eslint-disable-next-line @next/next/no-img-element -- the signature is a small picture
@@ -292,7 +292,18 @@ async function CustomerQuote({ params }: { params: Promise<{ token: string }> })
 
       {/* Sign and book (not printed) */}
       <div className="no-print mx-auto mt-4 max-w-[8.5in]">
-        {accepted ? null : closed || expired || pastDate ? (
+        {accepted ? (
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <p className="text-lg font-bold text-[#2f7a4f]">✓ Signed and booked</p>
+            <p className="text-[15px] text-[#3a4652]">
+              Signed by {row.signed_name} on {signedDate}. Tap &ldquo;Save as PDF&rdquo; at the top for a signed copy.
+            </p>
+            {row.signature && (
+              // eslint-disable-next-line @next/next/no-img-element -- the signature is a small picture
+              <img src={row.signature} alt={`Signature of ${row.signed_name ?? "the customer"}`} className="mt-2 h-16 max-w-full object-contain" />
+            )}
+          </div>
+        ) : closed || expired || pastDate ? (
           <p className="rounded-xl bg-white p-4 text-[15px] text-[#15202b] shadow-sm">
             {closed
               ? "This estimate is no longer open."
