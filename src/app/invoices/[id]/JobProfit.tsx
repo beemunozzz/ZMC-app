@@ -51,12 +51,14 @@ export async function JobProfit({ supabase, inv, prices }: { supabase: SupabaseC
     clocked.set(e.crew_id as string, (clocked.get(e.crew_id as string) ?? 0) + h);
   }
   const crew = people.map((id) => {
-    const rate = rateOf.get(id) ?? null;
+    const own = rateOf.get(id) ?? null;
+    const typical = own == null;
+    const rate = own ?? costs.crew_pay_rate;
     const fromClock = clocked.has(id);
     const hours = fromClock ? r2(clocked.get(id)!) : fallbackHours;
-    return { id, name: nameOf.get(id) ?? "Removed", rate, hours, fromClock, pay: rate == null ? 0 : r2(rate * hours) };
+    return { id, name: nameOf.get(id) ?? "Removed", rate, typical, hours, fromClock, pay: r2(rate * hours) };
   });
-  const missingRates = crew.filter((c) => c.rate == null);
+  const missingRates = crew.filter((c) => c.typical);
   const crewPay = r2(crew.reduce((a, c) => a + c.pay, 0));
 
   // Our truck: the choices saved on the quote, or a one-day round trip for the job's miles.
@@ -102,13 +104,9 @@ export async function JobProfit({ supabase, inv, prices }: { supabase: SupabaseC
             {line(
             <>− {c.name}</>,
             c.pay,
-            c.rate == null ? (
-              <span className="text-warn">No pay rate set (Payroll → Employees)</span>
-            ) : (
-              <>
-                {money(c.rate)}/hr × {hrs(c.hours)} hrs {c.fromClock ? "(clocked)" : `(job ${hrs(Number(inv.hours))} + travel ${hrs(travel)})`}
-              </>
-            ),
+            <>
+              {money(c.rate)}/hr{c.typical ? " typical" : ""} × {hrs(c.hours)} hrs {c.fromClock ? "(clocked)" : `(job ${hrs(Number(inv.hours))} + travel ${hrs(travel)})`}
+            </>,
             )}
           </Fragment>
         ))
@@ -122,7 +120,7 @@ export async function JobProfit({ supabase, inv, prices }: { supabase: SupabaseC
         <span className="tabular-nums">{money(Math.abs(profit))}</span>
       </div>
       <p className="text-xs text-muted">
-        Before payroll taxes and card fees.{missingRates.length ? ` Add pay rates for ${missingRates.map((c) => c.name).join(", ")} to make this exact.` : ""}
+        Before payroll taxes and card fees.{missingRates.length ? ` ${missingRates.map((c) => c.name).join(", ")}: no pay rate in Payroll yet, so the typical rate (☰ → Prices → Our costs) is used.` : ""}
       </p>
     </section>
   );

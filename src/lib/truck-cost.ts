@@ -13,6 +13,7 @@ export type OwnerCosts = {
   follow_mpg: number; // the car that brings the crew home after a one-way rental
   truck_pickup_cost: number; // one person's time to pick up, set up and return the truck
   flat_margin: number; // 0.15 = 15% profit margin on flat rates
+  crew_pay_rate: number; // typical crew pay per hour, for profit estimates until real pay rates are set
 };
 
 export const DEFAULT_COSTS: OwnerCosts = {
@@ -27,6 +28,7 @@ export const DEFAULT_COSTS: OwnerCosts = {
   follow_mpg: 25,
   truck_pickup_cost: 75,
   flat_margin: 0.15,
+  crew_pay_rate: 20,
 };
 
 export const COST_KEYS = Object.keys(DEFAULT_COSTS) as (keyof OwnerCosts)[];

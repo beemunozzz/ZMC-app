@@ -107,6 +107,9 @@
 
 - Nov 27: **Crew hours this week** (owner's week schedule, under the days): each full-time crew member's scheduled job hours with a bar out of 40, orange "low" under 30, number of jobs, days off (approved all-day time off); part-time and on-call in one line underneath. Tap a name to see only their jobs. Summary chip "Low on hours: N" jumps to it. Hours are the jobs' estimated hours (no travel). 40/30 are placeholders in `src/components/CrewHours.tsx`; ask Zach what counts as a full week.
 
+- Nov 27 (setup step 0024 applied): **Low-hours alert.** From Wednesday (Pacific) through Sunday, Zach's home screen shows "Low on hours this week" for full-time crew with 16 or fewer scheduled job hours, each with Schedule and **Got it** (hides that person until next week; `hours_alert_acks`). Wednesday evening the nightly timer also sends Zach a phone notification (`low_hours_targets`), once the notification keys are set up. Settings in `src/lib/hours-alert.ts` (16 hrs, Wednesday).
+- **Typical crew pay** (☰ → Prices → Our costs, default $20/hr, `owner_costs.crew_pay_rate`): the quote's estimated job profit and the invoice's job profit use it for anyone without a pay rate in Payroll, so the green box always shows. Brandon couldn't see the quote profit box because no crew pay rates are set yet.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.

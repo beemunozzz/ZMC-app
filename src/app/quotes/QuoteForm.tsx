@@ -134,7 +134,9 @@ export function QuoteForm({
   const isFlat = v.pricing === "flat";
   const chosenTotal = isFlat ? flat.total : p.total;
   const leftOver = Math.round((chosenTotal - (p.allIn ? tCost : 0) - p.supplies) * 100) / 100;
-  const crewPay = crewRate ? Math.round(p.movers * crewRate.rate * p.dayHours * 100) / 100 : 0;
+  // Crew pay: the crew's average rate from Payroll, or the typical rate from Our costs until rates are set.
+  const payRate = crewRate?.rate ?? costs.crew_pay_rate;
+  const crewPay = Math.round(p.movers * payRate * p.dayHours * 100) / 100;
   const jobProfit = Math.round((leftOver - crewPay) * 100) / 100;
   const nteSuggest = isFlat ? flat.total : suggestedNte(inputs, prices);
   const nte = Number(v.nte) || 0;
@@ -539,26 +541,20 @@ export function QuoteForm({
               <span className="text-ink">Left for crew pay and profit</span>
               <span className="tabular-nums text-ink">{money(leftOver)}</span>
             </div>
-            {crewRate ? (
-              <>
-                <div className="flex items-start justify-between gap-3">
-                  <span className="min-w-0 text-ink">
-                    − Crew pay (estimate)
-                    <span className="block text-xs tabular-nums text-muted">
-                      {p.movers} × {money(crewRate.rate)}/hr average × {fmtHrs(p.dayHours)} hrs (job + travel)
-                    </span>
-                  </span>
-                  <span className="shrink-0 tabular-nums text-ink">{money(crewPay)}</span>
-                </div>
-                <div className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 font-semibold ${jobProfit >= 0 ? "bg-ok/12 text-ok" : "bg-bad/10 text-bad"}`}>
-                  <span>{jobProfit >= 0 ? "▲ Estimated job profit" : "▼ Estimated loss"}</span>
-                  <span className="tabular-nums">{money(Math.abs(jobProfit))}</span>
-                </div>
-                <p className="text-xs text-muted">Before payroll taxes and card fees. The invoice shows the real profit with the actual crew and hours.</p>
-              </>
-            ) : (
-              <p className="text-xs text-warn">Add crew pay rates (Payroll → Employees) to see the estimated job profit here.</p>
-            )}
+            <div className="flex items-start justify-between gap-3">
+              <span className="min-w-0 text-ink">
+                − Crew pay (estimate)
+                <span className="block text-xs tabular-nums text-muted">
+                  {p.movers} × {money(payRate)}/hr {crewRate ? "average" : "typical (☰ → Prices → Our costs)"} × {fmtHrs(p.dayHours)} hrs (job + travel)
+                </span>
+              </span>
+              <span className="shrink-0 tabular-nums text-ink">{money(crewPay)}</span>
+            </div>
+            <div className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 font-semibold ${jobProfit >= 0 ? "bg-ok/12 text-ok" : "bg-bad/10 text-bad"}`}>
+              <span>{jobProfit >= 0 ? "▲ Estimated job profit" : "▼ Estimated loss"}</span>
+              <span className="tabular-nums">{money(Math.abs(jobProfit))}</span>
+            </div>
+            <p className="text-xs text-muted">Before payroll taxes and card fees. The invoice shows the real profit with the actual crew and hours.</p>
           </div>
 
           <label className={label}>

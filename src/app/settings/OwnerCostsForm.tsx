@@ -34,6 +34,7 @@ const GROUPS: { title: string; fields: F[] }[] = [
     fields: [
       { key: "truck_pickup_cost", label: "Picking up and returning the truck", prefix: "$", suffix: "(one person, one hour)", step: 1 },
       { key: "flat_margin", label: "Flat-rate profit margin", suffix: "%", step: 1 },
+      { key: "crew_pay_rate", label: "Typical crew pay (for profit estimates)", prefix: "$", suffix: "per hour, until pay rates are set in Payroll", step: 0.5 },
     ],
   },
 ];

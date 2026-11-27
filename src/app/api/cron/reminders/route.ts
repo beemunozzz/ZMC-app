@@ -1,7 +1,8 @@
 // The nightly "you have a job tomorrow" reminder. Vercel's free timer calls this once each evening
 // (see vercel.json). It only works with the secret key (CRON_SECRET) that Vercel sends along.
 import { createClient } from "@supabase/supabase-js";
-import { fmtTime } from "@/lib/dates";
+import { fmtHours, fmtTime, mondayOf, todayISO } from "@/lib/dates";
+import { ALERT_FROM_WEEKDAY, ALERT_HOURS, pacificWeekday } from "@/lib/hours-alert";
 import { sendPush } from "@/lib/push";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 
@@ -42,5 +43,28 @@ export async function GET(request: Request) {
       },
     })),
   );
-  return Response.json({ jobs: new Set(rows.map((r) => r.job_id)).size, sent });
+
+  // Wednesday evening: tell Zach which full-time crew are low on hours this week (until he taps "Got it").
+  let lowSent = 0;
+  if (pacificWeekday() === ALERT_FROM_WEEKDAY) {
+    const [{ data: low }, { data: owners }] = await Promise.all([
+      db.rpc("low_hours_targets", { p_key: key, p_week: mondayOf(todayISO()), p_max: ALERT_HOURS }),
+      db.rpc("owner_push_targets", { p_key: key }),
+    ]);
+    const people = (low ?? []) as { full_name: string; hours: number }[];
+    if (people.length && owners?.length) {
+      lowSent = await sendPush(
+        (owners as { endpoint: string; p256dh: string; auth: string }[]).map((o) => ({
+          ...o,
+          msg: {
+            title: `Low on hours this week (${people.length})`,
+            body: people.map((p) => `${p.full_name.split(" ")[0]} ${fmtHours(Number(p.hours))} hrs`).join(" · "),
+            url: "/",
+            tag: `low-hours-${mondayOf(todayISO())}`,
+          },
+        })),
+      );
+    }
+  }
+  return Response.json({ jobs: new Set(rows.map((r) => r.job_id)).size, sent, lowSent });
 }

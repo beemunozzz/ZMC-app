@@ -19,6 +19,8 @@ import { reminderText } from "@/lib/texts";
 import { ReminderLink } from "@/components/ReminderLink";
 import { LimitedHome } from "@/components/LimitedHome";
 import { setupFor } from "@/lib/setup";
+import { ALERT_HOURS, alertDay } from "@/lib/hours-alert";
+import { ackLowHours } from "@/app/hours-actions";
 import { decideWeek } from "@/app/my-schedule/actions";
 import { WEEKDAY_LABEL, WEEKLY_COLUMNS, cleanWeek, currentOf, weekChanges, type WeeklySchedule } from "@/lib/regular";
 import { Avatars } from "@/components/Avatars";
@@ -59,7 +61,7 @@ async function Home() {
 
   const [{ data: jobRows }, { data: crewRows }, { data: quoteRows }, stockton] = await Promise.all([
     supabase.from("jobs").select(JOB_COLUMNS).gte("job_date", from).lte("job_date", horizon > weekEnd ? horizon : weekEnd).order("job_date").order("start_time", { nullsFirst: false }),
-    supabase.from("crew_members").select("id, full_name, email, user_id, employment").eq("active", true).order("full_name"),
+    supabase.from("crew_members").select("id, full_name, email, user_id, employment, role, is_dev").eq("active", true).order("full_name"),
     supabase.from("quotes").select("id, customer_name, status, created_at, quote_total, move_date").order("created_at", { ascending: false }).limit(300),
     stocktonForecast(),
   ]);
@@ -74,6 +76,22 @@ async function Home() {
   // ---- Tomorrow's reminders ----
   const tomorrow = addDays(today, 1);
   const tomorrows = jobs.filter((j) => j.job_date === tomorrow && isLive(j));
+
+  // ---- Low hours: full-time crew with ALERT_HOURS or fewer this week (from Wednesday, until Zach taps "Got it") ----
+  let lowHours: { id: string; name: string; hours: number; jobs: number }[] = [];
+  if (alertDay()) {
+    const { data: acks } = await supabase.from("hours_alert_acks").select("crew_id").eq("week_start", weekStart);
+    const acked = new Set((acks ?? []).map((a) => a.crew_id as string));
+    const weekJobs = jobs.filter((j) => j.job_date >= weekStart && j.job_date <= weekEnd && j.status !== "canceled");
+    lowHours = crew
+      .filter((c) => c.role !== "owner" && !c.is_dev && (c.employment ?? "full_time") === "full_time" && !acked.has(c.id as string))
+      .map((c) => {
+        const mine = weekJobs.filter((j) => jobCrew(j).includes(c.id as string));
+        return { id: c.id as string, name: c.full_name as string, hours: mine.reduce((s, j) => s + (Number(j.est_hours) || 0), 0), jobs: mine.length };
+      })
+      .filter((r) => r.hours <= ALERT_HOURS)
+      .sort((a, b) => a.hours - b.hours);
+  }
 
   // ---- Crew who can't make a job, and late time-off requests ----
   const [{ data: coverRows }, { data: offRows }] = await Promise.all([
@@ -319,6 +337,34 @@ async function Home() {
               })}
             </ul>
             <p className="text-xs text-muted">Find cover opens the job: swap them out and save. &ldquo;Sorted&rdquo; clears it if they worked it out.</p>
+          </section>
+        )}
+
+        {/* Full-time crew low on hours this week */}
+        {lowHours.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-2xl border-2 border-warn/40 bg-card p-4">
+            <h2 className={h2}>Low on hours this week</h2>
+            <ul className="divide-y divide-line">
+              {lowHours.map((r) => (
+                <li key={r.id} className="flex items-center gap-3 py-3">
+                  <p className="min-w-0 flex-1 text-[15px] text-ink">
+                    <b>{r.name}</b>
+                    <span className="block text-xs tabular-nums text-muted">
+                      {fmtHours(r.hours)} hrs scheduled · {r.jobs} job{r.jobs === 1 ? "" : "s"}
+                    </span>
+                  </p>
+                  <Link href={`/schedule?view=week&who=${r.id}`} className="press flex h-11 shrink-0 items-center rounded-xl border border-line px-3 text-sm font-semibold text-primary">
+                    Schedule
+                  </Link>
+                  <form action={ackLowHours}>
+                    <input type="hidden" name="crew_id" value={r.id} />
+                    <input type="hidden" name="week" value={weekStart} />
+                    <button className="press h-11 shrink-0 rounded-xl bg-warn px-3 text-sm font-semibold text-white dark:text-navy">Got it</button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted">Full-time crew with {ALERT_HOURS} hours or fewer on the schedule this week. &ldquo;Got it&rdquo; hides them until next week.</p>
           </section>
         )}
 
