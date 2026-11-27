@@ -182,7 +182,7 @@ These come from Brandon's feedback and the `zmc-app-design` skill.
   - lines `#E2DBD0`
   - red `#B3261E` / `#EC5B52` (one red in dark mode for text, chips and filled shapes; filled shapes use `bg-bad-fill` with white text so they never look pink)
 - Fonts: **Archivo** for everything (Brandon's pick, Nov 2026): its narrow width (`.font-display`, wdth 62) for bold uppercase headings, regular width for body. Before that: Barlow Condensed + Inter (Version 1).
-- **Logo (Nov 2026, Brandon's pick):** the letters "ZMC." (with the period) in **Georgia**, bold (`.font-logo` in `globals.css`; Gelasio, a free Georgia look-alike, stands in on Android). Used in the header, the login screen and the loading screen. ZMC logo files (black and white) may still come from Zach.
+- **Logo (Nov 2026, Brandon's pick):** the letters "ZMC." (with the period) in **Georgia**, bold (`.font-logo` in `globals.css`; Gelasio, a free Georgia look-alike, stands in on Android). Used in the header, the login screen and the loading screen. **App icon** (Nov 2026, Brandon's): black "ZMC." on a glossy silver tile; the original is `reference/brand/zmc-app-icon-original.png` and the square version (no corners, phones round them) is `zmc-app-icon-square.png`, sized into `public/icons/` and `src/app/favicon.ico`. ZMC logo files (black and white) may still come from Zach.
 - Motion: subtle and quick, ease-out, animate only transform and opacity, press scale 0.97, and respect "reduce motion".
 - Things should sit in **consistent fixed spots**. Brandon notices when layouts shift from one card to the next.
 - Use smaller text on phones, an app-style header, and a ☰ menu for secondary screens.
