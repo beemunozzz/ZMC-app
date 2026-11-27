@@ -101,6 +101,8 @@
 
 - Nov 27: **Job profit** box on invoices (owner only): customer pays − each crew member's pay (rate from Payroll × clocked hours, or job hours + drive to/from the shop if they didn't clock in) − our truck (the quote's truck choices, or a one-day round-trip estimate) − materials and water = job profit (green) or loss (red). Before payroll taxes and card fees. Schedule cards: the time on its own line; status and "Our truck"/"Their truck" tags under it; crew-hrs hidden in the narrow computer columns. Job page: the navy header's bottom row shows the crew on the left and "We bring our truck" / "Customer's truck" on the right.
 
+- Nov 27: Quotes: **Estimated job profit** (green) in the owner-only Our side box: left for crew pay and profit − crew pay (movers × the crew's average pay rate from Payroll × job + travel hours). Customer copies (quote link, invoice link, PDFs) are built from separate snapshots and never include profit or our costs.
+
 ## Next
 - Then: home-screen app icon (needs the logo files), and crew tools (clock in/out, photos).
 - Phase 3: address autocomplete (Google Places) and automatic house details (RentCast). Waiting on Brandon: OK to add a card to Google (with a daily cap), OK for RentCast's free plan, and which email to sign up with.
