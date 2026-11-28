@@ -34,7 +34,7 @@ async function Settings() {
         </p>
         <PricesForm prices={prices} />
         <OwnerCostsForm costs={costs} />
-        <MeetForm shop={meet.shop_address} buffer={meet.meet_buffer_min} />
+        <MeetForm shop={meet.shop_address} buffer={meet.meet_buffer_min} early={meet.arrive_early_min} />
         <LoadListForm list={loadList} />
       </main>
     </div>

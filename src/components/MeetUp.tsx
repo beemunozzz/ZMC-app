@@ -21,6 +21,14 @@ export type MeetInfo = {
   canChangeAll: boolean;
   /** Past 8 PM the night before (crew can't change any more; Zach can). */
   locked: boolean;
+  /** At the job this many minutes before the start ("8:55 AM"). */
+  arriveBy: string;
+  early: number;
+  /** The viewer's own "leave home by" (from their home address), and how it was worked out. */
+  homeLeave: string;
+  homeDriveText: string;
+  /** On the job but no home address in My info yet. */
+  needsHome: boolean;
 };
 
 /** Where and when the crew meets. One line, one button. */
@@ -36,13 +44,15 @@ export function MeetUp(m: MeetInfo) {
 
   const mine = m.onJob && m.at === "shop" && m.meAtSite;
   const headline =
-    m.at === "site" ? `Meet at the job site${m.time ? ` · ${m.time}` : ""}` : mine ? `You meet at the site${m.start ? ` · ${m.start}` : ""}` : `Meet at the shop${m.time ? ` · ${m.time}` : ""}`;
-  const sub =
     m.at === "site"
-      ? "Everyone drives to the pickup address."
+      ? `Meet at the job site${m.arriveBy ? ` · ${m.arriveBy}` : ""}`
       : mine
-        ? "Own car, at the pickup address by the start time."
-        : [m.driveText, m.leave && `leave by ${m.leave}`].filter(Boolean).join(" · ");
+        ? `You meet at the site${m.arriveBy ? ` · ${m.arriveBy}` : ""}`
+        : `Meet at the shop${m.time ? ` · ${m.time}` : ""}`;
+  const sub =
+    m.at === "site" || mine
+      ? `${mine ? "Own car. " : "Everyone drives to the pickup address. "}Be there ${m.early} minutes before the ${m.start} start.`
+      : [m.driveText, m.leave && `truck leaves ${m.leave}`, m.arriveBy && `at the job ${m.arriveBy}`].filter(Boolean).join(" · ");
 
   const small = "press h-10 rounded-xl px-3 text-sm font-semibold disabled:opacity-60";
 
@@ -52,6 +62,20 @@ export function MeetUp(m: MeetInfo) {
         <div className="min-w-0">
           <p className="text-[15px] font-semibold text-ink">{headline}</p>
           {sub && <p className="text-sm text-muted">{sub}</p>}
+          {m.homeLeave && (
+            <p className="mt-1 text-[15px] font-semibold text-primary">
+              🏠 Leave home by {m.homeLeave}
+              <span className="block text-xs font-normal text-muted">{m.homeDriveText} (estimate until Google Maps is set up)</span>
+            </p>
+          )}
+          {m.needsHome && (
+            <p className="mt-1 text-sm text-muted">
+              <a href="/my-info" className="font-semibold text-primary">
+                Add your home address
+              </a>{" "}
+              to see what time to leave home.
+            </p>
+          )}
           {m.at === "shop" && m.atSite.length > 0 && (
             <p className="text-sm text-muted">
               At the site instead: <span className="font-medium text-ink">{m.atSite.join(", ")}</span>

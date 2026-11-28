@@ -4,12 +4,16 @@ import { ZMC_TZ, addDays, fmtMinutes, fmtTime, minutes, todayISO } from "./dates
 import type { Job } from "./jobs";
 import { geocode } from "./weather";
 
-export type MeetSettings = { shop_address: string; meet_buffer_min: number };
+export type MeetSettings = { shop_address: string; meet_buffer_min: number; arrive_early_min: number };
 
 /** Zach's shop address and the extra minutes before leaving. Safe if the setup step hasn't run yet. */
 export async function getMeetSettings(supabase: { from: (t: string) => any }): Promise<MeetSettings> { // eslint-disable-line @typescript-eslint/no-explicit-any
-  const { data } = await supabase.from("settings").select("shop_address, meet_buffer_min").eq("id", 1).maybeSingle();
-  return { shop_address: (data?.shop_address as string) ?? "", meet_buffer_min: Number(data?.meet_buffer_min ?? 10) };
+  const { data } = await supabase.from("settings").select("*").eq("id", 1).maybeSingle();
+  return {
+    shop_address: (data?.shop_address as string) ?? "",
+    meet_buffer_min: Number(data?.meet_buffer_min ?? 10),
+    arrive_early_min: Number(data?.arrive_early_min ?? 5),
+  };
 }
 
 const AVG_MPH = 45; // rough average for local driving with a truck
@@ -45,24 +49,40 @@ export async function driveFor(job: Pick<Job, "drive_min" | "miles_out" | "picku
 
 export type MeetPlan = {
   at: "shop" | "site";
-  /** "8:10 AM" (shop) or the job start (site). Empty if the job has no start time. */
+  /** Shop: when the crew meets there ("8:05 AM"). Site: when to be at the pickup ("8:55 AM"). Empty without a start time. */
   time: string;
   /** Leave the shop by this time (shop only). */
   leave: string;
   drive: Drive;
+  /** The same times in minutes after midnight, for working out "leave home by". */
+  meetMin: number | null;
+  arriveMin: number | null;
 };
 
-/** Meet time at the shop = start - drive - buffer, rounded down to 5 minutes. */
-export function meetPlan(job: Pick<Job, "meet_at" | "start_time">, drive: Drive, buffer: number): MeetPlan {
+/**
+ * Everyone reaches the job `early` minutes before the start (5). The truck leaves the shop a drive earlier,
+ * and the crew meets at the shop `buffer` minutes before that (10). Example: start 9:00, 40 min drive →
+ * at the job 8:55, leave the shop 8:15, meet at the shop 8:05.
+ */
+export function meetPlan(job: Pick<Job, "meet_at" | "start_time">, drive: Drive, buffer: number, early = 5): MeetPlan {
   const start = minutes(job.start_time);
-  if (job.meet_at === "site" || start == null) {
-    return { at: job.meet_at === "site" ? "site" : "shop", time: start == null ? "" : fmtMinutes(start), leave: "", drive };
+  const arrive = start == null ? null : start - early;
+  if (job.meet_at === "site" || arrive == null) {
+    return { at: job.meet_at === "site" ? "site" : "shop", time: arrive == null ? "" : fmtMinutes(arrive), leave: "", drive, meetMin: arrive, arriveMin: arrive };
   }
-  const leave = start - (drive?.min ?? 30);
+  const leave = Math.floor((arrive - (drive?.min ?? 30)) / 5) * 5;
   const meet = Math.floor((leave - buffer) / 5) * 5;
-  return { at: "shop", time: fmtMinutes(meet), leave: fmtMinutes(Math.floor(leave / 5) * 5), drive };
+  return { at: "shop", time: fmtMinutes(meet), leave: fmtMinutes(leave), drive, meetMin: meet, arriveMin: arrive };
 }
 
+/** Drive minutes between two addresses (estimate from the map until Google Maps is set up). */
+async function driveBetween(from: string, to: string): Promise<number | null> {
+  if (!from.trim() || !to.trim()) return null;
+  const timeout = <T,>(p: Promise<T>) => Promise.race([p.catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), 3000))]);
+  const [a, b] = await Promise.all([timeout(geocode(from)), timeout(geocode(to))]);
+  if (!a || !b) return null;
+  return milesToMinutes(milesBetween(a, b) * ROAD_FACTOR);
+}
 
 function driveText(d: Drive) {
   if (!d) return "Drive time unknown (figured 30 min)";
@@ -89,16 +109,27 @@ export async function loadMeet(
 ): Promise<Map<string, MeetInfo>> {
   const out = new Map<string, MeetInfo>();
   if (!jobs.length) return out;
-  const [settings, { data: siteRows }] = await Promise.all([
+  const [settings, { data: siteRows }, { data: prof }] = await Promise.all([
     getMeetSettings(supabase),
     supabase.from("meet_at_site").select("job_id, crew_id").in("job_id", jobs.map((j) => j.id)),
+    supabase.from("crew_profile").select("address").eq("crew_id", me.id).maybeSingle(),
   ]);
+  const home = ((prof?.address as string) ?? "").trim();
   const site = (siteRows ?? []) as { job_id: string; crew_id: string }[];
   await Promise.all(
     jobs.map(async (j) => {
       const drive = j.meet_at === "site" ? null : await driveFor(j, settings.shop_address);
-      const plan = meetPlan(j, drive, settings.meet_buffer_min);
+      const plan = meetPlan(j, drive, settings.meet_buffer_min, settings.arrive_early_min);
       const onJob = j.lead_id === me.id || j.crew_ids.includes(me.id);
+      // "Leave home by": from the crew member's home address to the shop, or to the pickup if they meet at the site.
+      const mineAtSite = plan.at === "site" || site.some((s) => s.job_id === j.id && s.crew_id === me.id);
+      const target = mineAtSite ? plan.arriveMin : plan.meetMin;
+      let homeLeave = "";
+      let homeDrive: number | null = null;
+      if (onJob && me.role !== "owner" && home && target != null) {
+        homeDrive = await driveBetween(home, mineAtSite ? j.pickup_address : settings.shop_address);
+        if (homeDrive != null) homeLeave = fmtMinutes(Math.floor((target - homeDrive) / 5) * 5);
+      }
       const locked = meetLocked(j.job_date);
       const here = site.filter((s) => s.job_id === j.id);
       out.set(j.id, {
@@ -113,6 +144,11 @@ export async function loadMeet(
         meAtSite: here.some((s) => s.crew_id === me.id),
         canChangeAll: me.role === "owner" || (j.lead_id === me.id && !locked),
         locked: onJob && me.role !== "owner" && locked,
+        arriveBy: plan.arriveMin != null ? fmtMinutes(plan.arriveMin) : "",
+        early: settings.arrive_early_min,
+        homeLeave,
+        homeDriveText: homeDrive != null ? `about ${homeDrive} min from your home to ${mineAtSite ? "the job" : "the shop"}` : "",
+        needsHome: onJob && me.role !== "owner" && !home,
       });
     }),
   );
