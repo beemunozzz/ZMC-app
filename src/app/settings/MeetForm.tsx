@@ -16,16 +16,14 @@ export function MeetForm({ shop, buffer, early }: { shop: string; buffer: number
         <span>Shop address (where the crew meets)</span>
         <input name="shop_address" defaultValue={shop} placeholder="Street, Stockton, CA" autoComplete="street-address" className={input} />
       </label>
-      <label className={label}>
-        <span>Arrive at the job this many minutes early</span>
-        <input name="arrive_early_min" type="number" inputMode="numeric" min={0} max={60} defaultValue={early} className={`${input} max-w-32`} />
-      </label>
+      <input type="hidden" name="arrive_early_min" value={early} />
       <label className={label}>
         <span>Crew at the shop this many minutes before the truck leaves</span>
         <input name="meet_buffer_min" type="number" inputMode="numeric" min={0} max={120} defaultValue={buffer} className={`${input} max-w-32`} />
       </label>
       <p className="text-xs text-muted">
-        Example: job starts 9:00, 5 minutes early, 40 min drive, 10 minutes at the shop → at the job 8:55, truck leaves 8:15, crew meet at the
+        The crew always gets to the job 5 minutes before the start time (time to get out and talk to the homeowner; the customer&apos;s clock
+        still starts at the start time). Example: job starts 9:00, 40 min drive, 10 minutes at the shop → at the job 8:55, truck leaves 8:15, crew meet at the
         shop at 8:05. Crew meeting at the site are told to be there at 8:55, and each person gets a &ldquo;leave home by&rdquo; time from the
         home address in their My info.
       </p>
